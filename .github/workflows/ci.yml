@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: 静的解析 (ESLint)
+        run: npm run lint
+
+      - name: 単体テスト (Vitest)
+        run: npm run test
+
+      - name: ビルド確認
+        run: npm run build
