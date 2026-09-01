@@ -34,3 +34,21 @@ npm run preview
 - 「+1」ボタン：カウントを1増やします
 - 「リセット」ボタン：カウントを0に戻します
 
+### 単体テスト
+
+```bash
+npm run test
+```
+
+### 静的解析（ESLint）
+
+```bash
+npm run lint
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+静的解析・単体テスト・ビルドの3つを検証します。
+
