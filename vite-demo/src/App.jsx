@@ -28,22 +28,10 @@ function App() {
 
       <nav className="flex flex-wrap justify-center gap-x-5 gap-y-3">
         <a
-          href="http://localhost:5000/"
+          href="http://localhost:8080/"
           className="text-sm text-slate-400 underline decoration-dotted transition hover:text-slate-200"
         >
-          Python版デモアプリへ
-        </a>
-        <a
-          href="http://localhost:5001/"
-          className="text-sm text-slate-400 underline decoration-dotted transition hover:text-slate-200"
-        >
-          Rust版デモアプリへ
-        </a>
-        <a
-          href="http://localhost:5002/"
-          className="text-sm text-slate-400 underline decoration-dotted transition hover:text-slate-200"
-        >
-          Go版デモアプリへ
+          ホームへ戻る
         </a>
       </nav>
     </div>

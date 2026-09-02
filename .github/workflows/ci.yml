@@ -14,14 +14,19 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: vite-demo/package-lock.json
 
       - run: npm ci
+        working-directory: vite-demo
 
       - name: 静的解析 (ESLint)
         run: npm run lint
+        working-directory: vite-demo
 
       - name: 単体テスト (Vitest)
         run: npm run test
+        working-directory: vite-demo
 
       - name: ビルド確認
         run: npm run build
+        working-directory: vite-demo
