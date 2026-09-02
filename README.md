@@ -55,8 +55,7 @@ npm run lint
 ## カウンターデモアプリ（Python版）
 
 Flask で作られた同じカウンターデモアプリです（[python-demo](python-demo)）。
-ホーム画面から Vite 版デモアプリへ、Vite 版デモアプリからも Python 版へ
-それぞれ移動できます。
+各デモアプリの画面下部から、他の言語版デモアプリへそれぞれ移動できます。
 
 ### セットアップ手順
 
@@ -71,5 +70,46 @@ python app.py
 ```
 
 ブラウザで http://localhost:5000 を開くと、Python版のカウンターデモが表示されます。
-（Vite版デモアプリは http://localhost:5173 で起動している前提でリンクしています）
+
+## カウンターデモアプリ（Rust版）
+
+axum で作られた同じカウンターデモアプリです（[rust-demo](rust-demo)）。
+
+### セットアップ手順
+
+```bash
+cd rust-demo
+
+# 依存パッケージの取得とサーバー起動
+cargo run
+```
+
+ブラウザで http://localhost:5001 を開くと、Rust版のカウンターデモが表示されます。
+
+## カウンターデモアプリ（Go版）
+
+標準ライブラリの `net/http` だけで作られた同じカウンターデモアプリです（[go-demo](go-demo)）。
+
+### セットアップ手順
+
+```bash
+cd go-demo
+
+# サーバー起動
+go run .
+```
+
+ブラウザで http://localhost:5002 を開くと、Go版のカウンターデモが表示されます。
+
+---
+
+各デモアプリは以下のポートで動作する前提で、互いにリンクしています。
+すべて同時に起動しておくと、画面下部のリンクから行き来できます。
+
+| デモ | ディレクトリ | ポート |
+| --- | --- | --- |
+| Vite (React) | [/](.) | 5173 |
+| Python (Flask) | [python-demo](python-demo) | 5000 |
+| Rust (axum) | [rust-demo](rust-demo) | 5001 |
+| Go (net/http) | [go-demo](go-demo) | 5002 |
 

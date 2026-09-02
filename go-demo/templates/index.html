@@ -3,14 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>カウンターデモ (Python版)</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}"
-    />
+    <title>カウンターデモ (Go版)</title>
+    <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <h1>カウンターデモ (Python版)</h1>
+    <h1>カウンターデモ (Go版)</h1>
 
     <p id="count">0</p>
 
@@ -21,8 +18,8 @@
 
     <nav class="nav">
       <a class="nav-link" href="http://localhost:5173/">Vite版デモアプリへ</a>
+      <a class="nav-link" href="http://localhost:5000/">Python版デモアプリへ</a>
       <a class="nav-link" href="http://localhost:5001/">Rust版デモアプリへ</a>
-      <a class="nav-link" href="http://localhost:5002/">Go版デモアプリへ</a>
     </nav>
 
     <script>
