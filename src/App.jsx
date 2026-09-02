@@ -25,6 +25,13 @@ function App() {
           リセット
         </button>
       </div>
+
+      <a
+        href="http://localhost:5000/"
+        className="text-sm text-slate-400 underline decoration-dotted transition hover:text-slate-200"
+      >
+        Python版デモアプリへ
+      </a>
     </div>
   )
 }
