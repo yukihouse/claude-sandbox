@@ -15,6 +15,18 @@ updates:
       interval: 'weekly'
     open-pull-requests-limit: 10
 
+  - package-ecosystem: 'gomod'
+    directory: '/go-demo'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: 'cargo'
+    directory: '/rust-demo'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 10
+
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
