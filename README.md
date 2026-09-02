@@ -52,3 +52,24 @@ npm run lint
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
 静的解析・単体テスト・ビルドの3つを検証します。
 
+## カウンターデモアプリ（Python版）
+
+Flask で作られた同じカウンターデモアプリです（[python-demo](python-demo)）。
+ホーム画面から Vite 版デモアプリへ、Vite 版デモアプリからも Python 版へ
+それぞれ移動できます。
+
+### セットアップ手順
+
+```bash
+cd python-demo
+
+# 依存パッケージをインストール
+pip install -r requirements.txt
+
+# 開発サーバーを起動
+python app.py
+```
+
+ブラウザで http://localhost:5000 を開くと、Python版のカウンターデモが表示されます。
+（Vite版デモアプリは http://localhost:5173 で起動している前提でリンクしています）
+
