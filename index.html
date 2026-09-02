@@ -3,10 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>カウンターデモ</title>
+    <title>カウンターデモ集</title>
+    <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <h1>カウンターデモ集</h1>
+    <p class="lead">
+      同じ「カウンター」アプリを複数の言語・フレームワークで実装したデモです。
+      各カードから、それぞれのデモアプリ（あらかじめ起動しておく必要があります）へ移動できます。
+    </p>
+
+    <div class="cards">
+      <a class="card" href="http://localhost:5173/">
+        <h2>Vite (React)</h2>
+        <p>React + Vite + Tailwind CSS</p>
+        <span class="port">http://localhost:5173/</span>
+      </a>
+
+      <a class="card" href="http://localhost:5000/">
+        <h2>Python (Flask)</h2>
+        <p>Flask</p>
+        <span class="port">http://localhost:5000/</span>
+      </a>
+
+      <a class="card" href="http://localhost:5001/">
+        <h2>Rust (axum)</h2>
+        <p>axum</p>
+        <span class="port">http://localhost:5001/</span>
+      </a>
+
+      <a class="card" href="http://localhost:5002/">
+        <h2>Go (net/http)</h2>
+        <p>標準ライブラリ net/http</p>
+        <span class="port">http://localhost:5002/</span>
+      </a>
+    </div>
   </body>
 </html>

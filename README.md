@@ -1,14 +1,57 @@
 # claude-sandbox
 claude code向けのsandbox
 
-## カウンターデモアプリ
+## 構成
 
-React + Vite + Tailwind CSS で作られたシンプルなカウンターアプリです。
+同じ「カウンター」アプリを複数の言語・フレームワークで実装したデモ集です。
+各デモは `xxx-demo` フォルダの下に自己完結しており、共通の「ホーム画面」（リポジトリ
+ルートの `index.html` / `style.css`）からのみリンクされます。
+
+デモ同士が直接リンクし合うことはありません（依存方向を一方向にするため）。
+各デモは「ホームへ戻る」リンクだけを持ち、ホーム画面が全デモへのリンクを持ちます。
+
+```
+/                 ホーム画面（静的HTML、フレームワーク・ビルド不要）
+├── index.html
+└── style.css
+
+/vite-demo        Vite (React) 版
+/python-demo      Python (Flask) 版
+/rust-demo        Rust (axum) 版
+/go-demo          Go (net/http) 版
+```
+
+新しい言語のデモを追加する場合は、
+
+1. その言語用の `xxx-demo` フォルダを追加し、ホーム画面への「戻る」リンクだけを持たせる
+2. ホーム画面（`index.html`）にそのデモへのリンクカードを1つ追加する
+
+の2箇所を変更するだけで完結します。既存デモやホーム画面のロジックには手を入れません。
+
+## ホーム画面
+
+フレームワークやビルドツールに依存しない、素の HTML/CSS のみで作られた静的ページです。
+どの言語のデモにも肩入れしないよう、あえて特定の言語ランタイムを要求しない構成にしています。
+
+### 起動方法
+
+```bash
+# リポジトリルートで、任意の静的サーバーを使って起動します
+python3 -m http.server 8080
+```
+
+ブラウザで http://localhost:8080 を開くと、各デモへのリンク一覧が表示されます。
+
+## カウンターデモアプリ（Vite / React版）
+
+React + Vite + Tailwind CSS で作られたシンプルなカウンターアプリです（[vite-demo](vite-demo)）。
 ボタンを押すとカウントがリアルタイムで増加します。
 
 ### セットアップ手順
 
 ```bash
+cd vite-demo
+
 # 依存パッケージをインストール
 npm install
 
@@ -22,6 +65,8 @@ npm run dev
 ### ビルド
 
 ```bash
+cd vite-demo
+
 # 本番用ビルド
 npm run build
 
@@ -37,12 +82,14 @@ npm run preview
 ### 単体テスト
 
 ```bash
+cd vite-demo
 npm run test
 ```
 
 ### 静的解析（ESLint）
 
 ```bash
+cd vite-demo
 npm run lint
 ```
 
@@ -50,12 +97,11 @@ npm run lint
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-静的解析・単体テスト・ビルドの3つを検証します。
+`vite-demo` に対して静的解析・単体テスト・ビルドの3つを検証します。
 
 ## カウンターデモアプリ（Python版）
 
 Flask で作られた同じカウンターデモアプリです（[python-demo](python-demo)）。
-各デモアプリの画面下部から、他の言語版デモアプリへそれぞれ移動できます。
 
 ### セットアップ手順
 
@@ -103,13 +149,13 @@ go run .
 
 ---
 
-各デモアプリは以下のポートで動作する前提で、互いにリンクしています。
-すべて同時に起動しておくと、画面下部のリンクから行き来できます。
+各デモアプリは以下のポートで動作する前提です。
+ホーム画面も含めてすべて同時に起動しておくと、ホーム画面からリンクを辿って行き来できます。
 
 | デモ | ディレクトリ | ポート |
 | --- | --- | --- |
-| Vite (React) | [/](.) | 5173 |
+| ホーム画面 | [/](.) | 8080 |
+| Vite (React) | [vite-demo](vite-demo) | 5173 |
 | Python (Flask) | [python-demo](python-demo) | 5000 |
 | Rust (axum) | [rust-demo](rust-demo) | 5001 |
 | Go (net/http) | [go-demo](go-demo) | 5002 |
-
