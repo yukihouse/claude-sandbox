@@ -5,7 +5,32 @@ on:
     branches: [main]
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      vite: ${{ steps.filter.outputs.vite }}
+      go: ${{ steps.filter.outputs.go }}
+      csharp: ${{ steps.filter.outputs.csharp }}
+      typescript: ${{ steps.filter.outputs.typescript }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            vite:
+              - 'vite-demo/**'
+            go:
+              - 'go-demo/**'
+            csharp:
+              - 'csharp-demo/**'
+            typescript:
+              - 'typescript-demo/**'
+
   test-and-lint:
+    needs: changes
+    if: needs.changes.outputs.vite == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -32,6 +57,8 @@ jobs:
         working-directory: vite-demo
 
   go-demo:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -54,6 +81,8 @@ jobs:
         working-directory: go-demo
 
   csharp-demo:
+    needs: changes
+    if: needs.changes.outputs.csharp == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -67,6 +96,8 @@ jobs:
         working-directory: csharp-demo/CsharpDemo.Tests
 
   typescript-demo:
+    needs: changes
+    if: needs.changes.outputs.typescript == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
