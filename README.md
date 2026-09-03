@@ -21,6 +21,7 @@ claude code向けのsandbox
 /go-demo          Go (net/http) 版
 /csharp-demo      C# (ASP.NET Core) 版
 /typescript-demo  TypeScript (Deno) 版
+/zig-demo         Zig (std.net) 版
 ```
 
 新しい言語のデモを追加する場合は、
@@ -220,6 +221,44 @@ deno task test
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
 `typescript-demo` に対して型チェック・単体テストを検証します。
 
+## カウンターデモアプリ（Zig版）
+
+Zig 標準ライブラリの `std.net` だけで作られた同じカウンターデモアプリです
+（[zig-demo](zig-demo)）。**Zig 0.15系を対象にしています。**
+
+> **Note:** Zig 0.16（現行の最新安定版）では `std.net` 自体が撤廃され、
+> `std.Io.net` という新しいI/O抽象化（vtableベース）に置き換わっています。
+> Homebrewなどで入る `zig` コマンドが既に 0.16 系になっている場合はこのまま動かず、
+> [zigup](https://github.com/marler8997/zigup) や
+> [zvm](https://www.zvm.app/) などのバージョン管理ツール、
+> または [ziglang.org/download](https://ziglang.org/download/) から
+> 0.15系のバイナリを別途用意してください（例:
+> `brew install zig@0.15 && brew link zig@0.15`）。
+
+### セットアップ手順
+
+```bash
+cd zig-demo
+
+# サーバー起動
+zig run src/main.zig
+```
+
+ブラウザで http://localhost:5005 を開くと、Zig版のカウンターデモが表示されます。
+
+### 単体テスト
+
+```bash
+cd zig-demo
+zig test src/main.zig
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`zig-demo` に対して単体テストを検証します。
+
 ---
 
 各デモアプリは以下のポートで動作する前提です。
@@ -234,3 +273,4 @@ deno task test
 | Go (net/http) | [go-demo](go-demo) | 5002 |
 | C# (ASP.NET Core) | [csharp-demo](csharp-demo) | 5003 |
 | TypeScript (Deno) | [typescript-demo](typescript-demo) | 5004 |
+| Zig (std.net) | [zig-demo](zig-demo) | 5005 |
