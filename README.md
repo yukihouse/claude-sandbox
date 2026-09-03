@@ -112,13 +112,26 @@ Flask で作られた同じカウンターデモアプリです（[python-demo](
 cd python-demo
 
 # 依存パッケージをインストール
-pip install -r requirements.txt
+uv sync
 
 # 開発サーバーを起動
-python app.py
+uv run python app.py
 ```
 
 ブラウザで http://localhost:5000 を開くと、Python版のカウンターデモが表示されます。
+
+### 単体テスト
+
+```bash
+cd python-demo
+uv run pytest
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`python-demo` に対して単体テストを検証します。
 
 ## カウンターデモアプリ（Rust版）
 

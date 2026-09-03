@@ -12,6 +12,7 @@ jobs:
       go: ${{ steps.filter.outputs.go }}
       csharp: ${{ steps.filter.outputs.csharp }}
       typescript: ${{ steps.filter.outputs.typescript }}
+      python: ${{ steps.filter.outputs.python }}
       zig: ${{ steps.filter.outputs.zig }}
     steps:
       - uses: actions/checkout@v7
@@ -28,6 +29,8 @@ jobs:
               - 'csharp-demo/**'
             typescript:
               - 'typescript-demo/**'
+            python:
+              - 'python-demo/**'
             zig:
               - 'zig-demo/**'
 
@@ -116,6 +119,24 @@ jobs:
       - name: 単体テスト
         run: deno task test
         working-directory: typescript-demo
+
+  python-demo:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          working-directory: python-demo
+
+      - run: uv sync --locked
+        working-directory: python-demo
+
+      - name: 単体テスト
+        run: uv run pytest
+        working-directory: python-demo
 
   zig-demo:
     needs: changes
