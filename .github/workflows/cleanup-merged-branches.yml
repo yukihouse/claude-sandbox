@@ -70,11 +70,19 @@ jobs:
               if (name === defaultBranch || protectedBranches.includes(name)) continue;
               if (branchesWithOpenPR.has(name)) continue;
 
-              // このブランチをheadとするマージ済みPRを検索
-              const { data: searchResult } = await github.rest.search.issuesAndPullRequests({
-                q: `repo:${context.repo.owner}/${context.repo.repo} type:pr is:merged head:${name}`,
+              // このブランチをheadとするPRを取得し、現在のブランチ先頭コミットが
+              // マージされたものと一致する場合のみ削除対象とする
+              // (ブランチ名が再利用され、過去の別PRだけがマージ済みというケースを除外するため)
+              const matchingPRs = await github.paginate(github.rest.pulls.list, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'closed',
+                head: `${context.repo.owner}:${name}`,
               });
-              if (searchResult.total_count === 0) continue;
+              const isMerged = matchingPRs.some(
+                (pr) => pr.merged_at && pr.head.sha === branch.commit.sha
+              );
+              if (!isMerged) continue;
 
               try {
                 await github.rest.git.deleteRef({
