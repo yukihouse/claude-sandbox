@@ -9,7 +9,35 @@ on:
     - cron: '0 3 * * 1'
 
 jobs:
+  changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      languages: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            javascript-typescript:
+              - 'vite-demo/**'
+              - 'typescript-demo/**'
+            python:
+              - 'python-demo/**'
+            go:
+              - 'go-demo/**'
+            rust:
+              - 'rust-demo/**'
+
   analyze:
+    needs: changes
+    if: |
+      always() &&
+      needs.changes.result != 'failure' &&
+      needs.changes.result != 'cancelled' &&
+      (github.event_name != 'pull_request' || needs.changes.outputs.languages != '[]')
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
     permissions:
@@ -19,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript-typescript', 'python', 'go', 'rust']
+        language: ${{ github.event_name == 'pull_request' && fromJSON(needs.changes.outputs.languages) || fromJSON('["javascript-typescript", "python", "go", "rust"]') }}
 
     steps:
       - uses: actions/checkout@v7
