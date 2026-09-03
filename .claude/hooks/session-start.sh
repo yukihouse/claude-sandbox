@@ -9,7 +9,7 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
 fi
 
 # --- .NET SDK (needed by csharp-demo) ---------------------------------
-DOTNET_VERSION="8.0"
+DOTNET_VERSION="10.0"
 
 if ! command -v dotnet >/dev/null 2>&1; then
   echo "Installing .NET SDK ${DOTNET_VERSION} via apt..."
