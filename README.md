@@ -21,7 +21,6 @@ claude code向けのsandbox
 /go-demo          Go (net/http) 版
 /csharp-demo      C# (ASP.NET Core) 版
 /typescript-demo  TypeScript (Deno) 版
-/zig-demo         Zig (std.net) 版
 ```
 
 新しい言語のデモを追加する場合は、
@@ -150,11 +149,22 @@ go run .
 
 ブラウザで http://localhost:5002 を開くと、Go版のカウンターデモが表示されます。
 
+### 単体テスト
+
+```bash
+cd go-demo
+go test ./...
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`go-demo` に対して静的解析・単体テスト・ビルドの3つを検証します。
+
 ## カウンターデモアプリ（C#版）
 
 ASP.NET Core（Minimal API）で作られた同じカウンターデモアプリです（[csharp-demo](csharp-demo)）。
-
-> **Note:** この環境には `dotnet` SDK が無いため、実際の起動確認はできていません。
 
 ### セットアップ手順
 
@@ -167,13 +177,24 @@ dotnet run
 
 ブラウザで http://localhost:5003 を開くと、C#版のカウンターデモが表示されます。
 
+### 単体テスト
+
+```bash
+cd csharp-demo/CsharpDemo.Tests
+dotnet test
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`csharp-demo` に対して単体テストを検証します。
+
 ## カウンターデモアプリ（TypeScript版）
 
 Deno（`Deno.serve`）で作られた同じカウンターデモアプリです（[typescript-demo](typescript-demo)）。
 Node.js版のフロントエンドである Vite 版とは異なり、サーバーサイドを TypeScript で
 書いたバックエンド実装です。
-
-> **Note:** この環境には `deno` が無いため、実際の起動確認はできていません。
 
 ### セットアップ手順
 
@@ -186,24 +207,18 @@ deno task start
 
 ブラウザで http://localhost:5004 を開くと、TypeScript版のカウンターデモが表示されます。
 
-## カウンターデモアプリ（Zig版）
-
-Zig 標準ライブラリの `std.net` だけで作られた同じカウンターデモアプリです
-（[zig-demo](zig-demo)）。Zig 0.13系を想定しています。`std.net` 周りのAPIは
-バージョンによって変わることがあるため、手元の環境で動かない場合は適宜読み替えてください。
-
-> **Note:** この環境には `zig` が無いため、実際の起動確認はできていません。
-
-### セットアップ手順
+### 単体テスト
 
 ```bash
-cd zig-demo
-
-# サーバー起動
-zig run src/main.zig
+cd typescript-demo
+deno task test
 ```
 
-ブラウザで http://localhost:5005 を開くと、Zig版のカウンターデモが表示されます。
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`typescript-demo` に対して型チェック・単体テストを検証します。
 
 ---
 
@@ -219,4 +234,3 @@ zig run src/main.zig
 | Go (net/http) | [go-demo](go-demo) | 5002 |
 | C# (ASP.NET Core) | [csharp-demo](csharp-demo) | 5003 |
 | TypeScript (Deno) | [typescript-demo](typescript-demo) | 5004 |
-| Zig (std.net) | [zig-demo](zig-demo) | 5005 |

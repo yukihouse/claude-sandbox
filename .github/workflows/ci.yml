@@ -30,3 +30,55 @@ jobs:
       - name: ビルド確認
         run: npm run build
         working-directory: vite-demo
+
+  go-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: false
+
+      - name: 静的解析 (go vet)
+        run: go vet ./...
+        working-directory: go-demo
+
+      - name: 単体テスト
+        run: go test ./...
+        working-directory: go-demo
+
+      - name: ビルド確認
+        run: go build ./...
+        working-directory: go-demo
+
+  csharp-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 単体テスト
+        run: dotnet test
+        working-directory: csharp-demo/CsharpDemo.Tests
+
+  typescript-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: 型チェック
+        run: deno check server.ts
+        working-directory: typescript-demo
+
+      - name: 単体テスト
+        run: deno task test
+        working-directory: typescript-demo

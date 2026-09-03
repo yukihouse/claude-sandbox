@@ -8,4 +8,10 @@
     <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="CsharpDemo.Tests/**" />
+    <Content Remove="CsharpDemo.Tests/**" />
+    <None Remove="CsharpDemo.Tests/**" />
+  </ItemGroup>
+
 </Project>

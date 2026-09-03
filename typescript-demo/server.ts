@@ -17,7 +17,7 @@ async function serveStatic(path: string): Promise<Response> {
   }
 }
 
-Deno.serve({ port: PORT }, (req: Request) => {
+export function handler(req: Request): Promise<Response> {
   const { pathname } = new URL(req.url);
 
   if (pathname === "/" || pathname === "/index.html") {
@@ -28,7 +28,10 @@ Deno.serve({ port: PORT }, (req: Request) => {
     return serveStatic("./static/style.css");
   }
 
-  return new Response("Not Found", { status: 404 });
-});
+  return Promise.resolve(new Response("Not Found", { status: 404 }));
+}
 
-console.log(`Listening on http://localhost:${PORT}`);
+if (import.meta.main) {
+  Deno.serve({ port: PORT }, handler);
+  console.log(`Listening on http://localhost:${PORT}`);
+}
