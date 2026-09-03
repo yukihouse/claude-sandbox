@@ -148,6 +148,19 @@ cargo run
 
 ブラウザで http://localhost:5001 を開くと、Rust版のカウンターデモが表示されます。
 
+### 単体テスト
+
+```bash
+cd rust-demo
+cargo test
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`rust-demo` に対して静的解析・単体テスト・ビルドの3つを検証します。
+
 ## カウンターデモアプリ（Go版）
 
 標準ライブラリの `net/http` だけで作られた同じカウンターデモアプリです（[go-demo](go-demo)）。
