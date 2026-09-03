@@ -13,6 +13,7 @@ jobs:
       csharp: ${{ steps.filter.outputs.csharp }}
       typescript: ${{ steps.filter.outputs.typescript }}
       python: ${{ steps.filter.outputs.python }}
+      zig: ${{ steps.filter.outputs.zig }}
     steps:
       - uses: actions/checkout@v7
 
@@ -30,6 +31,8 @@ jobs:
               - 'typescript-demo/**'
             python:
               - 'python-demo/**'
+            zig:
+              - 'zig-demo/**'
 
   test-and-lint:
     needs: changes
@@ -134,3 +137,22 @@ jobs:
       - name: 単体テスト
         run: uv run pytest
         working-directory: python-demo
+
+  zig-demo:
+    needs: changes
+    if: needs.changes.outputs.zig == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Zig 0.15.2 をインストール
+        run: |
+          url=$(curl -fsSL https://ziglang.org/download/index.json | jq -r '.["0.15.2"]["x86_64-linux"].tarball')
+          curl -fsSL "$url" -o /tmp/zig.tar.xz
+          top_dir=$(tar -tf /tmp/zig.tar.xz | head -1 | cut -d/ -f1)
+          tar -xf /tmp/zig.tar.xz -C /tmp
+          echo "/tmp/$top_dir" >> "$GITHUB_PATH"
+
+      - name: 単体テスト
+        run: zig test src/main.zig
+        working-directory: zig-demo
