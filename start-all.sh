@@ -11,6 +11,11 @@
 
 set -u
 
+# ジョブコントロールを有効にし、バックグラウンドで起動する各デモを
+# それぞれ専用のプロセスグループにする（`kill -- -$pid` でグループごと
+# 停止するため）。setsid コマンドは macOS 標準では入っていないため使わない。
+set -m
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$ROOT_DIR/logs"
 PIDS=()
@@ -43,7 +48,7 @@ mkdir -p "$LOG_DIR"
 cleanup() {
   echo
   echo "全プロセスを停止しています..."
-  # setsid で各デモを専用のプロセスグループとして起動しているため、
+  # 各デモを専用のプロセスグループとして起動しているため、
   # グループごと (npm が起動する vite の子プロセスなども含めて) 停止する。
   for pid in "${PIDS[@]}"; do
     kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
@@ -66,7 +71,7 @@ start() {
     return
   fi
 
-  setsid bash -c "cd '$ROOT_DIR/$dir' && $cmd" >"$LOG_DIR/$name.log" 2>&1 &
+  bash -c "cd '$ROOT_DIR/$dir' && $cmd" >"$LOG_DIR/$name.log" 2>&1 &
 
   local pid=$!
   PIDS+=("$pid")
