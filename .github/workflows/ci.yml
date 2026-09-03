@@ -14,6 +14,7 @@ jobs:
       typescript: ${{ steps.filter.outputs.typescript }}
       python: ${{ steps.filter.outputs.python }}
       zig: ${{ steps.filter.outputs.zig }}
+      rust: ${{ steps.filter.outputs.rust }}
     steps:
       - uses: actions/checkout@v7
 
@@ -33,6 +34,8 @@ jobs:
               - 'python-demo/**'
             zig:
               - 'zig-demo/**'
+            rust:
+              - 'rust-demo/**'
 
   test-and-lint:
     needs: changes
@@ -156,3 +159,22 @@ jobs:
       - name: 単体テスト
         run: zig test src/main.zig
         working-directory: zig-demo
+
+  rust-demo:
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 静的解析 (Clippy)
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: rust-demo
+
+      - name: 単体テスト
+        run: cargo test
+        working-directory: rust-demo
+
+      - name: ビルド確認
+        run: cargo build
+        working-directory: rust-demo
