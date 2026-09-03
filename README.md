@@ -109,11 +109,32 @@ cd vite-demo
 npm run lint
 ```
 
+### E2Eテスト（Playwright）
+
+実際のブラウザ（Chromium）でデモアプリを操作し、動作確認を自動化するE2Eテストです。
+Playwright が開発サーバー（`npm run dev`）を自動で起動・停止するため、事前にサーバーを
+立ち上げておく必要はありません。
+
+```bash
+cd vite-demo
+
+# 初回のみ: テストで使うブラウザをインストール
+npx playwright install --with-deps chromium
+
+# E2Eテストを実行
+npm run test:e2e
+```
+
+`npm run test`（Vitest + Testing Library）が仮想DOM上でコンポーネントの振る舞いを
+検証するのに対し、こちらは実際に起動したアプリに対してブラウザから「+1」「リセット」
+ボタンをクリックし、画面表示やリンク遷移までを含めて確認します。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`vite-demo` に対して静的解析・単体テスト・ビルドの3つを検証します。
+`vite-demo` に対して静的解析・単体テスト・ビルド・E2Eテスト（Playwright）の
+4つを検証します。
 
 ## カウンターデモアプリ（Python版）
 
