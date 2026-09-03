@@ -20,10 +20,13 @@ fi
 # --- Zig ----------------------------------------------------------------
 # ziglang.org and GitHub release assets are not reachable from this
 # sandbox's network policy, so we install the official prebuilt binary
-# distributed as a PyPI wheel (pypi.org is allowlisted) instead.
-if ! command -v zig >/dev/null 2>&1; then
-  echo "Installing Zig via the ziglang PyPI package..."
-  python3 -m pip install --quiet --user ziglang
+# distributed as a PyPI wheel (pypi.org is allowlisted) instead. Pinned
+# to match the version zig-demo's CI installs (.github/workflows/ci.yml).
+ZIG_VERSION="0.15.2"
+
+if [ "$(zig version 2>/dev/null || true)" != "$ZIG_VERSION" ]; then
+  echo "Installing Zig ${ZIG_VERSION} via the ziglang PyPI package..."
+  python3 -m pip install --quiet --user "ziglang==${ZIG_VERSION}"
 
   ZIG_SHIM="$HOME/.local/bin/zig"
   mkdir -p "$(dirname "$ZIG_SHIM")"
