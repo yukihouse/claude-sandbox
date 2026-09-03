@@ -31,7 +31,7 @@ Usage: ./start-all.sh
 
   ホーム画面           http://localhost:8080
   Vite (React)         http://localhost:5173
-  Python (Flask)       http://localhost:5000
+  Python (Flask)       http://127.0.0.1:5000  (macOSではAirPlay受信機能とのポート衝突を避けるため localhost ではなく 127.0.0.1 を使ってください)
   Rust (axum)          http://localhost:5001
   Go (net/http)        http://localhost:5002
   C# (ASP.NET Core)    http://localhost:5003
