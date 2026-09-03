@@ -234,8 +234,6 @@ Zig 標準ライブラリの `std.net` だけで作られた同じカウンタ�
 > または [ziglang.org/download](https://ziglang.org/download/) から
 > 0.15系のバイナリを別途用意してください。
 
-> **Note:** この環境には `zig` が無いため、実際の起動確認はできていません。
-
 ### セットアップ手順
 
 ```bash
@@ -246,6 +244,19 @@ zig run src/main.zig
 ```
 
 ブラウザで http://localhost:5005 を開くと、Zig版のカウンターデモが表示されます。
+
+### 単体テスト
+
+```bash
+cd zig-demo
+zig test src/main.zig
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`zig-demo` に対して単体テストを検証します。
 
 ---
 

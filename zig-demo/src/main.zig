@@ -73,3 +73,19 @@ fn writeResponse(stream: std.net.Stream, status: []const u8, content_type: []con
     try stream.writeAll(header);
     try stream.writeAll(body);
 }
+
+const testing = std.testing;
+
+test "requestPath extracts the root path" {
+    const path = requestPath("GET / HTTP/1.1\r\nHost: localhost\r\n\r\n");
+    try testing.expectEqualStrings("/", path.?);
+}
+
+test "requestPath extracts a nested path" {
+    const path = requestPath("GET /style.css HTTP/1.1\r\n");
+    try testing.expectEqualStrings("/style.css", path.?);
+}
+
+test "requestPath returns null when there is no method/path separator" {
+    try testing.expect(requestPath("garbage") == null);
+}
