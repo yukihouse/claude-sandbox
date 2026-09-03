@@ -21,6 +21,7 @@ claude code向けのsandbox
 /go-demo          Go (net/http) 版
 /csharp-demo      C# (ASP.NET Core) 版
 /typescript-demo  TypeScript (Deno) 版
+/zig-demo         Zig (std.net) 版
 ```
 
 新しい言語のデモを追加する場合は、
@@ -220,6 +221,24 @@ deno task test
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
 `typescript-demo` に対して型チェック・単体テストを検証します。
 
+## カウンターデモアプリ（Zig版）
+
+Zig 標準ライブラリの `std.net` だけで作られた同じカウンターデモアプリです
+（[zig-demo](zig-demo)）。Zig 0.16系を想定しています。
+
+> **Note:** この環境には `zig` が無いため、実際の起動確認はできていません。
+
+### セットアップ手順
+
+```bash
+cd zig-demo
+
+# サーバー起動
+zig run src/main.zig
+```
+
+ブラウザで http://localhost:5005 を開くと、Zig版のカウンターデモが表示されます。
+
 ---
 
 各デモアプリは以下のポートで動作する前提です。
@@ -234,3 +253,4 @@ deno task test
 | Go (net/http) | [go-demo](go-demo) | 5002 |
 | C# (ASP.NET Core) | [csharp-demo](csharp-demo) | 5003 |
 | TypeScript (Deno) | [typescript-demo](typescript-demo) | 5004 |
+| Zig (std.net) | [zig-demo](zig-demo) | 5005 |
