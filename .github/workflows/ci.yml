@@ -126,9 +126,11 @@ jobs:
 
       - name: Zig 0.15.2 をインストール
         run: |
-          curl -fsSL https://ziglang.org/download/0.15.2/zig-linux-x86_64-0.15.2.tar.xz -o /tmp/zig.tar.xz
+          url=$(curl -fsSL https://ziglang.org/download/index.json | jq -r '.["0.15.2"]["x86_64-linux"].tarball')
+          curl -fsSL "$url" -o /tmp/zig.tar.xz
+          top_dir=$(tar -tf /tmp/zig.tar.xz | head -1 | cut -d/ -f1)
           tar -xf /tmp/zig.tar.xz -C /tmp
-          echo "/tmp/zig-linux-x86_64-0.15.2" >> "$GITHUB_PATH"
+          echo "/tmp/$top_dir" >> "$GITHUB_PATH"
 
       - name: 単体テスト
         run: zig test src/main.zig
