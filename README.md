@@ -226,13 +226,14 @@ deno task test
 Zig 標準ライブラリの `std.net` だけで作られた同じカウンターデモアプリです
 （[zig-demo](zig-demo)）。**Zig 0.15系を対象にしています。**
 
-> **Note:** Zig 0.16（開発版）では `std.net` 自体が撤廃され、`std.Io` という
-> 新しいI/O抽象化に置き換わる作業が進行中です（まだ仕様が固まっていません）。
-> Homebrewの `zig` が 0.16系の開発スナップショットを指している場合は動きません。
+> **Note:** Zig 0.16（現行の最新安定版）では `std.net` 自体が撤廃され、
+> `std.Io.net` という新しいI/O抽象化（vtableベース）に置き換わっています。
+> Homebrewなどで入る `zig` コマンドが既に 0.16 系になっている場合はこのまま動かず、
 > [zigup](https://github.com/marler8997/zigup) や
 > [zvm](https://www.zvm.app/) などのバージョン管理ツール、
 > または [ziglang.org/download](https://ziglang.org/download/) から
-> 0.15系のバイナリを別途用意してください。
+> 0.15系のバイナリを別途用意してください（例:
+> `brew install zig@0.15 && brew link zig@0.15`）。
 
 ### セットアップ手順
 
