@@ -121,6 +121,16 @@ cd vite-demo
 npm run test
 ```
 
+### カバレッジ確認
+
+```bash
+cd vite-demo
+npm run test:coverage
+```
+
+Vitest（v8プロバイダ）でカバレッジを計測し、ターミナルにサマリーを表示します。
+詳細は `vite-demo/coverage/index.html` を開くと確認できます。
+
 ### 静的解析（ESLint）
 
 ```bash
@@ -152,8 +162,8 @@ npm run test:e2e
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`vite-demo` に対して静的解析・単体テスト・ビルド・E2Eテスト（Playwright）の
-4つを検証します。
+`vite-demo` に対して静的解析・単体テスト（カバレッジ計測込み）・ビルド・
+E2Eテスト（Playwright）の4つを検証します。
 
 ## カウンターデモアプリ（Python版）
 
@@ -186,11 +196,14 @@ cd python-demo
 uv run pytest
 ```
 
+`pytest-cov` により、テスト実行のたびにカバレッジのサマリー（`--cov-report=term-missing`）
+がターミナルに表示されます。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`python-demo` に対して単体テストを検証します。
+`python-demo` に対して単体テスト（カバレッジ計測込み）を検証します。
 
 ### GUIライブラリ版
 
@@ -215,7 +228,8 @@ uv run python app.py
 
 ブラウザで http://127.0.0.1:5007 を開くと、Gradio版のカウンターデモが表示されます。
 
-単体テストは `cd python-demo/gradio-ver && uv run pytest` で実行できます。
+単体テストは `cd python-demo/gradio-ver && uv run pytest` で実行できます
+（`pytest-cov` によりカバレッジのサマリーも表示されます）。
 
 #### NiceGUI版
 
@@ -233,7 +247,8 @@ uv run python app.py
 
 ブラウザで http://127.0.0.1:5008 を開くと、NiceGUI版のカウンターデモが表示されます。
 
-単体テストは `cd python-demo/nicegui-ver && uv run pytest` で実行できます。
+単体テストは `cd python-demo/nicegui-ver && uv run pytest` で実行できます
+（`pytest-cov` によりカバレッジのサマリーも表示されます）。
 
 #### CI（GUIライブラリ版）
 
@@ -263,11 +278,25 @@ cd rust-demo
 cargo test
 ```
 
+### カバレッジ確認
+
+```bash
+# 初回のみ: cargo-llvm-cov をインストール
+cargo install cargo-llvm-cov
+
+cd rust-demo
+cargo llvm-cov --summary-only
+```
+
+HTMLレポートが欲しい場合は `cargo llvm-cov --html` を実行すると
+`target/llvm-cov/html/index.html` に出力されます。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`rust-demo` に対して静的解析・単体テスト・ビルドの3つを検証します。
+`rust-demo` に対して静的解析・単体テスト（カバレッジ計測込み）・ビルドの
+3つを検証します。
 
 ## カウンターデモアプリ（Go版）
 
@@ -291,11 +320,22 @@ cd go-demo
 go test ./...
 ```
 
+### カバレッジ確認
+
+```bash
+cd go-demo
+go test ./... -cover
+```
+
+より詳細な行単位のレポートは `go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out`
+で確認できます。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`go-demo` に対して静的解析・単体テスト・ビルドの3つを検証します。
+`go-demo` に対して静的解析・単体テスト（カバレッジ計測込み）・ビルドの
+3つを検証します。
 
 ## カウンターデモアプリ（C#版）
 
@@ -319,11 +359,29 @@ cd csharp-demo/CsharpDemo.Tests
 dotnet test
 ```
 
+### カバレッジ確認
+
+```bash
+cd csharp-demo
+dotnet test CsharpDemo.Tests --collect:"XPlat Code Coverage" --results-directory CsharpDemo.Tests/TestResults
+
+# 初回のみ: レポート集計ツールをインストール
+dotnet tool restore
+
+# Cobertura形式のXMLをテキストサマリーに変換
+dotnet tool run reportgenerator "-reports:CsharpDemo.Tests/TestResults/**/coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:TextSummary"
+cat coveragereport/Summary.txt
+```
+
+`coverlet.collector`（`CsharpDemo.Tests` に導入済み）でカバレッジを収集し、
+`dotnet-reportgenerator-globaltool`（`csharp-demo/.config/dotnet-tools.json` で管理）で
+人が読めるサマリーに変換しています。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`csharp-demo` に対して単体テストを検証します。
+`csharp-demo` に対して単体テスト（カバレッジ計測込み）を検証します。
 
 ## カウンターデモアプリ（TypeScript版）
 
@@ -349,11 +407,21 @@ cd typescript-demo
 deno task test
 ```
 
+### カバレッジ確認
+
+```bash
+cd typescript-demo
+deno task test:coverage
+```
+
+Deno 標準搭載のカバレッジ計測機能（`deno test --coverage` / `deno coverage`）を使い、
+ファイルごとのカバレッジ率をターミナルに表示します。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`typescript-demo` に対して型チェック・単体テストを検証します。
+`typescript-demo` に対して型チェック・単体テスト（カバレッジ計測込み）を検証します。
 
 ## カウンターデモアプリ（Zig版）
 
@@ -386,6 +454,13 @@ zig run src/main.zig
 cd zig-demo
 zig test src/main.zig
 ```
+
+> **Note:** Zig にはカバレッジ計測が標準搭載されていないため、本デモではCIに
+> カバレッジ計測を組み込んでいません。手元で確認したい場合は
+> [kcov](https://github.com/SimonKagstrom/kcov) を使って
+> `zig test src/main.zig --test-no-exec -femit-bin=zig-out/bin/test`
+> でテストバイナリだけをビルドし、`kcov --include-pattern=src kcov-output zig-out/bin/test`
+> のように実行する方法があります。
 
 ### CI
 
@@ -424,6 +499,8 @@ cd zig-demo/zig-perf-demo
 zig test src/main.zig
 ```
 
+カバレッジ計測についてはzig-demoと同様の理由でCIに組み込んでいません（上記のNote参照）。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
@@ -452,11 +529,22 @@ cd kotlin-demo
 ./gradlew test
 ```
 
+### カバレッジ確認
+
+```bash
+cd kotlin-demo
+./gradlew koverLog
+```
+
+[Kover](https://github.com/Kotlin/kotlinx-kover) プラグインでカバレッジを計測し、
+行カバレッジ率をコンソールに表示します（テストも同時に実行されます）。
+HTMLレポートは `./gradlew koverHtmlReport` で生成できます。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`kotlin-demo` に対して単体テスト・ビルドを検証します。
+`kotlin-demo` に対して単体テスト（カバレッジ計測込み）・ビルドを検証します。
 
 ## カウンターデモアプリ（PHP版）
 
@@ -483,11 +571,23 @@ cd php-demo
 composer test
 ```
 
+### カバレッジ確認
+
+```bash
+cd php-demo
+composer run test:coverage
+```
+
+カバレッジ計測には `pcov` または `Xdebug` 拡張が必要です（未インストールの場合、
+PHPUnitが警告を出して失敗します）。CIでは `shivammathur/setup-php` で `pcov` を
+有効化しています。ローカルで試す場合は `sudo apt install php-pcov`（または
+`pecl install pcov`）などで導入してください。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`php-demo` に対して単体テストを検証します。
+`php-demo` に対して単体テスト（カバレッジ計測込み）を検証します。
 
 ---
 

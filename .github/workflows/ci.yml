@@ -74,8 +74,8 @@ jobs:
         run: npm run lint
         working-directory: vite-demo
 
-      - name: 単体テスト (Vitest)
-        run: npm run test
+      - name: 単体テスト (Vitest) + カバレッジ計測
+        run: npm run test:coverage
         working-directory: vite-demo
 
       - name: ビルド確認
@@ -130,8 +130,8 @@ jobs:
         run: go vet ./...
         working-directory: go-demo
 
-      - name: 単体テスト
-        run: go test ./...
+      - name: 単体テスト + カバレッジ計測
+        run: go test ./... -cover
         working-directory: go-demo
 
       - name: ビルド確認
@@ -149,9 +149,16 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: 単体テスト
-        run: dotnet test
-        working-directory: csharp-demo/CsharpDemo.Tests
+      - name: 単体テスト + カバレッジ計測
+        run: dotnet test CsharpDemo.Tests --collect:"XPlat Code Coverage" --results-directory CsharpDemo.Tests/TestResults
+        working-directory: csharp-demo
+
+      - name: カバレッジレポート集計
+        run: |
+          dotnet tool restore
+          dotnet tool run reportgenerator "-reports:CsharpDemo.Tests/TestResults/**/coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:TextSummary"
+          cat coveragereport/Summary.txt
+        working-directory: csharp-demo
 
   typescript-demo:
     needs: changes
@@ -168,8 +175,8 @@ jobs:
         run: deno check server.ts
         working-directory: typescript-demo
 
-      - name: 単体テスト
-        run: deno task test
+      - name: 単体テスト + カバレッジ計測
+        run: deno task test:coverage
         working-directory: typescript-demo
 
   python-demo:
@@ -275,8 +282,12 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
         working-directory: rust-demo
 
-      - name: 単体テスト
-        run: cargo test
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: 単体テスト + カバレッジ計測
+        run: cargo llvm-cov --summary-only
         working-directory: rust-demo
 
       - name: ビルド確認
@@ -295,8 +306,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 単体テスト
-        run: ./gradlew test
+      - name: 単体テスト + カバレッジ計測
+        run: ./gradlew koverLog
         working-directory: kotlin-demo
 
       - name: ビルド確認
@@ -313,10 +324,11 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
+          coverage: pcov
 
       - run: composer install --no-interaction
         working-directory: php-demo
 
-      - name: 単体テスト
-        run: composer test
+      - name: 単体テスト + カバレッジ計測
+        run: composer run test:coverage
         working-directory: php-demo

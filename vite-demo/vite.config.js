@@ -9,5 +9,11 @@ export default defineConfig({
     setupFiles: './src/setupTests.js',
     globals: true,
     exclude: ['**/node_modules/**', 'e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      include: ['src/**'],
+      exclude: ['src/main.jsx', 'src/setupTests.js'],
+    },
   },
 })
