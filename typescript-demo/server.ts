@@ -17,8 +17,56 @@ async function serveStatic(path: string): Promise<Response> {
   }
 }
 
+// 複数タブ・複数ブラウザでカウンターをリアルタイムに同期する
+// 「👥 みんなで見てるカウンター」機能のための共有状態。
+let sharedCount = 0;
+const clients = new Set<WebSocket>();
+
+type ClientMessage = { type: "increment" } | { type: "reset" };
+
+function broadcastState(): void {
+  const payload = JSON.stringify({ count: sharedCount, viewers: clients.size });
+  for (const socket of clients) {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(payload);
+    }
+  }
+}
+
+function handleWebSocket(req: Request): Response {
+  const { socket, response } = Deno.upgradeWebSocket(req);
+
+  socket.onopen = () => {
+    clients.add(socket);
+    broadcastState();
+  };
+
+  socket.onmessage = (event) => {
+    const message = JSON.parse(event.data as string) as ClientMessage;
+
+    if (message.type === "increment") {
+      sharedCount += 1;
+    } else if (message.type === "reset") {
+      sharedCount = 0;
+    }
+
+    broadcastState();
+  };
+
+  socket.onclose = () => {
+    clients.delete(socket);
+    broadcastState();
+  };
+
+  return response;
+}
+
 export function handler(req: Request): Promise<Response> {
   const { pathname } = new URL(req.url);
+
+  if (pathname === "/ws") {
+    return Promise.resolve(handleWebSocket(req));
+  }
 
   if (pathname === "/" || pathname === "/index.html") {
     return serveStatic("./static/index.html");
