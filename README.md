@@ -306,6 +306,10 @@ go test ./...
 
 ASP.NET Core（Minimal API）で作られた同じカウンターデモアプリです（[csharp-demo](csharp-demo)）。
 
+カウンターに加えて、C#のLINQの強さを体感できる「📊 クリック統計」機能つきです。
++1ボタンを押した時刻をサーバー側で記録し、LINQの `Zip` / `Average` / `Min` / `Max`
+でクリック間隔（平均・最速・最遅）を集計して表示します。
+
 ### セットアップ手順
 
 ```bash
