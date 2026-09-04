@@ -25,6 +25,8 @@ claude code向けのsandbox
 /typescript-demo  TypeScript (Deno) 版
 /zig-demo         Zig (std.net) 版
 └── zig-perf-demo Zig vs Python 速度対決デモ
+/kotlin-demo      Kotlin (Ktor) 版
+/php-demo         PHP 版
 ```
 
 新しい言語のデモを追加する場合は、
@@ -428,6 +430,65 @@ zig test src/main.zig
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
 `zig-demo/zig-perf-demo` に対して単体テストを検証します。
 
+## カウンターデモアプリ（Kotlin版）
+
+Ktor（Nettyエンジン）で作られた同じカウンターデモアプリです（[kotlin-demo](kotlin-demo)）。
+
+### セットアップ手順
+
+```bash
+cd kotlin-demo
+
+# 依存パッケージの取得とサーバー起動（Gradle Wrapper使用）
+./gradlew run
+```
+
+ブラウザで http://localhost:5009 を開くと、Kotlin版のカウンターデモが表示されます。
+
+### 単体テスト
+
+```bash
+cd kotlin-demo
+./gradlew test
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`kotlin-demo` に対して単体テスト・ビルドを検証します。
+
+## カウンターデモアプリ（PHP版）
+
+PHP組み込みのWebサーバーだけで作られた同じカウンターデモアプリです（[php-demo](php-demo)）。
+
+### セットアップ手順
+
+```bash
+cd php-demo
+
+# 依存パッケージ（PHPUnit）をインストール
+composer install
+
+# サーバー起動
+php -S localhost:5010 index.php
+```
+
+ブラウザで http://localhost:5010 を開くと、PHP版のカウンターデモが表示されます。
+
+### 単体テスト
+
+```bash
+cd php-demo
+composer test
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`php-demo` に対して単体テストを検証します。
+
 ---
 
 各デモアプリは以下のポートで動作する前提です。
@@ -438,9 +499,13 @@ zig test src/main.zig
 | ホーム画面 | [/](.) | 8080 |
 | Vite (React) | [vite-demo](vite-demo) | 5173 |
 | Python (Flask) | [python-demo](python-demo) | 5000 |
+| Python (Gradio) | [python-demo/gradio-ver](python-demo/gradio-ver) | 5007 |
+| Python (NiceGUI) | [python-demo/nicegui-ver](python-demo/nicegui-ver) | 5008 |
 | Rust (axum) | [rust-demo](rust-demo) | 5001 |
 | Go (net/http) | [go-demo](go-demo) | 5002 |
 | C# (ASP.NET Core) | [csharp-demo](csharp-demo) | 5003 |
 | TypeScript (Deno) | [typescript-demo](typescript-demo) | 5004 |
 | Zig (std.net) | [zig-demo](zig-demo) | 5005 |
 | Zig vs Python 速度対決 | [zig-demo/zig-perf-demo](zig-demo/zig-perf-demo) | 5006 |
+| Kotlin (Ktor) | [kotlin-demo](kotlin-demo) | 5009 |
+| PHP | [php-demo](php-demo) | 5010 |

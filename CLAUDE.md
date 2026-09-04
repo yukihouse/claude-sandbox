@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-同じ「カウンター」アプリを7言語・フレームワークで並行実装したデモ集です。各デモの
+同じ「カウンター」アプリを9言語・フレームワークで並行実装したデモ集です。各デモの
 セットアップ手順・テストコマンド・ポート番号は README.md に一覧があるので、まずそちらを
 参照してください。
 
