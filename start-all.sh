@@ -92,7 +92,7 @@ start "go"         "go-demo"         "go run ."                                 
 start "csharp"     "csharp-demo"     "dotnet run"                                                    "dotnet"
 start "typescript" "typescript-demo" "deno task start"                                                "deno"
 start "zig"        "zig-demo"        "zig run src/main.zig"                                          "zig"
-start "zig-perf"   "zig-perf-demo"   "zig run -O ReleaseFast src/main.zig"                           "zig"
+start "zig-perf"   "zig-demo/zig-perf-demo" "zig run -O ReleaseFast src/main.zig"                       "zig"
 
 echo
 if [[ ${#STARTED[@]} -eq 0 ]]; then
