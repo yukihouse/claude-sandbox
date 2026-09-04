@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zigパフォーマンスデモ</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <h1>Zig vs Python 速度対決</h1>
+
+    <p class="lead">
+      「素数を1つずつ試し割りで数える」という同じアルゴリズムを、Zig（ネイティブコンパイル）と
+      Python（インタプリタ）でまったく同じ実装で用意しました。ボタンを押すと、サーバー上で
+      両方を実際に実行して所要時間を計測します。
+    </p>
+
+    <div class="controls">
+      <label for="n-select">探索範囲（この数までの素数を数える）</label>
+      <select id="n-select">
+        <option value="300000">300,000（速め）</option>
+        <option value="1000000" selected>1,000,000（標準）</option>
+        <option value="2000000">2,000,000（じっくり）</option>
+      </select>
+      <button class="btn-run" id="run">ベンチマーク実行</button>
+    </div>
+
+    <p id="status" class="status" role="status"></p>
+
+    <div id="result" class="result" hidden>
+      <div class="bars">
+        <div class="bar-row">
+          <span class="bar-label">Zig</span>
+          <div class="bar-track">
+            <div class="bar-fill bar-zig" id="bar-zig"></div>
+          </div>
+          <span class="bar-value" id="value-zig"></span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">Python</span>
+          <div class="bar-track">
+            <div class="bar-fill bar-python" id="bar-python"></div>
+          </div>
+          <span class="bar-value" id="value-python"></span>
+        </div>
+      </div>
+      <p class="headline" id="headline"></p>
+      <p class="detail" id="detail"></p>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-link" href="http://localhost:8080/">ホームへ戻る</a>
+    </nav>
+
+    <script>
+      const nSelect = document.getElementById('n-select')
+      const runBtn = document.getElementById('run')
+      const statusEl = document.getElementById('status')
+      const resultEl = document.getElementById('result')
+      const barZig = document.getElementById('bar-zig')
+      const barPython = document.getElementById('bar-python')
+      const valueZig = document.getElementById('value-zig')
+      const valuePython = document.getElementById('value-python')
+      const headlineEl = document.getElementById('headline')
+      const detailEl = document.getElementById('detail')
+
+      const formatMs = (ms) => (ms >= 1000 ? `${(ms / 1000).toFixed(2)} 秒` : `${ms.toFixed(1)} ms`)
+
+      runBtn.addEventListener('click', async () => {
+        const n = nSelect.value
+        runBtn.disabled = true
+        resultEl.hidden = true
+        statusEl.textContent = '計測中…（数百ミリ秒〜数秒かかります）'
+
+        try {
+          const res = await fetch(`/api/benchmark?n=${n}`)
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          const data = await res.json()
+
+          statusEl.textContent = ''
+          resultEl.hidden = false
+
+          const zigMs = data.zigMs
+          const pythonMs = data.pythonMs
+
+          if (pythonMs == null) {
+            barZig.style.width = '100%'
+            barPython.style.width = '0%'
+            valueZig.textContent = formatMs(zigMs)
+            valuePython.textContent = 'N/A'
+            headlineEl.textContent = `Zig: ${formatMs(zigMs)} で ${data.primeCount.toLocaleString()} 個の素数を発見`
+            detailEl.textContent = `Python での計測に失敗しました（${data.pythonError ?? '不明なエラー'}）。このサーバーに python3 がインストールされているか確認してください。`
+          } else {
+            const maxMs = Math.max(zigMs, pythonMs)
+            barZig.style.width = `${Math.max((zigMs / maxMs) * 100, 1)}%`
+            barPython.style.width = `${Math.max((pythonMs / maxMs) * 100, 1)}%`
+            valueZig.textContent = formatMs(zigMs)
+            valuePython.textContent = formatMs(pythonMs)
+            headlineEl.textContent = `Zigは Python より約 ${data.speedup.toFixed(1)} 倍高速でした`
+            detailEl.textContent = `探索範囲: ${Number(n).toLocaleString()} まで / 発見した素数: ${data.primeCount.toLocaleString()} 個（両言語とも同じ試し割りアルゴリズムを使用）`
+          }
+        } catch (err) {
+          statusEl.textContent = `計測に失敗しました: ${err.message}`
+        } finally {
+          runBtn.disabled = false
+        }
+      })
+    </script>
+  </body>
+</html>
