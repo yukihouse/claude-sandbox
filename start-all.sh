@@ -27,12 +27,15 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 Usage: ./start-all.sh
 
 リポジトリ内の全デモ（ホーム画面 + vite/python/rust/go/csharp/typescript/zig の
-各カウンターデモ、および Zig vs Python 速度対決デモ）を、必要なツールチェインが
-揃っているものだけまとめて起動します。
+各カウンターデモ、Python版のGUIライブラリ違い（Gradio/NiceGUI）、および
+Zig vs Python 速度対決デモ）を、必要なツールチェインが揃っているものだけ
+まとめて起動します。
 
   ホーム画面           http://localhost:8080
   Vite (React)         http://localhost:5173
   Python (Flask)       http://127.0.0.1:5000  (macOSではAirPlay受信機能とのポート衝突を避けるため localhost ではなく 127.0.0.1 を使ってください)
+  Python (Gradio)      http://localhost:5007
+  Python (NiceGUI)     http://localhost:5008
   Rust (axum)          http://localhost:5001
   Go (net/http)        http://localhost:5002
   C# (ASP.NET Core)    http://localhost:5003
@@ -87,6 +90,8 @@ echo
 start "home"       "."               "python3 -m http.server 8080"                                  "python3"
 start "vite"       "vite-demo"       "npm install >/dev/null 2>&1; npm run dev -- --host"           "npm"
 start "python"     "python-demo"     "uv sync >/dev/null 2>&1; uv run python app.py"                 "uv"
+start "python-gradio"  "python-demo/gradio-ver"  "uv sync >/dev/null 2>&1; uv run python app.py"     "uv"
+start "python-nicegui" "python-demo/nicegui-ver" "uv sync >/dev/null 2>&1; uv run python app.py"     "uv"
 start "rust"       "rust-demo"       "cargo run"                                                     "cargo"
 start "go"         "go-demo"         "go run ."                                                      "go"
 start "csharp"     "csharp-demo"     "dotnet run"                                                    "dotnet"
