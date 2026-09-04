@@ -58,6 +58,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.vite == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -75,7 +77,11 @@ jobs:
         working-directory: vite-demo
 
       - name: 単体テスト (Vitest) + カバレッジ計測
-        run: npm run test:coverage
+        id: cov
+        run: |
+          npm run test:coverage | tee coverage-output.txt
+          pct=$(grep -oE 'Lines[[:space:]]*:[[:space:]]*[0-9.]+%' coverage-output.txt | grep -oE '[0-9.]+%' | head -1)
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: vite-demo
 
       - name: ビルド確認
@@ -118,6 +124,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.go == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -131,7 +139,11 @@ jobs:
         working-directory: go-demo
 
       - name: 単体テスト + カバレッジ計測
-        run: go test ./... -cover
+        id: cov
+        run: |
+          go test ./... -cover | tee coverage-output.txt
+          pct=$(grep -oE 'coverage: [0-9.]+% of statements' coverage-output.txt | grep -oE '[0-9.]+%' | head -1)
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: go-demo
 
       - name: ビルド確認
@@ -142,6 +154,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.csharp == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -154,16 +168,21 @@ jobs:
         working-directory: csharp-demo
 
       - name: カバレッジレポート集計
+        id: cov
         run: |
           dotnet tool restore
           dotnet tool run reportgenerator "-reports:CsharpDemo.Tests/TestResults/**/coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:TextSummary"
           cat coveragereport/Summary.txt
+          pct=$(grep -m1 'Line coverage:' coveragereport/Summary.txt | grep -oE '[0-9.]+%')
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: csharp-demo
 
   typescript-demo:
     needs: changes
     if: needs.changes.outputs.typescript == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -176,13 +195,23 @@ jobs:
         working-directory: typescript-demo
 
       - name: 単体テスト + カバレッジ計測
-        run: deno task test:coverage
+        id: cov
+        run: |
+          deno test --allow-read --coverage=coverage
+          deno coverage coverage
+          deno coverage coverage --lcov > coverage.lcov
+          lf=$(grep -oP '(?<=^LF:)\d+' coverage.lcov | awk '{s+=$1} END{print s+0}')
+          lh=$(grep -oP '(?<=^LH:)\d+' coverage.lcov | awk '{s+=$1} END{print s+0}')
+          pct=$(awk -v lf="$lf" -v lh="$lh" 'BEGIN { if (lf > 0) printf "%.1f%%", (lh / lf) * 100; else print "N/A" }')
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: typescript-demo
 
   python-demo:
     needs: changes
     if: needs.changes.outputs.python == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -193,14 +222,20 @@ jobs:
       - run: uv sync --locked
         working-directory: python-demo
 
-      - name: 単体テスト
-        run: uv run pytest
+      - name: 単体テスト + カバレッジ計測
+        id: cov
+        run: |
+          uv run pytest | tee coverage-output.txt
+          pct=$(grep -m1 '^TOTAL' coverage-output.txt | grep -oE '[0-9]+%')
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: python-demo
 
   python-gradio-demo:
     needs: changes
     if: needs.changes.outputs.pythonGradio == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -211,14 +246,20 @@ jobs:
       - run: uv sync --locked
         working-directory: python-demo/gradio-ver
 
-      - name: 単体テスト
-        run: uv run pytest
+      - name: 単体テスト + カバレッジ計測
+        id: cov
+        run: |
+          uv run pytest | tee coverage-output.txt
+          pct=$(grep -m1 '^TOTAL' coverage-output.txt | grep -oE '[0-9]+%')
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: python-demo/gradio-ver
 
   python-nicegui-demo:
     needs: changes
     if: needs.changes.outputs.pythonNicegui == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -229,8 +270,12 @@ jobs:
       - run: uv sync --locked
         working-directory: python-demo/nicegui-ver
 
-      - name: 単体テスト
-        run: uv run pytest
+      - name: 単体テスト + カバレッジ計測
+        id: cov
+        run: |
+          uv run pytest | tee coverage-output.txt
+          pct=$(grep -m1 '^TOTAL' coverage-output.txt | grep -oE '[0-9]+%')
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: python-demo/nicegui-ver
 
   zig-demo:
@@ -275,6 +320,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.rust == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -287,7 +334,11 @@ jobs:
           tool: cargo-llvm-cov
 
       - name: 単体テスト + カバレッジ計測
-        run: cargo llvm-cov --summary-only
+        id: cov
+        run: |
+          cargo llvm-cov --summary-only
+          pct=$(cargo llvm-cov report --json | jq -r '.data[0].totals.lines.percent')
+          echo "percent=$(printf '%.1f%%' "$pct")" >> "$GITHUB_OUTPUT"
         working-directory: rust-demo
 
       - name: ビルド確認
@@ -298,6 +349,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.kotlin == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -307,7 +360,11 @@ jobs:
           java-version: '21'
 
       - name: 単体テスト + カバレッジ計測
-        run: ./gradlew koverLog
+        id: cov
+        run: |
+          ./gradlew koverLog | tee coverage-output.txt
+          pct=$(grep -oE 'line coverage: [0-9.]+%' coverage-output.txt | grep -oE '[0-9.]+%')
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: kotlin-demo
 
       - name: ビルド確認
@@ -318,6 +375,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.php == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.cov.outputs.percent }}
     steps:
       - uses: actions/checkout@v7
 
@@ -330,5 +389,96 @@ jobs:
         working-directory: php-demo
 
       - name: 単体テスト + カバレッジ計測
-        run: composer run test:coverage
+        id: cov
+        run: |
+          composer run test:coverage | tee coverage-output.txt
+          pct=$(grep -m1 'Lines:' coverage-output.txt | grep -oE '[0-9]+(\.[0-9]+)?%')
+          echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: php-demo
+
+  coverage-comment:
+    needs:
+      - changes
+      - test-and-lint
+      - python-demo
+      - python-gradio-demo
+      - python-nicegui-demo
+      - go-demo
+      - csharp-demo
+      - typescript-demo
+      - rust-demo
+      - kotlin-demo
+      - php-demo
+      - zig-demo
+      - zig-perf-demo
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const changes = {
+              vite: '${{ needs.changes.outputs.vite }}',
+              python: '${{ needs.changes.outputs.python }}',
+              pythonGradio: '${{ needs.changes.outputs.pythonGradio }}',
+              pythonNicegui: '${{ needs.changes.outputs.pythonNicegui }}',
+              go: '${{ needs.changes.outputs.go }}',
+              csharp: '${{ needs.changes.outputs.csharp }}',
+              typescript: '${{ needs.changes.outputs.typescript }}',
+              rust: '${{ needs.changes.outputs.rust }}',
+              kotlin: '${{ needs.changes.outputs.kotlin }}',
+              php: '${{ needs.changes.outputs.php }}',
+            };
+            const rows = [
+              ['vite-demo (Vitest)', changes.vite, "${{ needs['test-and-lint'].outputs.coverage }}"],
+              ['python-demo (pytest)', changes.python, "${{ needs['python-demo'].outputs.coverage }}"],
+              ['python-demo/gradio-ver (pytest)', changes.pythonGradio, "${{ needs['python-gradio-demo'].outputs.coverage }}"],
+              ['python-demo/nicegui-ver (pytest)', changes.pythonNicegui, "${{ needs['python-nicegui-demo'].outputs.coverage }}"],
+              ['go-demo', changes.go, "${{ needs['go-demo'].outputs.coverage }}"],
+              ['csharp-demo (coverlet)', changes.csharp, "${{ needs['csharp-demo'].outputs.coverage }}"],
+              ['typescript-demo (Deno)', changes.typescript, "${{ needs['typescript-demo'].outputs.coverage }}"],
+              ['rust-demo (cargo-llvm-cov)', changes.rust, "${{ needs['rust-demo'].outputs.coverage }}"],
+              ['kotlin-demo (Kover)', changes.kotlin, "${{ needs['kotlin-demo'].outputs.coverage }}"],
+              ['php-demo (pcov)', changes.php, "${{ needs['php-demo'].outputs.coverage }}"],
+            ];
+
+            const lines = ['| デモ | 行カバレッジ |', '| --- | --- |'];
+            for (const [name, changed, coverage] of rows) {
+              const display = changed === 'true' ? (coverage && coverage.length > 0 ? coverage : 'N/A') : '_(変更なし)_';
+              lines.push(`| ${name} | ${display} |`);
+            }
+
+            const marker = '<!-- coverage-report -->';
+            const body = [
+              marker,
+              '### 📊 単体テストカバレッジ',
+              '',
+              ...lines,
+              '',
+              '_zig-demo / zig-perf-demo はカバレッジ計測ツール未対応のため対象外です（README参照）。_',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
