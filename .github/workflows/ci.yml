@@ -84,7 +84,10 @@ jobs:
         id: cov
         run: |
           npm run test:coverage | tee coverage-output.txt
-          pct=$(grep -oE 'Lines[[:space:]]*:[[:space:]]*[0-9.]+%' coverage-output.txt | grep -oE '[0-9.]+%' | head -1)
+          pct=$(awk -F'|' '/All files/{gsub(/[ \t]/,"",$5); print $5"%"}' coverage-output.txt | head -1)
+          if [ -z "$pct" ]; then
+            pct=$(grep -oE 'Lines[[:space:]]*:[[:space:]]*[0-9.]+%' coverage-output.txt | grep -oE '[0-9.]+%' | head -1)
+          fi
           echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: vite-demo
 
@@ -367,7 +370,8 @@ jobs:
         id: cov
         run: |
           ./gradlew koverLog | tee coverage-output.txt
-          pct=$(grep -oE 'line coverage: [0-9.]+%' coverage-output.txt | grep -oE '[0-9.]+%')
+          raw=$(grep -oE 'line coverage: [0-9.]+%' coverage-output.txt | grep -oE '[0-9.]+')
+          pct=$([ -n "$raw" ] && printf '%.1f%%' "$raw")
           echo "percent=${pct:-N/A}" >> "$GITHUB_OUTPUT"
         working-directory: kotlin-demo
 
