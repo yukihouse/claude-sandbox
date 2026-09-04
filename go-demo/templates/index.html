@@ -16,6 +16,19 @@
       <button class="btn-reset" id="reset">リセット</button>
     </div>
 
+    <section class="challenge">
+      <h2>🏁 100人同時押しチャレンジ</h2>
+      <p class="challenge-desc">
+        Go の goroutine を100個同時に起動して「せーの」でボタンを押させてみます。<br />
+        排他制御（sync.Mutex）ありなしで結果がどう変わるか比べてみましょう。
+      </p>
+      <div class="buttons">
+        <button class="btn-challenge-safe" id="challenge-safe">✅ 排他制御あり</button>
+        <button class="btn-challenge-unsafe" id="challenge-unsafe">⚠️ 排他制御なし</button>
+      </div>
+      <p class="challenge-result" id="challenge-result"></p>
+    </section>
+
     <nav class="nav">
       <a class="nav-link" href="http://localhost:8080/">ホームへ戻る</a>
     </nav>
@@ -32,6 +45,30 @@
       document.getElementById('reset').addEventListener('click', () => {
         count = 0
         countEl.textContent = count
+      })
+
+      const challengeResultEl = document.getElementById('challenge-result')
+
+      async function runChallenge(path) {
+        challengeResultEl.textContent = '100人が同時にボタンを押しています…'
+
+        const response = await fetch(path, { method: 'POST' })
+        const { result, expected } = await response.json()
+
+        if (result === expected) {
+          challengeResultEl.textContent = `結果: ${result} / ${expected} 押した分だけきっちり反映されました！`
+        } else {
+          const lost = expected - result
+          challengeResultEl.textContent = `結果: ${result} / ${expected}（${lost}回分が競合で消えました。race condition発生！）`
+        }
+      }
+
+      document.getElementById('challenge-safe').addEventListener('click', () => {
+        runChallenge('/api/challenge/safe')
+      })
+
+      document.getElementById('challenge-unsafe').addEventListener('click', () => {
+        runChallenge('/api/challenge/unsafe')
       })
     </script>
   </body>
