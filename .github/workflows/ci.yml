@@ -13,6 +13,8 @@ jobs:
       csharp: ${{ steps.filter.outputs.csharp }}
       typescript: ${{ steps.filter.outputs.typescript }}
       python: ${{ steps.filter.outputs.python }}
+      pythonGradio: ${{ steps.filter.outputs.pythonGradio }}
+      pythonNicegui: ${{ steps.filter.outputs.pythonNicegui }}
       zig: ${{ steps.filter.outputs.zig }}
       zigPerf: ${{ steps.filter.outputs.zigPerf }}
       rust: ${{ steps.filter.outputs.rust }}
@@ -35,10 +37,16 @@ jobs:
               - 'typescript-demo/**'
             python:
               - 'python-demo/**'
+              - '!python-demo/gradio-ver/**'
+              - '!python-demo/nicegui-ver/**'
+            pythonGradio:
+              - 'python-demo/gradio-ver/**'
+            pythonNicegui:
+              - 'python-demo/nicegui-ver/**'
             zig:
               - 'zig-demo/**'
             zigPerf:
-              - 'zig-perf-demo/**'
+              - 'zig-demo/zig-perf-demo/**'
             rust:
               - 'rust-demo/**'
             kotlin:
@@ -182,6 +190,42 @@ jobs:
         run: uv run pytest
         working-directory: python-demo
 
+  python-gradio-demo:
+    needs: changes
+    if: needs.changes.outputs.pythonGradio == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          working-directory: python-demo/gradio-ver
+
+      - run: uv sync --locked
+        working-directory: python-demo/gradio-ver
+
+      - name: 単体テスト
+        run: uv run pytest
+        working-directory: python-demo/gradio-ver
+
+  python-nicegui-demo:
+    needs: changes
+    if: needs.changes.outputs.pythonNicegui == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          working-directory: python-demo/nicegui-ver
+
+      - run: uv sync --locked
+        working-directory: python-demo/nicegui-ver
+
+      - name: 単体テスト
+        run: uv run pytest
+        working-directory: python-demo/nicegui-ver
+
   zig-demo:
     needs: changes
     if: needs.changes.outputs.zig == 'true'
@@ -218,7 +262,7 @@ jobs:
 
       - name: 単体テスト
         run: zig test src/main.zig
-        working-directory: zig-perf-demo
+        working-directory: zig-demo/zig-perf-demo
 
   rust-demo:
     needs: changes

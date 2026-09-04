@@ -17,12 +17,14 @@ claude code向けのsandbox
 
 /vite-demo        Vite (React) 版
 /python-demo      Python (Flask) 版
+├── gradio-ver    同デモのGUIをGradioで構築した版
+└── nicegui-ver   同デモのGUIをNiceGUIで構築した版
 /rust-demo        Rust (axum) 版
 /go-demo          Go (net/http) 版
 /csharp-demo      C# (ASP.NET Core) 版
 /typescript-demo  TypeScript (Deno) 版
 /zig-demo         Zig (std.net) 版
-/zig-perf-demo    Zig vs Python 速度対決デモ
+└── zig-perf-demo Zig vs Python 速度対決デモ
 /kotlin-demo      Kotlin (Ktor) 版
 /php-demo         PHP 版
 ```
@@ -33,6 +35,20 @@ claude code向けのsandbox
 2. ホーム画面（`index.html`）にそのデモへのリンクカードを1つ追加する
 
 の2箇所を変更するだけで完結します。既存デモやホーム画面のロジックには手を入れません。
+
+### 各デモ画面の共通ルール
+
+各デモのカウンター画面（`index.html`）は、見た目・構造を揃えるために次の契約に
+従っています。専用のテンプレートフォルダは用意していないので、新しい言語のデモを
+追加する際は既存デモ（例: `go-demo/templates/index.html`）をコピーして書き換えて
+ください。
+
+- `style.css` はそのまま流用する（内容を変更しない。ビルドツールで独自にスタイルを
+  管理する `vite-demo` のようなケースは除く）
+- カウンターの数値は `id="count"` の要素に表示する
+- ボタンは `.btn-increment`（+1）・`.btn-reset`（リセット）の class を持つ
+- 「ホームへ戻る」リンクは `.nav-link` class を持ち、`href` は `http://localhost:8080/` 固定
+- タイトル・見出しは `カウンターデモ (○○版)` の形式にする
 
 ## まとめて起動する
 
@@ -175,6 +191,55 @@ uv run pytest
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
 `python-demo` に対して単体テストを検証します。
+
+### GUIライブラリ版
+
+`python-demo` 配下には、同じカウンターアプリを別のPython GUIライブラリで組んだ版も
+サブフォルダとして置いています。ロジック（`compute_increment` / `compute_reset`）は
+Flask版と同じですが、画面の組み立て方（宣言的UIコンポーネント vs 命令的なイベント
+ハンドラ）の違いを見比べられます。
+
+#### Gradio版
+
+Gradio の `Blocks` API でUIを組み立てた版です（[python-demo/gradio-ver](python-demo/gradio-ver)）。
+
+```bash
+cd python-demo/gradio-ver
+
+# 依存パッケージをインストール
+uv sync
+
+# 開発サーバーを起動
+uv run python app.py
+```
+
+ブラウザで http://127.0.0.1:5007 を開くと、Gradio版のカウンターデモが表示されます。
+
+単体テストは `cd python-demo/gradio-ver && uv run pytest` で実行できます。
+
+#### NiceGUI版
+
+NiceGUI の `ui` API でUIを組み立てた版です（[python-demo/nicegui-ver](python-demo/nicegui-ver)）。
+
+```bash
+cd python-demo/nicegui-ver
+
+# 依存パッケージをインストール
+uv sync
+
+# 開発サーバーを起動
+uv run python app.py
+```
+
+ブラウザで http://127.0.0.1:5008 を開くと、NiceGUI版のカウンターデモが表示されます。
+
+単体テストは `cd python-demo/nicegui-ver && uv run pytest` で実行できます。
+
+#### CI（GUIライブラリ版）
+
+`gradio-ver` / `nicegui-ver` はそれぞれ独立した `pyproject.toml` / `uv.lock` を持つため、
+CIでも `python-demo` 本体とは別ジョブ（`python-gradio-demo` / `python-nicegui-demo`）として
+単体テストを検証します。
 
 ## カウンターデモアプリ（Rust版）
 
@@ -331,7 +396,7 @@ zig test src/main.zig
 ## Zig vs Python 速度対決デモ
 
 カウンターアプリではなく、Zig の「圧倒的なパフォーマンス」を体感するための単体デモです
-（[zig-perf-demo](zig-perf-demo)）。
+（[zig-demo/zig-perf-demo](zig-demo/zig-perf-demo)）。
 
 「素数を1つずつ試し割りで数える」という同じアルゴリズムを Zig（ネイティブコンパイル）と
 Python（インタプリタ）でまったく同じ実装で用意し、ボタンを押すとサーバー上で両方を実際に
@@ -342,7 +407,7 @@ Python（インタプリタ）でまったく同じ実装で用意し、ボタ�
 ### セットアップ手順
 
 ```bash
-cd zig-perf-demo
+cd zig-demo/zig-perf-demo
 
 # サーバー起動（パフォーマンス比較のため最適化ビルドで実行する）
 zig run -O ReleaseFast src/main.zig
@@ -355,7 +420,7 @@ zig run -O ReleaseFast src/main.zig
 ### 単体テスト
 
 ```bash
-cd zig-perf-demo
+cd zig-demo/zig-perf-demo
 zig test src/main.zig
 ```
 
@@ -363,7 +428,7 @@ zig test src/main.zig
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`zig-perf-demo` に対して単体テストを検証します。
+`zig-demo/zig-perf-demo` に対して単体テストを検証します。
 
 ## カウンターデモアプリ（Kotlin版）
 
@@ -378,7 +443,7 @@ cd kotlin-demo
 ./gradlew run
 ```
 
-ブラウザで http://localhost:5007 を開くと、Kotlin版のカウンターデモが表示されます。
+ブラウザで http://localhost:5009 を開くと、Kotlin版のカウンターデモが表示されます。
 
 ### 単体テスト
 
@@ -406,10 +471,10 @@ cd php-demo
 composer install
 
 # サーバー起動
-php -S localhost:5008 index.php
+php -S localhost:5010 index.php
 ```
 
-ブラウザで http://localhost:5008 を開くと、PHP版のカウンターデモが表示されます。
+ブラウザで http://localhost:5010 を開くと、PHP版のカウンターデモが表示されます。
 
 ### 単体テスト
 
@@ -434,11 +499,13 @@ composer test
 | ホーム画面 | [/](.) | 8080 |
 | Vite (React) | [vite-demo](vite-demo) | 5173 |
 | Python (Flask) | [python-demo](python-demo) | 5000 |
+| Python (Gradio) | [python-demo/gradio-ver](python-demo/gradio-ver) | 5007 |
+| Python (NiceGUI) | [python-demo/nicegui-ver](python-demo/nicegui-ver) | 5008 |
 | Rust (axum) | [rust-demo](rust-demo) | 5001 |
 | Go (net/http) | [go-demo](go-demo) | 5002 |
 | C# (ASP.NET Core) | [csharp-demo](csharp-demo) | 5003 |
 | TypeScript (Deno) | [typescript-demo](typescript-demo) | 5004 |
 | Zig (std.net) | [zig-demo](zig-demo) | 5005 |
-| Zig vs Python 速度対決 | [zig-perf-demo](zig-perf-demo) | 5006 |
-| Kotlin (Ktor) | [kotlin-demo](kotlin-demo) | 5007 |
-| PHP | [php-demo](php-demo) | 5008 |
+| Zig vs Python 速度対決 | [zig-demo/zig-perf-demo](zig-demo/zig-perf-demo) | 5006 |
+| Kotlin (Ktor) | [kotlin-demo](kotlin-demo) | 5009 |
+| PHP | [php-demo](php-demo) | 5010 |
