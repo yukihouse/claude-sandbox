@@ -35,10 +35,14 @@ jobs:
               - 'csharp-demo/**'
             typescript:
               - 'typescript-demo/**'
+            # dorny/paths-filter (picomatch) は正パターンと否定(!)パターンを1つのルールに
+            # 混在させると、正パターンの制約が外れて全ファイルにマッチしてしまう既知の挙動が
+            # あるため、'!python-demo/gradio-ver/**' のような除外ではなく列挙で対象を絞っている。
             python:
-              - 'python-demo/**'
-              - '!python-demo/gradio-ver/**'
-              - '!python-demo/nicegui-ver/**'
+              - 'python-demo/*'
+              - 'python-demo/static/**'
+              - 'python-demo/templates/**'
+              - 'python-demo/tests/**'
             pythonGradio:
               - 'python-demo/gradio-ver/**'
             pythonNicegui:
