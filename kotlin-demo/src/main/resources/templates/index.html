@@ -16,6 +16,17 @@
       <button class="btn-reset" id="reset">リセット</button>
     </div>
 
+    <section class="autopilot">
+      <h2>🚀 コルーチンオートパイロット</h2>
+      <p class="autopilot-desc">
+        Kotlinのcoroutine（<code>delay</code>）でサーバー側が自動的に一定間隔で
+        カウントアップし、Server-Sent Eventsでブラウザにリアルタイム配信します。<br />
+        スレッドをブロックせずに「待つ」処理を書けるのがcoroutineの持ち味です。
+      </p>
+      <button class="btn-autopilot" id="autopilot-start">自動カウント開始</button>
+      <p class="autopilot-count" id="autopilot-count">-</p>
+    </section>
+
     <nav class="nav">
       <a class="nav-link" href="http://localhost:8080/">ホームへ戻る</a>
     </nav>
@@ -32,6 +43,30 @@
       document.getElementById('reset').addEventListener('click', () => {
         count = 0
         countEl.textContent = count
+      })
+
+      const autopilotButton = document.getElementById('autopilot-start')
+      const autopilotCountEl = document.getElementById('autopilot-count')
+
+      autopilotButton.addEventListener('click', () => {
+        autopilotButton.disabled = true
+        autopilotCountEl.textContent = '0'
+
+        const source = new EventSource('/api/autopilot')
+
+        source.onmessage = (event) => {
+          autopilotCountEl.textContent = event.data
+        }
+
+        source.addEventListener('done', () => {
+          source.close()
+          autopilotButton.disabled = false
+        })
+
+        source.onerror = () => {
+          source.close()
+          autopilotButton.disabled = false
+        }
       })
     </script>
   </body>

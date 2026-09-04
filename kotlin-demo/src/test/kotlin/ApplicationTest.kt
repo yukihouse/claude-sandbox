@@ -34,4 +34,16 @@ class ApplicationTest {
 
         assertEquals(HttpStatusCode.NotFound, response.status)
     }
+
+    @Test
+    fun autopilotStreamsTicksAndCompletes() = testApplication {
+        application { module() }
+
+        val response = client.get("/api/autopilot")
+        val body = response.bodyAsText()
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue(body.contains("data: $AUTOPILOT_TICKS"))
+        assertTrue(body.contains("event: done"))
+    }
 }

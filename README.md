@@ -439,6 +439,10 @@ zig test src/main.zig
 
 Ktor（Nettyエンジン）で作られた同じカウンターデモアプリです（[kotlin-demo](kotlin-demo)）。
 
+カウンターに加えて、Kotlinのcoroutine（`delay`によるノンブロッキングな待機）を
+体感できる「🚀 コルーチンオートパイロット」機能つきです。ボタンを押すとサーバー側が
+一定間隔で自動的にカウントアップし、Server-Sent Eventsでブラウザにリアルタイム配信します。
+
 ### セットアップ手順
 
 ```bash
