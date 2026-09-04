@@ -22,7 +22,7 @@ claude code向けのsandbox
 /csharp-demo      C# (ASP.NET Core) 版
 /typescript-demo  TypeScript (Deno) 版
 /zig-demo         Zig (std.net) 版
-/zig-perf-demo    Zig vs Python 速度対決デモ
+└── zig-perf-demo Zig vs Python 速度対決デモ
 ```
 
 新しい言語のデモを追加する場合は、
@@ -329,7 +329,7 @@ zig test src/main.zig
 ## Zig vs Python 速度対決デモ
 
 カウンターアプリではなく、Zig の「圧倒的なパフォーマンス」を体感するための単体デモです
-（[zig-perf-demo](zig-perf-demo)）。
+（[zig-demo/zig-perf-demo](zig-demo/zig-perf-demo)）。
 
 「素数を1つずつ試し割りで数える」という同じアルゴリズムを Zig（ネイティブコンパイル）と
 Python（インタプリタ）でまったく同じ実装で用意し、ボタンを押すとサーバー上で両方を実際に
@@ -340,7 +340,7 @@ Python（インタプリタ）でまったく同じ実装で用意し、ボタ�
 ### セットアップ手順
 
 ```bash
-cd zig-perf-demo
+cd zig-demo/zig-perf-demo
 
 # サーバー起動（パフォーマンス比較のため最適化ビルドで実行する）
 zig run -O ReleaseFast src/main.zig
@@ -353,7 +353,7 @@ zig run -O ReleaseFast src/main.zig
 ### 単体テスト
 
 ```bash
-cd zig-perf-demo
+cd zig-demo/zig-perf-demo
 zig test src/main.zig
 ```
 
@@ -361,7 +361,7 @@ zig test src/main.zig
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`zig-perf-demo` に対して単体テストを検証します。
+`zig-demo/zig-perf-demo` に対して単体テストを検証します。
 
 ---
 
@@ -378,4 +378,4 @@ zig test src/main.zig
 | C# (ASP.NET Core) | [csharp-demo](csharp-demo) | 5003 |
 | TypeScript (Deno) | [typescript-demo](typescript-demo) | 5004 |
 | Zig (std.net) | [zig-demo](zig-demo) | 5005 |
-| Zig vs Python 速度対決 | [zig-perf-demo](zig-perf-demo) | 5006 |
+| Zig vs Python 速度対決 | [zig-demo/zig-perf-demo](zig-demo/zig-perf-demo) | 5006 |

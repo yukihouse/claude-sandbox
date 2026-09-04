@@ -36,7 +36,7 @@ jobs:
             zig:
               - 'zig-demo/**'
             zigPerf:
-              - 'zig-perf-demo/**'
+              - 'zig-demo/zig-perf-demo/**'
             rust:
               - 'rust-demo/**'
 
@@ -212,7 +212,7 @@ jobs:
 
       - name: 単体テスト
         run: zig test src/main.zig
-        working-directory: zig-perf-demo
+        working-directory: zig-demo/zig-perf-demo
 
   rust-demo:
     needs: changes
