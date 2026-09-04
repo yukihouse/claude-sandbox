@@ -204,11 +204,18 @@ uv run pytest
 `pytest-cov` により、テスト実行のたびにカバレッジのサマリー（`--cov-report=term-missing`）
 がターミナルに表示されます。
 
+### 静的解析（ruff）
+
+```bash
+cd python-demo
+uv run ruff check .
+```
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`python-demo` に対して単体テスト（カバレッジ計測込み）を検証します。
+`python-demo` に対して静的解析（ruff）・単体テスト（カバレッジ計測込み）を検証します。
 
 ### GUIライブラリ版
 
@@ -234,7 +241,8 @@ uv run python app.py
 ブラウザで http://127.0.0.1:5007 を開くと、Gradio版のカウンターデモが表示されます。
 
 単体テストは `cd python-demo/gradio-ver && uv run pytest` で実行できます
-（`pytest-cov` によりカバレッジのサマリーも表示されます）。
+（`pytest-cov` によりカバレッジのサマリーも表示されます）。静的解析は
+`cd python-demo/gradio-ver && uv run ruff check .` で実行できます。
 
 #### NiceGUI版
 
@@ -253,13 +261,14 @@ uv run python app.py
 ブラウザで http://127.0.0.1:5008 を開くと、NiceGUI版のカウンターデモが表示されます。
 
 単体テストは `cd python-demo/nicegui-ver && uv run pytest` で実行できます
-（`pytest-cov` によりカバレッジのサマリーも表示されます）。
+（`pytest-cov` によりカバレッジのサマリーも表示されます）。静的解析は
+`cd python-demo/nicegui-ver && uv run ruff check .` で実行できます。
 
 #### CI（GUIライブラリ版）
 
 `gradio-ver` / `nicegui-ver` はそれぞれ独立した `pyproject.toml` / `uv.lock` を持つため、
 CIでも `python-demo` 本体とは別ジョブ（`python-gradio-demo` / `python-nicegui-demo`）として
-単体テストを検証します。
+静的解析（ruff）・単体テストを検証します。
 
 ## カウンターデモアプリ（Rust版）
 
