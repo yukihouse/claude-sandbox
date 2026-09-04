@@ -16,23 +16,61 @@
       <button class="btn-reset" id="reset">リセット</button>
     </div>
 
+    <section class="byte-view">
+      <h2>🔬 中身が見えるカウンター</h2>
+      <p class="byte-view-desc">
+        今のカウントの値が、メモリ上でどんなバイト列になっているかZigで覗いてみます。
+        型（サイズ）を変えると収まりきるかどうかも変わります。
+      </p>
+      <div class="buttons">
+        <button class="btn-byte-type" id="byte-type-u8">u8 (1byte)</button>
+        <button class="btn-byte-type" id="byte-type-u16">u16 (2byte)</button>
+        <button class="btn-byte-type" id="byte-type-u32">u32 (4byte)</button>
+      </div>
+      <dl class="byte-view-list">
+        <div><dt>16進数</dt><dd id="byte-hex">-</dd></div>
+        <div><dt>2進数</dt><dd id="byte-binary">-</dd></div>
+        <div><dt>収まる?</dt><dd id="byte-fits">-</dd></div>
+      </dl>
+    </section>
+
     <nav class="nav">
       <a class="nav-link" href="http://localhost:8080/">ホームへ戻る</a>
     </nav>
 
     <script>
       let count = 0
+      let lastByteType = null
       const countEl = document.getElementById('count')
+
+      async function inspectBytes(type) {
+        lastByteType = type
+
+        const response = await fetch(`/api/bytes?count=${count}&type=${type}`)
+        const data = await response.json()
+
+        document.getElementById('byte-hex').textContent = data.hex
+        document.getElementById('byte-binary').textContent = data.binary
+        document.getElementById('byte-fits').textContent = data.fits
+          ? `✅ ${data.type}に収まります`
+          : `⚠️ ${data.type}には収まりません（最大 ${data.maxValue}）`
+      }
 
       document.getElementById('increment').addEventListener('click', () => {
         count += 1
         countEl.textContent = count
+        if (lastByteType !== null) inspectBytes(lastByteType)
       })
 
       document.getElementById('reset').addEventListener('click', () => {
         count = 0
         countEl.textContent = count
+        if (lastByteType !== null) inspectBytes(lastByteType)
       })
+
+      document.getElementById('byte-type-u8').addEventListener('click', () => inspectBytes('u8'))
+      document.getElementById('byte-type-u16').addEventListener('click', () => inspectBytes('u16'))
+      document.getElementById('byte-type-u32').addEventListener('click', () => inspectBytes('u32'))
     </script>
   </body>
 </html>
