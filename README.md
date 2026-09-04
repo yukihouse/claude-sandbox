@@ -17,6 +17,8 @@ claude code向けのsandbox
 
 /vite-demo        Vite (React) 版
 /python-demo      Python (Flask) 版
+├── gradio-ver    同デモのGUIをGradioで構築した版
+└── nicegui-ver   同デモのGUIをNiceGUIで構築した版
 /rust-demo        Rust (axum) 版
 /go-demo          Go (net/http) 版
 /csharp-demo      C# (ASP.NET Core) 版
@@ -173,6 +175,55 @@ uv run pytest
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
 `python-demo` に対して単体テストを検証します。
+
+### GUIライブラリ版
+
+`python-demo` 配下には、同じカウンターアプリを別のPython GUIライブラリで組んだ版も
+サブフォルダとして置いています。ロジック（`compute_increment` / `compute_reset`）は
+Flask版と同じですが、画面の組み立て方（宣言的UIコンポーネント vs 命令的なイベント
+ハンドラ）の違いを見比べられます。
+
+#### Gradio版
+
+Gradio の `Blocks` API でUIを組み立てた版です（[python-demo/gradio-ver](python-demo/gradio-ver)）。
+
+```bash
+cd python-demo/gradio-ver
+
+# 依存パッケージをインストール
+uv sync
+
+# 開発サーバーを起動
+uv run python app.py
+```
+
+ブラウザで http://127.0.0.1:5007 を開くと、Gradio版のカウンターデモが表示されます。
+
+単体テストは `cd python-demo/gradio-ver && uv run pytest` で実行できます。
+
+#### NiceGUI版
+
+NiceGUI の `ui` API でUIを組み立てた版です（[python-demo/nicegui-ver](python-demo/nicegui-ver)）。
+
+```bash
+cd python-demo/nicegui-ver
+
+# 依存パッケージをインストール
+uv sync
+
+# 開発サーバーを起動
+uv run python app.py
+```
+
+ブラウザで http://127.0.0.1:5008 を開くと、NiceGUI版のカウンターデモが表示されます。
+
+単体テストは `cd python-demo/nicegui-ver && uv run pytest` で実行できます。
+
+#### CI（GUIライブラリ版）
+
+`gradio-ver` / `nicegui-ver` はそれぞれ独立した `pyproject.toml` / `uv.lock` を持つため、
+CIでも `python-demo` 本体とは別ジョブ（`python-gradio-demo` / `python-nicegui-demo`）として
+単体テストを検証します。
 
 ## カウンターデモアプリ（Rust版）
 
