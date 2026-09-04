@@ -88,3 +88,51 @@ button:active {
 .nav-link:hover {
   color: #e2e8f0;
 }
+
+.challenge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 28rem;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.challenge h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.challenge-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+.btn-challenge-safe {
+  background-color: #16a34a;
+}
+
+.btn-challenge-safe:hover {
+  background-color: #22c55e;
+}
+
+.btn-challenge-unsafe {
+  background-color: #dc2626;
+}
+
+.btn-challenge-unsafe:hover {
+  background-color: #ef4444;
+}
+
+.challenge-result {
+  min-height: 1.5rem;
+  margin: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.95rem;
+}
