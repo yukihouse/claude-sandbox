@@ -14,6 +14,8 @@
 
     <p id="count">0</p>
 
+    <p class="reaction" id="reaction">👋 +1ボタンを押してみてください</p>
+
     <div class="buttons">
       <button class="btn-increment" id="increment">+1</button>
       <button class="btn-reset" id="reset">リセット</button>
@@ -25,16 +27,32 @@
 
     <script>
       let count = 0
+      let lastClickAt = null
       const countEl = document.getElementById('count')
+      const reactionEl = document.getElementById('reaction')
 
-      document.getElementById('increment').addEventListener('click', () => {
+      document.getElementById('increment').addEventListener('click', async () => {
         count += 1
         countEl.textContent = count
+
+        const now = performance.now()
+        const intervalMs = lastClickAt === null ? null : Math.round(now - lastClickAt)
+        lastClickAt = now
+
+        const response = await fetch('/api/react', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ count, intervalMs }),
+        })
+        const data = await response.json()
+        reactionEl.textContent = data.comment
       })
 
       document.getElementById('reset').addEventListener('click', () => {
         count = 0
         countEl.textContent = count
+        lastClickAt = null
+        reactionEl.textContent = '👋 +1ボタンを押してみてください'
       })
     </script>
   </body>
