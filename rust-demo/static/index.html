@@ -16,6 +16,22 @@
       <button class="btn-reset" id="reset">リセット</button>
     </div>
 
+    <section class="safe-counter">
+      <h2>🛡️ 壊れないカウンター (u8: 0〜255)</h2>
+      <p class="safe-counter-desc">
+        Rustの <code>checked_add</code> で桁あふれ（オーバーフロー）を検出します。
+        他の言語だと255の次が0に巻き戻ってしまうことがありますが、
+        Rustでは安全に停止します。
+      </p>
+      <p class="safe-counter-value" id="safe-counter-value">0 / 255</p>
+      <div class="buttons">
+        <button class="btn-jump" id="safe-counter-jump">MAX手前までジャンプ (250)</button>
+        <button class="btn-safe-increment" id="safe-counter-increment">+1</button>
+        <button class="btn-reset" id="safe-counter-reset">リセット</button>
+      </div>
+      <p class="safe-counter-message" id="safe-counter-message"></p>
+    </section>
+
     <nav class="nav">
       <a class="nav-link" href="http://localhost:8080/">ホームへ戻る</a>
     </nav>
@@ -32,6 +48,41 @@
       document.getElementById('reset').addEventListener('click', () => {
         count = 0
         countEl.textContent = count
+      })
+
+      const safeCounterValueEl = document.getElementById('safe-counter-value')
+      const safeCounterMessageEl = document.getElementById('safe-counter-message')
+
+      function renderSafeCounter(data) {
+        safeCounterValueEl.textContent = `${data.value} / ${data.max}`
+      }
+
+      async function callSafeCounter(path) {
+        const response = await fetch(path, { method: 'POST' })
+        const data = await response.json()
+
+        if (response.ok) {
+          safeCounterMessageEl.textContent = ''
+        } else {
+          safeCounterMessageEl.textContent = `⚠️ ${data.max}を超えようとしたので安全に停止しました（オーバーフローなし）`
+        }
+        renderSafeCounter(data)
+      }
+
+      fetch('/api/safe-counter')
+        .then((response) => response.json())
+        .then(renderSafeCounter)
+
+      document.getElementById('safe-counter-jump').addEventListener('click', () => {
+        callSafeCounter('/api/safe-counter/jump-near-max')
+      })
+
+      document.getElementById('safe-counter-increment').addEventListener('click', () => {
+        callSafeCounter('/api/safe-counter/increment')
+      })
+
+      document.getElementById('safe-counter-reset').addEventListener('click', () => {
+        callSafeCounter('/api/safe-counter/reset')
       })
     </script>
   </body>
