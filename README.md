@@ -22,6 +22,7 @@ claude code向けのsandbox
 /csharp-demo      C# (ASP.NET Core) 版
 /typescript-demo  TypeScript (Deno) 版
 /zig-demo         Zig (std.net) 版
+/zig-perf-demo    Zig vs Python 速度対決デモ
 ```
 
 新しい言語のデモを追加する場合は、
@@ -325,6 +326,43 @@ zig test src/main.zig
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
 `zig-demo` に対して単体テストを検証します。
 
+## Zig vs Python 速度対決デモ
+
+カウンターアプリではなく、Zig の「圧倒的なパフォーマンス」を体感するための単体デモです
+（[zig-perf-demo](zig-perf-demo)）。
+
+「素数を1つずつ試し割りで数える」という同じアルゴリズムを Zig（ネイティブコンパイル）と
+Python（インタプリタ）でまったく同じ実装で用意し、ボタンを押すとサーバー上で両方を実際に
+実行して所要時間を比較します。Zig サーバーが `python3` をサブプロセスとして起動して計測する
+ため、追加のサーバー起動は不要です（`python3` が見つからない環境ではPython側の結果が
+「N/A」になります）。
+
+### セットアップ手順
+
+```bash
+cd zig-perf-demo
+
+# サーバー起動（パフォーマンス比較のため最適化ビルドで実行する）
+zig run -O ReleaseFast src/main.zig
+```
+
+ブラウザで http://localhost:5006 を開くと、探索範囲を選んで「ベンチマーク実行」ボタンを
+押せます。実行のたびにサーバー上で Zig 版・Python 版それぞれの実行時間を計測し、何倍
+高速だったかを表示します。**Zig 0.15系を対象にしています**（zig-demo と同様の理由）。
+
+### 単体テスト
+
+```bash
+cd zig-perf-demo
+zig test src/main.zig
+```
+
+### CI
+
+`main` ブランチへのプルリクエスト作成時に GitHub Actions
+（[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
+`zig-perf-demo` に対して単体テストを検証します。
+
 ---
 
 各デモアプリは以下のポートで動作する前提です。
@@ -340,3 +378,4 @@ zig test src/main.zig
 | C# (ASP.NET Core) | [csharp-demo](csharp-demo) | 5003 |
 | TypeScript (Deno) | [typescript-demo](typescript-demo) | 5004 |
 | Zig (std.net) | [zig-demo](zig-demo) | 5005 |
+| Zig vs Python 速度対決 | [zig-perf-demo](zig-perf-demo) | 5006 |

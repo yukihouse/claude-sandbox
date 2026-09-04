@@ -27,7 +27,8 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 Usage: ./start-all.sh
 
 リポジトリ内の全デモ（ホーム画面 + vite/python/rust/go/csharp/typescript/zig の
-各カウンターデモ）を、必要なツールチェインが揃っているものだけまとめて起動します。
+各カウンターデモ、および Zig vs Python 速度対決デモ）を、必要なツールチェインが
+揃っているものだけまとめて起動します。
 
   ホーム画面           http://localhost:8080
   Vite (React)         http://localhost:5173
@@ -37,6 +38,7 @@ Usage: ./start-all.sh
   C# (ASP.NET Core)    http://localhost:5003
   TypeScript (Deno)    http://localhost:5004
   Zig (std.net)        http://localhost:5005
+  Zig vs Python        http://localhost:5006
 
 停止するには Ctrl+C を押してください。
 EOF
@@ -90,6 +92,7 @@ start "go"         "go-demo"         "go run ."                                 
 start "csharp"     "csharp-demo"     "dotnet run"                                                    "dotnet"
 start "typescript" "typescript-demo" "deno task start"                                                "deno"
 start "zig"        "zig-demo"        "zig run src/main.zig"                                          "zig"
+start "zig-perf"   "zig-perf-demo"   "zig run -O ReleaseFast src/main.zig"                           "zig"
 
 echo
 if [[ ${#STARTED[@]} -eq 0 ]]; then
