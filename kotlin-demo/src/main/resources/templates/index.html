@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>カウンターデモ (Kotlin版)</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <h1>カウンターデモ (Kotlin版)</h1>
+
+    <p id="count">0</p>
+
+    <div class="buttons">
+      <button class="btn-increment" id="increment">+1</button>
+      <button class="btn-reset" id="reset">リセット</button>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-link" href="http://localhost:8080/">ホームへ戻る</a>
+    </nav>
+
+    <script>
+      let count = 0
+      const countEl = document.getElementById('count')
+
+      document.getElementById('increment').addEventListener('click', () => {
+        count += 1
+        countEl.textContent = count
+      })
+
+      document.getElementById('reset').addEventListener('click', () => {
+        count = 0
+        countEl.textContent = count
+      })
+    </script>
+  </body>
+</html>

@@ -26,7 +26,7 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   cat <<'EOF'
 Usage: ./start-all.sh
 
-リポジトリ内の全デモ（ホーム画面 + vite/python/rust/go/csharp/typescript/zig の
+リポジトリ内の全デモ（ホーム画面 + vite/python/rust/go/csharp/typescript/zig/kotlin/php の
 各カウンターデモ、および Zig vs Python 速度対決デモ）を、必要なツールチェインが
 揃っているものだけまとめて起動します。
 
@@ -39,6 +39,8 @@ Usage: ./start-all.sh
   TypeScript (Deno)    http://localhost:5004
   Zig (std.net)        http://localhost:5005
   Zig vs Python        http://localhost:5006
+  Kotlin (Ktor)        http://localhost:5007
+  PHP                  http://localhost:5008
 
 停止するには Ctrl+C を押してください。
 EOF
@@ -93,6 +95,8 @@ start "csharp"     "csharp-demo"     "dotnet run"                               
 start "typescript" "typescript-demo" "deno task start"                                                "deno"
 start "zig"        "zig-demo"        "zig run src/main.zig"                                          "zig"
 start "zig-perf"   "zig-perf-demo"   "zig run -O ReleaseFast src/main.zig"                           "zig"
+start "kotlin"     "kotlin-demo"     "./gradlew run --console=plain"                                 "java"
+start "php"        "php-demo"        "composer install >/dev/null 2>&1; php -S localhost:5008 index.php" "php"
 
 echo
 if [[ ${#STARTED[@]} -eq 0 ]]; then
