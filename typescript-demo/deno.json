@@ -1,6 +1,7 @@
 {
   "tasks": {
     "start": "deno run --allow-net --allow-read server.ts",
-    "test": "deno test --allow-net --allow-read"
+    "test": "deno test --allow-net --allow-read",
+    "test:coverage": "deno test --allow-net --allow-read --coverage=coverage && deno coverage coverage"
   }
 }

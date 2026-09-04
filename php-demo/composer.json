@@ -19,7 +19,8 @@
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "test:coverage": "phpunit --coverage-text"
     },
     "config": {
         "sort-packages": true
