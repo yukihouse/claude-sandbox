@@ -16,6 +16,22 @@
       <button class="btn-reset" id="reset">リセット</button>
     </div>
 
+    <section class="stats">
+      <h2>📊 クリック統計 (LINQ)</h2>
+      <p class="stats-desc">
+        +1ボタンを押した時刻をサーバー側で記録し、LINQの <code>Zip</code> /
+        <code>Average</code> / <code>Min</code> / <code>Max</code> で
+        クリック間隔を集計します。
+      </p>
+      <button class="btn-stats" id="stats-refresh">統計を見る</button>
+      <dl class="stats-list">
+        <div><dt>総クリック数</dt><dd id="stat-total">-</dd></div>
+        <div><dt>平均間隔</dt><dd id="stat-average">-</dd></div>
+        <div><dt>⚡ 最速間隔</dt><dd id="stat-fastest">-</dd></div>
+        <div><dt>🐢 最遅間隔</dt><dd id="stat-slowest">-</dd></div>
+      </dl>
+    </section>
+
     <nav class="nav">
       <a class="nav-link" href="http://localhost:8080/">ホームへ戻る</a>
     </nav>
@@ -27,12 +43,30 @@
       document.getElementById('increment').addEventListener('click', () => {
         count += 1
         countEl.textContent = count
+        fetch('/api/clicks', { method: 'POST' })
       })
 
       document.getElementById('reset').addEventListener('click', () => {
         count = 0
         countEl.textContent = count
+        fetch('/api/clicks/reset', { method: 'POST' })
       })
+
+      function formatMs(value) {
+        return value === null ? '-' : `${value}ms`
+      }
+
+      async function refreshStats() {
+        const response = await fetch('/api/stats')
+        const stats = await response.json()
+
+        document.getElementById('stat-total').textContent = `${stats.totalClicks}回`
+        document.getElementById('stat-average').textContent = formatMs(stats.averageIntervalMs)
+        document.getElementById('stat-fastest').textContent = formatMs(stats.fastestIntervalMs)
+        document.getElementById('stat-slowest').textContent = formatMs(stats.slowestIntervalMs)
+      }
+
+      document.getElementById('stats-refresh').addEventListener('click', refreshStats)
     </script>
   </body>
 </html>
