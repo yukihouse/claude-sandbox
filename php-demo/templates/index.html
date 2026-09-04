@@ -11,6 +11,8 @@
 
     <p id="count">0</p>
 
+    <p class="persist-note">🔒 ブラウザを閉じても消えません（PHPセッションで30日間保持）</p>
+
     <div class="buttons">
       <button class="btn-increment" id="increment">+1</button>
       <button class="btn-reset" id="reset">リセット</button>
@@ -21,17 +23,22 @@
     </nav>
 
     <script>
-      let count = 0
       const countEl = document.getElementById('count')
 
-      document.getElementById('increment').addEventListener('click', () => {
-        count += 1
+      async function syncCount(path, method) {
+        const response = await fetch(path, { method })
+        const { count } = await response.json()
         countEl.textContent = count
+      }
+
+      syncCount('/api/count', 'GET')
+
+      document.getElementById('increment').addEventListener('click', () => {
+        syncCount('/api/increment', 'POST')
       })
 
       document.getElementById('reset').addEventListener('click', () => {
-        count = 0
-        countEl.textContent = count
+        syncCount('/api/reset', 'POST')
       })
     </script>
   </body>
