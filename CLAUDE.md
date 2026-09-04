@@ -15,6 +15,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   1. `xxx-demo/` フォルダを新規追加し、ホームへの「戻る」リンクだけを持たせる
   2. `index.html` にそのデモへのリンクカードを1つ追加する
   （加えて README・`start-all.sh`・`.github/workflows/ci.yml` にもそのデモの分を追記する）
+- ポート番号の割り当ては README.md 末尾のポート一覧表を正本（source of truth）とする。
+  新しいデモを追加する際は、必ずこの表を見て未使用のポート番号を選び、追加後は表も
+  更新すること（`start-all.sh` の起動コマンド・案内表示にも同じポートを反映する）。
+  なお 5000番はmacOSのAirPlay受信機能と衝突することがあるため、新規の割り当てでは
+  避けるのが望ましい（python-demoは既存の対応として `127.0.0.1` を使うことで回避している）。
 
 ## その他の注意点
 
