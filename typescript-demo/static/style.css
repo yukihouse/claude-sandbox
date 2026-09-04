@@ -88,3 +88,9 @@ button:active {
 .nav-link:hover {
   color: #e2e8f0;
 }
+
+.viewers-note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #94a3b8;
+}

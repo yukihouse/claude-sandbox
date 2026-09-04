@@ -11,6 +11,8 @@
 
     <p id="count">0</p>
 
+    <p class="viewers-note">👥 <span id="viewers">-</span>人が同時に見ています（複数タブで開くと同期します）</p>
+
     <div class="buttons">
       <button class="btn-increment" id="increment">+1</button>
       <button class="btn-reset" id="reset">リセット</button>
@@ -21,17 +23,23 @@
     </nav>
 
     <script>
-      let count = 0
       const countEl = document.getElementById('count')
+      const viewersEl = document.getElementById('viewers')
+
+      const socket = new WebSocket(`ws://${location.host}/ws`)
+
+      socket.addEventListener('message', (event) => {
+        const state = JSON.parse(event.data)
+        countEl.textContent = state.count
+        viewersEl.textContent = state.viewers
+      })
 
       document.getElementById('increment').addEventListener('click', () => {
-        count += 1
-        countEl.textContent = count
+        socket.send(JSON.stringify({ type: 'increment' }))
       })
 
       document.getElementById('reset').addEventListener('click', () => {
-        count = 0
-        countEl.textContent = count
+        socket.send(JSON.stringify({ type: 'reset' }))
       })
     </script>
   </body>
