@@ -1,7 +1,8 @@
 #!/bin/bash
-# Installs the .NET SDK and Zig toolchain when they are missing, so
-# csharp-demo (and any future zig-demo) work out of the box in a fresh
-# Claude Code on the web session. No-ops locally and when already installed.
+# Installs the .NET SDK, Zig and Deno toolchains when missing, and works
+# around a couple of environment quirks, so csharp-demo / zig-demo /
+# typescript-demo / php-demo work out of the box in a fresh Claude Code on
+# the web session. No-ops locally and when already installed.
 set -euo pipefail
 
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
@@ -37,5 +38,25 @@ EOF
   chmod +x "$ZIG_SHIM"
 fi
 
+# --- Deno (needed by typescript-demo) -----------------------------------
+# The official install script (deno.land/install.sh) pulls the binary from
+# dl.deno.land / GitHub releases, which this sandbox's network policy
+# blocks (403 on CONNECT). registry.npmjs.org is allowlisted instead, and
+# the `deno` npm package ships the same prebuilt binary, so install via npm.
+if ! command -v deno >/dev/null 2>&1; then
+  echo "Installing Deno via npm..."
+  npm install -g deno --silent > /dev/null
+fi
+
+# --- Composer superuser guard (needed by php-demo) -----------------------
+# Composer refuses to run script-defined commands (e.g. `composer test`,
+# which invokes `phpunit` as a script) as root unless explicitly allowed.
+# This sandbox always runs as root, so allow it once for all shells.
+if ! grep -q "^export COMPOSER_ALLOW_SUPERUSER=1$" "$HOME/.bashrc" 2>/dev/null; then
+  echo 'export COMPOSER_ALLOW_SUPERUSER=1' >> "$HOME/.bashrc"
+fi
+export COMPOSER_ALLOW_SUPERUSER=1
+
 echo "dotnet: $(dotnet --version 2>/dev/null || echo 'not available')"
 echo "zig: $(zig version 2>/dev/null || echo 'not available')"
+echo "deno: $(deno --version 2>/dev/null | head -1 || echo 'not available')"
