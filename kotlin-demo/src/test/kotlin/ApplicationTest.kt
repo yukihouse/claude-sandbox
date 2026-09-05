@@ -8,42 +8,46 @@ import kotlin.test.assertTrue
 
 class ApplicationTest {
     @Test
-    fun homePageReturnsCounterMarkup() = testApplication {
-        application { module() }
+    fun homePageReturnsCounterMarkup() =
+        testApplication {
+            application { module() }
 
-        val response = client.get("/")
+            val response = client.get("/")
 
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(response.bodyAsText().contains("カウンターデモ (Kotlin版)"))
-    }
-
-    @Test
-    fun staticStyleIsServed() = testApplication {
-        application { module() }
-
-        val response = client.get("/static/style.css")
-
-        assertEquals(HttpStatusCode.OK, response.status)
-    }
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertTrue(response.bodyAsText().contains("カウンターデモ (Kotlin版)"))
+        }
 
     @Test
-    fun unknownPathReturnsNotFound() = testApplication {
-        application { module() }
+    fun staticStyleIsServed() =
+        testApplication {
+            application { module() }
 
-        val response = client.get("/unknown")
+            val response = client.get("/static/style.css")
 
-        assertEquals(HttpStatusCode.NotFound, response.status)
-    }
+            assertEquals(HttpStatusCode.OK, response.status)
+        }
 
     @Test
-    fun autopilotStreamsTicksAndCompletes() = testApplication {
-        application { module() }
+    fun unknownPathReturnsNotFound() =
+        testApplication {
+            application { module() }
 
-        val response = client.get("/api/autopilot")
-        val body = response.bodyAsText()
+            val response = client.get("/unknown")
 
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(body.contains("data: $AUTOPILOT_TICKS"))
-        assertTrue(body.contains("event: done"))
-    }
+            assertEquals(HttpStatusCode.NotFound, response.status)
+        }
+
+    @Test
+    fun autopilotStreamsTicksAndCompletes() =
+        testApplication {
+            application { module() }
+
+            val response = client.get("/api/autopilot")
+            val body = response.bodyAsText()
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertTrue(body.contains("data: $AUTOPILOT_TICKS"))
+            assertTrue(body.contains("event: done"))
+        }
 }

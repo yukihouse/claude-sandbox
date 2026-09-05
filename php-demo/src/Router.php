@@ -39,11 +39,12 @@ final class Router
 
     private function file(string $filePath, string $contentType): Response
     {
-        if (!is_file($filePath)) {
+        $body = is_file($filePath) ? file_get_contents($filePath) : false;
+        if ($body === false) {
             return new Response(404, 'text/plain; charset=utf-8', 'Not Found');
         }
 
-        return new Response(200, $contentType, file_get_contents($filePath));
+        return new Response(200, $contentType, $body);
     }
 
     /** @param array<string, int> $data */

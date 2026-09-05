@@ -204,11 +204,18 @@ uv run pytest
 `pytest-cov` により、テスト実行のたびにカバレッジのサマリー（`--cov-report=term-missing`）
 がターミナルに表示されます。
 
+### 静的解析（ruff）
+
+```bash
+cd python-demo
+uv run ruff check .
+```
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`python-demo` に対して単体テスト（カバレッジ計測込み）を検証します。
+`python-demo` に対して静的解析（ruff）・単体テスト（カバレッジ計測込み）を検証します。
 
 ### GUIライブラリ版
 
@@ -234,7 +241,8 @@ uv run python app.py
 ブラウザで http://127.0.0.1:5007 を開くと、Gradio版のカウンターデモが表示されます。
 
 単体テストは `cd python-demo/gradio-ver && uv run pytest` で実行できます
-（`pytest-cov` によりカバレッジのサマリーも表示されます）。
+（`pytest-cov` によりカバレッジのサマリーも表示されます）。静的解析は
+`cd python-demo/gradio-ver && uv run ruff check .` で実行できます。
 
 #### NiceGUI版
 
@@ -253,13 +261,14 @@ uv run python app.py
 ブラウザで http://127.0.0.1:5008 を開くと、NiceGUI版のカウンターデモが表示されます。
 
 単体テストは `cd python-demo/nicegui-ver && uv run pytest` で実行できます
-（`pytest-cov` によりカバレッジのサマリーも表示されます）。
+（`pytest-cov` によりカバレッジのサマリーも表示されます）。静的解析は
+`cd python-demo/nicegui-ver && uv run ruff check .` で実行できます。
 
 #### CI（GUIライブラリ版）
 
 `gradio-ver` / `nicegui-ver` はそれぞれ独立した `pyproject.toml` / `uv.lock` を持つため、
 CIでも `python-demo` 本体とは別ジョブ（`python-gradio-demo` / `python-nicegui-demo`）として
-単体テストを検証します。
+静的解析（ruff）・単体テストを検証します。
 
 ## カウンターデモアプリ（Rust版）
 
@@ -396,11 +405,22 @@ cat coveragereport/Summary.txt
 `dotnet-reportgenerator-globaltool`（`csharp-demo/.config/dotnet-tools.json` で管理）で
 人が読めるサマリーに変換しています。
 
+### 静的解析（dotnet format）
+
+```bash
+cd csharp-demo
+dotnet format CsharpDemo.csproj --verify-no-changes
+```
+
+.NET SDKに標準搭載のフォーマッタ兼アナライザーで、コードスタイルやRoslynアナライザーの
+指摘を検証します。差分がある場合は `dotnet format CsharpDemo.csproj`（`--verify-no-changes`
+なし）で自動修正できます。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`csharp-demo` に対して単体テスト（カバレッジ計測込み）を検証します。
+`csharp-demo` に対して静的解析（dotnet format）・単体テスト（カバレッジ計測込み）を検証します。
 
 ## カウンターデモアプリ（TypeScript版）
 
@@ -440,11 +460,19 @@ deno task test:coverage
 Deno 標準搭載のカバレッジ計測機能（`deno test --coverage` / `deno coverage`）を使い、
 ファイルごとのカバレッジ率をターミナルに表示します。
 
+### 静的解析（deno lint）
+
+```bash
+cd typescript-demo
+deno task lint
+```
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`typescript-demo` に対して型チェック・単体テスト（カバレッジ計測込み）を検証します。
+`typescript-demo` に対して静的解析（deno lint）・型チェック・単体テスト（カバレッジ計測込み）
+を検証します。
 
 ## カウンターデモアプリ（Zig版）
 
@@ -571,11 +599,21 @@ cd kotlin-demo
 行カバレッジ率をコンソールに表示します（テストも同時に実行されます）。
 HTMLレポートは `./gradlew koverHtmlReport` で生成できます。
 
+### 静的解析（ktlint）
+
+```bash
+cd kotlin-demo
+./gradlew ktlintCheck
+```
+
+[ktlint](https://github.com/pinterest/ktlint) Gradleプラグインでコードスタイルを検証します。
+指摘がある場合は `./gradlew ktlintFormat` で自動修正できます。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`kotlin-demo` に対して単体テスト（カバレッジ計測込み）・ビルドを検証します。
+`kotlin-demo` に対して静的解析（ktlint）・単体テスト（カバレッジ計測込み）・ビルドを検証します。
 
 ## カウンターデモアプリ（PHP版）
 
@@ -618,11 +656,22 @@ PHPUnitが警告を出して失敗します）。CIでは `shivammathur/setup-ph
 有効化しています。ローカルで試す場合は `sudo apt install php-pcov`（または
 `pecl install pcov`）などで導入してください。
 
+### 静的解析（PHPStan）
+
+```bash
+cd php-demo
+composer run phpstan
+```
+
+`src/` と `tests/` を対象にレベル6で型チェックを行います（`phpstan.neon`）。
+`index.php` はスーパーグローバル（`$_SERVER` 等）を直接扱う薄いエントリーポイントの
+ため対象外にしています。
+
 ### CI
 
 `main` ブランチへのプルリクエスト作成時に GitHub Actions
 （[.github/workflows/ci.yml](.github/workflows/ci.yml)）が自動実行され、
-`php-demo` に対して単体テスト（カバレッジ計測込み）を検証します。
+`php-demo` に対して静的解析（PHPStan）・単体テスト（カバレッジ計測込み）を検証します。
 
 ---
 

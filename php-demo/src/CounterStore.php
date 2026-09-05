@@ -13,7 +13,7 @@ final class CounterStore
 {
     public function get(): int
     {
-        return $_SESSION['count'] ?? 0;
+        return (int) ($_SESSION['count'] ?? 0);
     }
 
     public function increment(): int

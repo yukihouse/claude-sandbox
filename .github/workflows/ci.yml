@@ -170,6 +170,10 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: 静的解析 (dotnet format)
+        run: dotnet format CsharpDemo.csproj --verify-no-changes
+        working-directory: csharp-demo
+
       - name: 単体テスト + カバレッジ計測
         run: dotnet test CsharpDemo.Tests --collect:"XPlat Code Coverage" --results-directory CsharpDemo.Tests/TestResults
         working-directory: csharp-demo
@@ -196,6 +200,10 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+
+      - name: 静的解析 (deno lint)
+        run: deno task lint
+        working-directory: typescript-demo
 
       - name: 型チェック
         run: deno check server.ts
@@ -229,6 +237,10 @@ jobs:
       - run: uv sync --locked
         working-directory: python-demo
 
+      - name: 静的解析 (ruff)
+        run: uv run ruff check .
+        working-directory: python-demo
+
       - name: 単体テスト + カバレッジ計測
         id: cov
         run: |
@@ -253,6 +265,10 @@ jobs:
       - run: uv sync --locked
         working-directory: python-demo/gradio-ver
 
+      - name: 静的解析 (ruff)
+        run: uv run ruff check .
+        working-directory: python-demo/gradio-ver
+
       - name: 単体テスト + カバレッジ計測
         id: cov
         run: |
@@ -275,6 +291,10 @@ jobs:
           working-directory: python-demo/nicegui-ver
 
       - run: uv sync --locked
+        working-directory: python-demo/nicegui-ver
+
+      - name: 静的解析 (ruff)
+        run: uv run ruff check .
         working-directory: python-demo/nicegui-ver
 
       - name: 単体テスト + カバレッジ計測
@@ -366,6 +386,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: 静的解析 (ktlint)
+        run: ./gradlew ktlintCheck
+        working-directory: kotlin-demo
+
       - name: 単体テスト + カバレッジ計測
         id: cov
         run: |
@@ -394,6 +418,10 @@ jobs:
           coverage: pcov
 
       - run: composer install --no-interaction
+        working-directory: php-demo
+
+      - name: 静的解析 (PHPStan)
+        run: composer run phpstan
         working-directory: php-demo
 
       - name: 単体テスト + カバレッジ計測
