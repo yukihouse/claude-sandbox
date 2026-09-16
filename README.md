@@ -15,6 +15,19 @@ uv run pytest --cov=tetris --cov-report=term-missing
 uv run tetris   # play the game in a terminal
 ```
 
+## Playing in the browser (Streamlit)
+
+A Streamlit UI is available alongside the terminal version, sharing the same
+game logic in `board.py` / `game.py`:
+
+```bash
+uv sync --extra streamlit
+uv run streamlit run src/tetris/streamlit_app.py
+```
+
+Controls are on-screen buttons (move left/right, rotate, soft drop, hard
+drop), plus an optional auto-drop toggle and speed slider in the sidebar.
+
 ## Building a standalone executable
 
 Requires [uv](https://docs.astral.sh/uv/). Run the script matching your OS to
