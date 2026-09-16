@@ -47,6 +47,14 @@ uv run --with pyinstaller pyinstaller \
   --noconfirm \
   "$ROOT_DIR/scripts/pyinstaller_entry.py"
 
+echo "==> Verifying --version output"
+ACTUAL_VERSION="$("$DIST_DIR/tetris" --version)"
+EXPECTED_VERSION="tetris ${VERSION}"
+if [[ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" ]]; then
+  echo "error: expected '$DIST_DIR/tetris --version' to print '$EXPECTED_VERSION', got '$ACTUAL_VERSION'" >&2
+  exit 1
+fi
+
 echo "==> Packaging archive for distribution"
 (cd "$DIST_DIR" && zip -q "$ARCHIVE_NAME" tetris)
 

@@ -42,14 +42,20 @@ pwsh scripts/build_windows.ps1  # on Windows -> dist/windows/tetris.exe
 Each also writes a distributable
 `dist/<os>/tetris-<version>-<os>-<arch>.zip`.
 
-The Windows build embeds version information (via
-[`scripts/version_info.txt`](scripts/version_info.txt)) into `tetris.exe`
-and fails the build if
-[`exe-checker`](exe-checker/) does not confirm it is present, so a
-`tetris.exe` produced by this script always reports `ok`. The
-[`windows-build.yml`](.github/workflows/windows-build.yml) workflow runs
-this same build and check on every push/PR that touches the game, the
-build scripts, or exe-checker.
+Every build script verifies the binary it just produced before packaging
+it, failing the build if the check doesn't pass:
+
+- **Windows**: embeds version information (via
+  [`scripts/version_info.txt`](scripts/version_info.txt)) into `tetris.exe`
+  and confirms it with [`exe-checker`](exe-checker/) — a Windows-only PE
+  resource, so this check only applies there. The
+  [`windows-build.yml`](.github/workflows/windows-build.yml) workflow runs
+  this same build and check on every push/PR that touches the game, the
+  build scripts, or exe-checker.
+- **All platforms**: `tetris --version` is checked to print the expected
+  `tetris <version>`, since macOS (Mach-O) and Linux (ELF) binaries have no
+  OS-level "version resource" equivalent to Windows' — a runtime
+  `--version` flag is the portable convention instead.
 
 ## Coverage on pull requests
 

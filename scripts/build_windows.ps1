@@ -59,6 +59,14 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+Write-Host "==> Verifying --version output"
+$ActualVersion = & $ExePath --version
+$ExpectedVersion = "tetris $Version"
+if ($ActualVersion -ne $ExpectedVersion) {
+    Write-Error "error: expected '$ExePath --version' to print '$ExpectedVersion', got '$ActualVersion'."
+    exit 1
+}
+
 Write-Host "==> Packaging archive for distribution"
 Compress-Archive -Path $ExePath -DestinationPath $ArchivePath -Force
 
