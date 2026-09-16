@@ -11,7 +11,8 @@ This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
 
 ```bash
 uv sync --dev
-uv run pytest --cov=tetris --cov-report=term-missing
+uv run coverage run -m unittest discover -s tests
+uv run coverage report -m
 uv run tetris   # play the game in a terminal
 ```
 
