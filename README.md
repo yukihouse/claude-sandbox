@@ -15,17 +15,18 @@ uv run pytest --cov=tetris --cov-report=term-missing
 uv run tetris   # play the game in a terminal
 ```
 
-## Building a standalone macOS executable
+## Building a standalone executable
 
-Run this on a Mac (requires [uv](https://docs.astral.sh/uv/)) to produce a
-single-file binary that doesn't need Python installed:
+Requires [uv](https://docs.astral.sh/uv/). Run the script matching your OS to
+produce a single-file binary that doesn't need Python installed:
 
 ```bash
-scripts/build_macos.sh
+scripts/build_macos.sh   # on macOS -> dist/macos/tetris
+scripts/build_linux.sh   # on Linux -> dist/linux/tetris
 ```
 
-This writes `dist/macos/tetris` and a distributable
-`dist/macos/tetris-<version>-macos-<arch>.zip`.
+Each also writes a distributable
+`dist/<os>/tetris-<version>-<os>-<arch>.zip`.
 
 ## Coverage on pull requests
 
