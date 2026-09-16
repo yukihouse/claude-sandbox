@@ -25,6 +25,7 @@ testpaths = ["tests"]
 [tool.coverage.run]
 source = ["tetris"]
 branch = true
+relative_files = true
 omit = ["src/tetris/cli.py", "src/tetris/__main__.py"]
 
 [tool.coverage.report]
