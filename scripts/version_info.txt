@@ -2,7 +2,7 @@
 #
 # PyInstaller version-file resource for the Windows tetris.exe build.
 # Passed to PyInstaller via --version-file so it embeds a VS_VERSION_INFO
-# resource in the .exe, which exe-checker verifies is present.
+# resource in the .exe, which version-checker verifies is present.
 #
 # Format reference:
 # https://pyinstaller.org/en/stable/usage.html#capturing-windows-version-data

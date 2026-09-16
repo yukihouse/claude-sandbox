@@ -2,7 +2,7 @@
 #
 # Produces a single-file tetris.exe (no Python install required to run it)
 # with version information embedded, plus a zip archive ready for
-# distribution. The build fails if exe-checker does not confirm the
+# distribution. The build fails if version-checker does not confirm the
 # version information was embedded correctly.
 #
 # Requirements: Windows, PowerShell, and uv (https://docs.astral.sh/uv/).
@@ -52,10 +52,10 @@ uv run --with pyinstaller pyinstaller `
     --noconfirm `
     "$RootDir\scripts\pyinstaller_entry.py"
 
-Write-Host "==> Verifying embedded version info with exe-checker"
-uv run --project "$RootDir\exe-checker" exe-checker $ExePath
+Write-Host "==> Verifying embedded version info with version-checker"
+uv run --project "$RootDir\version-checker" version-checker $ExePath
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "error: exe-checker did not confirm version info is embedded in $ExePath (exit code $LASTEXITCODE)."
+    Write-Error "error: version-checker did not confirm version info is embedded in $ExePath (exit code $LASTEXITCODE)."
     exit 1
 }
 

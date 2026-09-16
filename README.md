@@ -47,11 +47,11 @@ it, failing the build if the check doesn't pass:
 
 - **Windows**: embeds version information (via
   [`scripts/version_info.txt`](scripts/version_info.txt)) into `tetris.exe`
-  and confirms it with [`exe-checker`](exe-checker/) — a Windows-only PE
-  resource, so this check only applies there. The
+  and confirms it with [`version-checker`](version-checker/) — a
+  Windows-only PE resource, so this check only applies there. The
   [`windows-build.yml`](.github/workflows/windows-build.yml) workflow runs
   this same build and check on every push/PR that touches the game, the
-  build scripts, or exe-checker.
+  build scripts, or version-checker.
 - **All platforms**: `tetris --version` is checked to print the expected
   `tetris <version>`, since macOS (Mach-O) and Linux (ELF) binaries have no
   OS-level "version resource" equivalent to Windows' — a runtime

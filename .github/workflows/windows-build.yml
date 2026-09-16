@@ -9,7 +9,7 @@ on:
       - "scripts/**"
       - "pyproject.toml"
       - "uv.lock"
-      - "exe-checker/**"
+      - "version-checker/**"
       - ".github/workflows/windows-build.yml"
   pull_request:
     paths:
@@ -17,7 +17,7 @@ on:
       - "scripts/**"
       - "pyproject.toml"
       - "uv.lock"
-      - "exe-checker/**"
+      - "version-checker/**"
       - ".github/workflows/windows-build.yml"
 
 jobs:
