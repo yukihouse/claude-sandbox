@@ -1,0 +1,52 @@
+name: exe-checker Coverage
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "exe-checker/**"
+      - ".github/workflows/exe-checker-coverage.yml"
+  pull_request:
+    paths:
+      - "exe-checker/**"
+      - ".github/workflows/exe-checker-coverage.yml"
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: exe-checker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked --dev
+
+      - name: Run tests with coverage
+        run: uv run pytest --cov=exe_checker --cov-report=term-missing
+
+      - name: Coverage comment
+        id: coverage_comment
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          SUBPROJECT_ID: exe-checker
+          COVERAGE_PATH: exe-checker
+
+      - name: Store Pull Request comment to be posted later
+        uses: actions/upload-artifact@v4
+        if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
+        with:
+          name: python-coverage-comment-action-exe-checker
+          path: exe-checker/python-coverage-comment-action*.txt
