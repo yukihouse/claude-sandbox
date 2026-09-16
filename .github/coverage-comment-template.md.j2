@@ -1,0 +1,25 @@
+{% extends "base" %}
+
+{#- Show line coverage and branch coverage as two separate, clearly labeled
+    badges (instead of a single blended "Coverage" number that silently
+    mixes both), so it's never ambiguous which metric a number refers to
+    when compared against the diff-only, line-based "PR Coverage" badge. -#}
+{% block coverage_evolution_badge %}
+{#- coverage.info.covered_lines/num_statements are plain ints, so this ratio
+    is a Python float, not a decimal.Decimal — the built-in `pct` filter
+    requires a Decimal internally and raises TypeError on a float, so
+    percentages here are formatted by hand instead of via `| pct`. -#}
+{%- set line_rate = (coverage.info.covered_lines / coverage.info.num_statements) if coverage.info.num_statements else 1 -%}
+{%- set line_pct = "%d" | format(line_rate * 100) -%}
+{%- set line_text = "Line coverage for the whole project is " ~ ("%.2f" | format(line_rate * 100)) ~ "% (" ~ coverage.info.covered_lines ~ "/" ~ coverage.info.num_statements ~ " statements)." -%}
+<img title="{{ line_text }}" src="{{ 'Line Coverage' | generate_badge(message=line_pct ~ '%', color=(line_rate | x100 | get_badge_color)) }}">
+
+{%- if coverage.info.num_branches -%}
+{#- space #} {# space -#}
+{%- set branch_rate = (coverage.info.covered_branches / coverage.info.num_branches) -%}
+{%- set branch_pct = "%d" | format(branch_rate * 100) -%}
+{%- set branch_text = "Branch coverage for the whole project is " ~ ("%.2f" | format(branch_rate * 100)) ~ "% (" ~ coverage.info.covered_branches ~ "/" ~ coverage.info.num_branches ~ " branches)." -%}
+<img title="{{ branch_text }}" src="{{ 'Branch Coverage' | generate_badge(message=branch_pct ~ '%', color=(branch_rate | x100 | get_badge_color)) }}">
+
+{%- endif -%}
+{% endblock coverage_evolution_badge %}

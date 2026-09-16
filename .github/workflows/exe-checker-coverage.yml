@@ -36,6 +36,16 @@ jobs:
       - name: Run tests with coverage
         run: uv run pytest --cov=exe_checker --cov-report=term-missing
 
+      - name: Read custom coverage comment template
+        id: coverage_comment_template
+        working-directory: .
+        run: |
+          {
+            echo 'content<<COVERAGE_TEMPLATE_EOF'
+            cat .github/coverage-comment-template.md.j2
+            echo 'COVERAGE_TEMPLATE_EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Coverage comment
         id: coverage_comment
         uses: py-cov-action/python-coverage-comment-action@v3
@@ -43,6 +53,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           SUBPROJECT_ID: exe-checker
           COVERAGE_PATH: exe-checker
+          COMMENT_TEMPLATE: ${{ steps.coverage_comment_template.outputs.content }}
 
       - name: Store Pull Request comment to be posted later
         uses: actions/upload-artifact@v4
