@@ -6,7 +6,7 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "uv"
-    directory: "/exe-checker"
+    directory: "/version-checker"
     schedule:
       interval: "weekly"
 
