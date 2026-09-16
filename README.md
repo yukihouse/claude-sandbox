@@ -15,6 +15,18 @@ uv run pytest --cov=tetris --cov-report=term-missing
 uv run tetris   # play the game in a terminal
 ```
 
+## Building a standalone macOS executable
+
+Run this on a Mac (requires [uv](https://docs.astral.sh/uv/)) to produce a
+single-file binary that doesn't need Python installed:
+
+```bash
+scripts/build_macos.sh
+```
+
+This writes `dist/macos/tetris` and a distributable
+`dist/macos/tetris-<version>-macos-<arch>.zip`.
+
 ## Coverage on pull requests
 
 The [`coverage.yml`](.github/workflows/coverage.yml) workflow runs the test
