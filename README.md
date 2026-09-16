@@ -2,13 +2,14 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/yukihouse/claude-sandbox/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                       |    Stmts |     Miss |   Branch |   BrPart |    Cover |   Missing |
-|--------------------------- | -------: | -------: | -------: | -------: | -------: | --------: |
-| src/tetris/\_\_init\_\_.py |        6 |        0 |        0 |        0 |     100% |           |
-| src/tetris/board.py        |       48 |        0 |       16 |        0 |     100% |           |
-| src/tetris/game.py         |      107 |        0 |       24 |        0 |     100% |           |
-| src/tetris/shapes.py       |       22 |        0 |        6 |        0 |     100% |           |
-| **TOTAL**                  |  **183** |    **0** |   **46** |    **0** | **100%** |           |
+| Name                            |    Stmts |     Miss |   Branch |   BrPart |    Cover |   Missing |
+|-------------------------------- | -------: | -------: | -------: | -------: | -------: | --------: |
+| src/tetris/\_\_init\_\_.py      |        6 |        0 |        0 |        0 |     100% |           |
+| src/tetris/board.py             |       48 |        0 |       16 |        0 |     100% |           |
+| src/tetris/game.py              |      107 |        0 |       24 |        0 |     100% |           |
+| src/tetris/shapes.py            |       22 |        0 |        6 |        0 |     100% |           |
+| src/tetris/streamlit\_render.py |       36 |        0 |       10 |        0 |     100% |           |
+| **TOTAL**                       |  **219** |    **0** |   **56** |    **0** | **100%** |           |
 
 
 ## Setup coverage badge
