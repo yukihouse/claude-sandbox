@@ -34,12 +34,22 @@ Requires [uv](https://docs.astral.sh/uv/). Run the script matching your OS to
 produce a single-file binary that doesn't need Python installed:
 
 ```bash
-scripts/build_macos.sh   # on macOS -> dist/macos/tetris
-scripts/build_linux.sh   # on Linux -> dist/linux/tetris
+scripts/build_macos.sh          # on macOS -> dist/macos/tetris
+scripts/build_linux.sh          # on Linux -> dist/linux/tetris
+pwsh scripts/build_windows.ps1  # on Windows -> dist/windows/tetris.exe
 ```
 
 Each also writes a distributable
 `dist/<os>/tetris-<version>-<os>-<arch>.zip`.
+
+The Windows build embeds version information (via
+[`scripts/version_info.txt`](scripts/version_info.txt)) into `tetris.exe`
+and fails the build if
+[`exe-checker`](exe-checker/) does not confirm it is present, so a
+`tetris.exe` produced by this script always reports `ok`. The
+[`windows-build.yml`](.github/workflows/windows-build.yml) workflow runs
+this same build and check on every push/PR that touches the game, the
+build scripts, or exe-checker.
 
 ## Coverage on pull requests
 
