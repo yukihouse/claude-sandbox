@@ -9,7 +9,7 @@ from .pe import PEFormatError, has_version_info_resource
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="exe-checker",
+        prog="version-checker",
         description="Check whether a Windows .exe file has version information embedded.",
     )
     parser.add_argument("exe_path", type=Path, help="path to the .exe file to inspect")

@@ -1,6 +1,6 @@
 import pytest
 
-from exe_checker.cli import main
+from version_checker.cli import main
 
 from .pe_fixtures import build_pe, build_version_resource_section
 

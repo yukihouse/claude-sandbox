@@ -1,6 +1,6 @@
 import pytest
 
-from exe_checker.pe import PEFormatError, has_version_info_resource
+from version_checker.pe import PEFormatError, has_version_info_resource
 
 from .pe_fixtures import build_pe, build_version_resource_section
 
