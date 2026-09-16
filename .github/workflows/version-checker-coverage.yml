@@ -56,7 +56,7 @@ jobs:
           COMMENT_TEMPLATE: ${{ steps.coverage_comment_template.outputs.content }}
 
       - name: Store Pull Request comment to be posted later
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
         with:
           name: python-coverage-comment-action-version-checker
