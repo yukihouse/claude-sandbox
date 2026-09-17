@@ -8,10 +8,10 @@
 | src/version\_checker/cli.py          |       26 |        0 |        2 |        0 |     100% |           |
 | src/version\_checker/pe.py           |       99 |        0 |       50 |        0 |     100% |           |
 | tests/\_\_init\_\_.py                |        0 |        0 |        0 |        0 |     100% |           |
-| tests/pe\_fixtures.py                |       91 |        0 |        4 |        0 |     100% |           |
+| tests/pe\_fixtures.py                |       70 |        0 |        4 |        0 |     100% |           |
 | tests/test\_cli.py                   |       46 |        0 |        0 |        0 |     100% |           |
-| tests/test\_pe.py                    |       86 |        0 |        0 |        0 |     100% |           |
-| **TOTAL**                            |  **351** |    **0** |   **56** |    **0** | **100%** |           |
+| tests/test\_pe.py                    |       94 |        0 |        0 |        0 |     100% |           |
+| **TOTAL**                            |  **338** |    **0** |   **56** |    **0** | **100%** |           |
 
 
 ## Setup coverage badge
