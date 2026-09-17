@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_a44f0ac069e85531_test_main_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-17 00:22 +0000
+            created at 2026-09-17 00:38 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -113,10 +113,10 @@
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_seven_bag_produces_each_shape_once_before_repeating</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">        <span class="nam">game</span> <span class="op">=</span> <span class="nam">make_game</span><span class="op">(</span><span class="nam">seed</span><span class="op">=</span><span class="num">7</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">seen</span> <span class="op">=</span> <span class="nam">set</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">        <span class="key">for</span> <span class="nam">_</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="num">7</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">            <span class="nam">seen</span><span class="op">.</span><span class="nam">add</span><span class="op">(</span><span class="nam">game</span><span class="op">.</span><span class="nam">next_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">            <span class="nam">game</span><span class="op">.</span><span class="nam">next_name</span> <span class="op">=</span> <span class="nam">game</span><span class="op">.</span><span class="nam">_draw_from_bag</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">seen</span> <span class="op">=</span> <span class="op">{</span><span class="nam">game</span><span class="op">.</span><span class="nam">current</span><span class="op">.</span><span class="nam">name</span><span class="op">,</span> <span class="nam">game</span><span class="op">.</span><span class="nam">next_name</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">        <span class="key">for</span> <span class="nam">_</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="num">5</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">            <span class="nam">game</span><span class="op">.</span><span class="nam">spawn_piece</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">            <span class="nam">seen</span><span class="op">.</span><span class="nam">add</span><span class="op">(</span><span class="nam">game</span><span class="op">.</span><span class="nam">next_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">seen</span><span class="op">,</span> <span class="nam">set</span><span class="op">(</span><span class="nam">shapes</span><span class="op">.</span><span class="nam">SHAPE_NAMES</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_move_left_and_right_within_open_board</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -263,7 +263,7 @@
             <a class="nav" href="z_a44f0ac069e85531_test_main_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-17 00:22 +0000
+            created at 2026-09-17 00:38 +0000
         </p>
     </div>
 </footer>
