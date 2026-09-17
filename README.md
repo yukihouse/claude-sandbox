@@ -2,14 +2,20 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/yukihouse/claude-sandbox/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                            |    Stmts |     Miss |   Branch |   BrPart |    Cover |   Missing |
-|-------------------------------- | -------: | -------: | -------: | -------: | -------: | --------: |
-| src/tetris/\_\_init\_\_.py      |       12 |        0 |        0 |        0 |     100% |           |
-| src/tetris/board.py             |       48 |        0 |       16 |        0 |     100% |           |
-| src/tetris/game.py              |      107 |        0 |       24 |        0 |     100% |           |
-| src/tetris/shapes.py            |       22 |        0 |        6 |        0 |     100% |           |
-| src/tetris/streamlit\_render.py |       37 |        0 |       10 |        0 |     100% |           |
-| **TOTAL**                       |  **226** |    **0** |   **56** |    **0** | **100%** |           |
+| Name                             |    Stmts |     Miss |   Branch |   BrPart |    Cover |   Missing |
+|--------------------------------- | -------: | -------: | -------: | -------: | -------: | --------: |
+| src/tetris/\_\_init\_\_.py       |       12 |        0 |        0 |        0 |     100% |           |
+| src/tetris/board.py              |       48 |        0 |       16 |        0 |     100% |           |
+| src/tetris/game.py               |      107 |        0 |       24 |        0 |     100% |           |
+| src/tetris/shapes.py             |       22 |        0 |        6 |        0 |     100% |           |
+| src/tetris/streamlit\_render.py  |       37 |        0 |       10 |        0 |     100% |           |
+| tests/\_\_init\_\_.py            |        0 |        0 |        0 |        0 |     100% |           |
+| tests/test\_board.py             |       79 |        0 |        4 |        0 |     100% |           |
+| tests/test\_game.py              |      143 |        0 |       12 |        0 |     100% |           |
+| tests/test\_main.py              |       18 |        0 |        0 |        0 |     100% |           |
+| tests/test\_shapes.py            |       34 |        0 |        8 |        0 |     100% |           |
+| tests/test\_streamlit\_render.py |       55 |        0 |        4 |        0 |     100% |           |
+| **TOTAL**                        |  **555** |    **0** |   **84** |    **0** | **100%** |           |
 
 
 ## Setup coverage badge
