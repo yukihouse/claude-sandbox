@@ -18,7 +18,8 @@ This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
 
 ```bash
 uv sync --dev
-uv run pytest --cov=version_checker --cov-report=term-missing
+uv run coverage run -m unittest discover -s tests -t .
+uv run coverage report -m
 uv run version-checker path/to/app.exe
 ```
 

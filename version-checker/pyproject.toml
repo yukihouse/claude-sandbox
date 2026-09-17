@@ -11,17 +11,13 @@ version-checker = "version_checker.cli:main"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0.0",
-    "pytest-cov>=5.0.0",
+    "coverage>=7.0",
     "ruff>=0.16.8",
 ]
 
 [build-system]
 requires = ["uv_build>=0.8.17,<0.13.0"]
 build-backend = "uv_build"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
 
 [tool.coverage.run]
 source = ["version_checker"]
