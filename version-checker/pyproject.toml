@@ -19,7 +19,7 @@ requires = ["uv_build>=0.8.17,<0.13.0"]
 build-backend = "uv_build"
 
 [tool.coverage.run]
-source = ["version_checker"]
+source = ["version_checker", "tests"]
 branch = true
 relative_files = true
 omit = ["src/version_checker/__main__.py"]
