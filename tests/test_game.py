@@ -29,10 +29,10 @@ class TestGame(unittest.TestCase):
 
     def test_seven_bag_produces_each_shape_once_before_repeating(self):
         game = make_game(seed=7)
-        seen = set()
-        for _ in range(7):
+        seen = {game.current.name, game.next_name}
+        for _ in range(5):
+            game.spawn_piece()
             seen.add(game.next_name)
-            game.next_name = game._draw_from_bag()
         self.assertEqual(seen, set(shapes.SHAPE_NAMES))
 
     def test_move_left_and_right_within_open_board(self):
