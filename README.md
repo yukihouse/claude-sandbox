@@ -2,12 +2,16 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/yukihouse/claude-sandbox/blob/python-coverage-comment-action-data-version-checker/htmlcov/index.html)
 
-| Name                                 |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
-|------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
-| src/version\_checker/\_\_init\_\_.py |        3 |        0 |        0 |        0 |    100% |           |
-| src/version\_checker/cli.py          |       26 |        0 |        2 |        0 |    100% |           |
-| src/version\_checker/pe.py           |       99 |       14 |       50 |       16 |     79% |46-\>39, 48, 53-\>46, 55, 57-\>53, 69, 72, 93, 100, 105-108, 112, 131, 142-\>140, 144, 150, 158 |
-| **TOTAL**                            |  **128** |   **14** |   **52** |   **16** | **82%** |           |
+| Name                                 |    Stmts |     Miss |   Branch |   BrPart |    Cover |   Missing |
+|------------------------------------- | -------: | -------: | -------: | -------: | -------: | --------: |
+| src/version\_checker/\_\_init\_\_.py |        3 |        0 |        0 |        0 |     100% |           |
+| src/version\_checker/cli.py          |       26 |        0 |        2 |        0 |     100% |           |
+| src/version\_checker/pe.py           |       99 |        0 |       50 |        0 |     100% |           |
+| tests/\_\_init\_\_.py                |        0 |        0 |        0 |        0 |     100% |           |
+| tests/pe\_fixtures.py                |       91 |        0 |        4 |        0 |     100% |           |
+| tests/test\_cli.py                   |       46 |        0 |        0 |        0 |     100% |           |
+| tests/test\_pe.py                    |       86 |        0 |        0 |        0 |     100% |           |
+| **TOTAL**                            |  **351** |    **0** |   **56** |    **0** | **100%** |           |
 
 
 ## Setup coverage badge
