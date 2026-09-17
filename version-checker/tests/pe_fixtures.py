@@ -120,6 +120,95 @@ def _resource_directory(entries: list[tuple[int, int]]) -> bytes:
     return header + body
 
 
+def _file_header(number_of_sections: int, size_of_optional_header: int) -> bytes:
+    return struct.pack(
+        "<HHIIIHH",
+        IMAGE_FILE_MACHINE_I386,
+        number_of_sections,
+        0,  # TimeDateStamp
+        0,  # PointerToSymbolTable
+        0,  # NumberOfSymbols
+        size_of_optional_header,
+        0x0102,  # Characteristics
+    )
+
+
+def _minimal_optional_header(
+    magic: int,
+    fixed_size: int,
+    number_of_rva_and_sizes: int,
+    data_directory: list[tuple[int, int]] | None = None,
+) -> bytes:
+    """Build an optional header containing only the two fields
+    `_find_resource_directory` actually reads: the magic number and
+    NumberOfRvaAndSizes (plus the data directory that follows it). Lets
+    tests drive header shapes (PE32+, malformed) that `_optional_header32`
+    can't produce.
+    """
+    fixed = bytearray(fixed_size)
+    struct.pack_into("<H", fixed, 0, magic)
+    struct.pack_into("<I", fixed, fixed_size - 4, number_of_rva_and_sizes)
+    directory = b"".join(struct.pack("<II", va, size) for va, size in data_directory or [])
+    return bytes(fixed) + directory
+
+
+def build_pe_from_parts(file_header: bytes, optional_header: bytes, sections: bytes = b"") -> bytes:
+    """Assemble a PE file from already-built header pieces, for tests that
+    need precise control over header sizes/fields (e.g. malformed input)."""
+    return _dos_header() + b"PE\x00\x00" + file_header + optional_header + sections
+
+
+def build_resource_section_name_entry_not_subdirectory() -> bytes:
+    """Root -> a RT_VERSION type entry (marked as a subdirectory) whose
+    name directory has a single entry that is *not* itself marked as a
+    subdirectory - an edge case the parser skips over."""
+    name_offset = 24
+    root_dir = _resource_directory([(16, name_offset | 0x80000000)])
+    name_dir = _resource_directory([(1, 0)])
+    return root_dir + name_dir
+
+
+def build_resource_section_lang_entry_is_subdirectory() -> bytes:
+    """Root -> name -> a language directory whose single entry is
+    (incorrectly) marked as a subdirectory - an edge case the parser skips
+    over."""
+    name_offset, lang_offset = 24, 48
+    root_dir = _resource_directory([(16, name_offset | 0x80000000)])
+    name_dir = _resource_directory([(1, lang_offset | 0x80000000)])
+    lang_dir = _resource_directory([(0x409, 0x80000000)])
+    return root_dir + name_dir + lang_dir
+
+
+def build_resource_section_skips_non_version_leaf_then_finds_version_info() -> bytes:
+    """Root -> name -> a language directory with two leaf entries: the
+    first does not resolve to version info (zero-length data), the second
+    does. Exercises the "keep scanning siblings" path."""
+    name_offset, lang_offset = 24, 48
+    non_version_entry_offset, version_entry_offset, version_offset = 80, 96, 112
+
+    root_dir = _resource_directory([(16, name_offset | 0x80000000)])
+    name_dir = _resource_directory([(1, lang_offset | 0x80000000)])
+    lang_dir = _resource_directory(
+        [(0x409, non_version_entry_offset), (0x40A, version_entry_offset)]
+    )
+
+    non_version_data_entry = struct.pack("<IIII", 0, 0, 0, 0)  # version_size == 0
+
+    fixed_file_info = struct.pack("<I", 0xFEEF04BD) + b"\x00" * 48
+    body = VS_VERSION_INFO_KEY + b"\x00\x00" + fixed_file_info
+    version_data = struct.pack("<HHH", 6 + len(body), len(fixed_file_info), 0) + body
+    resource_rva = HEADER_SIZE
+    version_data_entry = struct.pack(
+        "<IIII", resource_rva + version_offset, len(version_data), 0, 0
+    )
+
+    section = (
+        root_dir + name_dir + lang_dir + non_version_data_entry + version_data_entry + version_data
+    )
+    assert len(section) == version_offset + len(version_data)
+    return section
+
+
 def build_version_resource_section(resource_type_id: int = 16) -> bytes:
     """Build a ".rsrc" section containing a 3-level resource directory
     (type -> name -> language) with a single leaf resource of the given

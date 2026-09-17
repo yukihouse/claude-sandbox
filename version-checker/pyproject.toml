@@ -25,6 +25,7 @@ relative_files = true
 omit = ["src/version_checker/__main__.py"]
 
 [tool.coverage.report]
+fail_under = 100
 exclude_lines = [
     "pragma: no cover",
     "if __name__ == .__main__.:",
