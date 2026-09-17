@@ -130,8 +130,7 @@ class TestGame(unittest.TestCase):
         game.current = piece
         target_cells = shapes.get_cells("I", 1)
         for r, c in target_cells:
-            if game.board.in_bounds(r, c):
-                game.board.grid[r][c] = 9
+            game.board.grid[r][c] = 9
         self.assertTrue(game.rotate())
         self.assertEqual(game.current.rotation, 1)
         self.assertNotEqual(game.current.col, 0)

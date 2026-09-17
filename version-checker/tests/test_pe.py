@@ -3,7 +3,13 @@ import unittest
 
 from version_checker.pe import PEFormatError, has_version_info_resource
 
-from .pe_fixtures import DOS_HEADER_SIZE, HEADER_SIZE, build_pe, build_version_resource_section
+from .pe_fixtures import (
+    DOS_HEADER_SIZE,
+    HEADER_SIZE,
+    build_pe,
+    build_resource_section_skips_non_version_leaf_then_finds_version_info,
+    build_version_resource_section,
+)
 
 _OPTIONAL_HEADER_OFFSET = DOS_HEADER_SIZE + 4 + 20
 _DATA_DIRECTORY_OFFSET = _OPTIONAL_HEADER_OFFSET + 96
@@ -128,6 +134,13 @@ class TestHasVersionInfoResource(unittest.TestCase):
         struct.pack_into("<I", section, offset_field, current | 0x80000000)
         data = build_pe(bytes(section))
         self.assertFalse(has_version_info_resource(data))
+
+    def test_keeps_scanning_siblings_after_a_non_version_leaf(self):
+        # Real multi-locale executables have several language entries per
+        # resource; the first one here carries no version data, so the
+        # parser must keep scanning rather than stop at it.
+        data = build_pe(build_resource_section_skips_non_version_leaf_then_finds_version_info())
+        self.assertTrue(has_version_info_resource(data))
 
 
 if __name__ == "__main__":
