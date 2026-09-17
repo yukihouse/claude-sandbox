@@ -1,25 +1,19 @@
 import struct
 import unittest
 
-from version_checker.pe import (
-    PEFormatError,
-    _read_directory_entries,
-    _resource_data_is_version_info,
-    _rva_to_offset,
-    has_version_info_resource,
-)
+from version_checker.pe import PEFormatError, has_version_info_resource
 
 from .pe_fixtures import (
     DOS_HEADER_SIZE,
-    _file_header,
-    _minimal_optional_header,
+    HEADER_SIZE,
     build_pe,
-    build_pe_from_parts,
-    build_resource_section_lang_entry_is_subdirectory,
-    build_resource_section_name_entry_not_subdirectory,
     build_resource_section_skips_non_version_leaf_then_finds_version_info,
     build_version_resource_section,
 )
+
+_OPTIONAL_HEADER_OFFSET = DOS_HEADER_SIZE + 4 + 20
+_DATA_DIRECTORY_OFFSET = _OPTIONAL_HEADER_OFFSET + 96
+_SECTION_TABLE_OFFSET = _OPTIONAL_HEADER_OFFSET + 224  # OPTIONAL_HEADER_SIZE for PE32
 
 
 class TestHasVersionInfoResource(unittest.TestCase):
@@ -53,104 +47,100 @@ class TestHasVersionInfoResource(unittest.TestCase):
             has_version_info_resource(bytes(data))
 
     def test_rejects_truncated_coff_file_header(self):
-        data = build_pe(resource_section=None)[: DOS_HEADER_SIZE + 4 + 10]
+        data = build_pe(resource_section=None)
+        # Cut the file off partway through the 20-byte COFF file header.
+        truncated = data[: DOS_HEADER_SIZE + 4 + 10]
         with self.assertRaisesRegex(PEFormatError, "truncated COFF file header"):
-            has_version_info_resource(data)
+            has_version_info_resource(truncated)
 
-    def test_rejects_missing_optional_header(self):
-        file_header = _file_header(number_of_sections=0, size_of_optional_header=0)
-        data = build_pe_from_parts(file_header, optional_header=b"")
+    def test_rejects_pe_with_no_optional_header(self):
+        data = bytearray(build_pe(resource_section=None))
+        struct.pack_into("<H", data, DOS_HEADER_SIZE + 4 + 16, 0)  # SizeOfOptionalHeader
         with self.assertRaisesRegex(PEFormatError, "no optional header"):
-            has_version_info_resource(data)
-
-    def test_no_version_info_for_pe32_plus_with_empty_data_directory(self):
-        # Exercises the PE32+ (64-bit) magic branch, and a NumberOfRvaAndSizes
-        # too small to contain a resource-directory entry at all.
-        optional_header = _minimal_optional_header(
-            magic=0x20B, fixed_size=112, number_of_rva_and_sizes=0
-        )
-        file_header = _file_header(
-            number_of_sections=0, size_of_optional_header=len(optional_header)
-        )
-        data = build_pe_from_parts(file_header, optional_header)
-        self.assertFalse(has_version_info_resource(data))
+            has_version_info_resource(bytes(data))
 
     def test_rejects_unrecognized_optional_header_magic(self):
-        optional_header = _minimal_optional_header(
-            magic=0x999, fixed_size=96, number_of_rva_and_sizes=16, data_directory=[(0, 0)] * 16
-        )
-        file_header = _file_header(
-            number_of_sections=0, size_of_optional_header=len(optional_header)
-        )
-        data = build_pe_from_parts(file_header, optional_header)
+        data = bytearray(build_pe(resource_section=None))
+        struct.pack_into("<H", data, _OPTIONAL_HEADER_OFFSET, 0x1234)
         with self.assertRaisesRegex(PEFormatError, "unrecognized optional header magic"):
-            has_version_info_resource(data)
+            has_version_info_resource(bytes(data))
+
+    def test_pe32_plus_with_no_resource_directory_reports_no_version_info(self):
+        # A PE32+ (64-bit) optional header lays the data directory 16 bytes
+        # further in than PE32; a NumberOfRvaAndSizes of 0 there means the
+        # file declares no data directories at all, resource or otherwise.
+        data = bytearray(build_pe(resource_section=None))
+        struct.pack_into("<H", data, _OPTIONAL_HEADER_OFFSET, 0x20B)  # PE32+
+        struct.pack_into("<I", data, _OPTIONAL_HEADER_OFFSET + 108, 0)
+        self.assertFalse(has_version_info_resource(bytes(data)))
 
     def test_rejects_truncated_section_table(self):
-        data_directory = [(0, 0)] * 16
-        data_directory[2] = (100, 50)  # nonzero resource RVA/size to reach section parsing
-        optional_header = _minimal_optional_header(
-            magic=0x10B, fixed_size=96, number_of_rva_and_sizes=16, data_directory=data_directory
-        )
-        file_header = _file_header(
-            number_of_sections=1, size_of_optional_header=len(optional_header)
-        )
-        data = build_pe_from_parts(file_header, optional_header, sections=b"\x00" * 10)
+        data = build_pe(build_version_resource_section())
+        truncated = data[: _SECTION_TABLE_OFFSET + 10]
         with self.assertRaisesRegex(PEFormatError, "truncated section table"):
+            has_version_info_resource(truncated)
+
+    def test_rejects_resource_rva_outside_any_section(self):
+        data = bytearray(build_pe(build_version_resource_section()))
+        resource_entry_offset = _DATA_DIRECTORY_OFFSET + 2 * 8
+        struct.pack_into("<I", data, resource_entry_offset, 0x7FFFFFFF)
+        with self.assertRaisesRegex(PEFormatError, "not contained in any section"):
+            has_version_info_resource(bytes(data))
+
+    def test_rejects_truncated_resource_directory_header(self):
+        # Far too short to contain the 16-byte resource directory header.
+        data = build_pe(b"\x00" * 8)
+        with self.assertRaisesRegex(PEFormatError, "truncated resource directory$"):
             has_version_info_resource(data)
 
-    def test_skips_name_entry_that_is_not_a_subdirectory(self):
-        data = build_pe(build_resource_section_name_entry_not_subdirectory())
+    def test_rejects_truncated_resource_directory_entry(self):
+        # A valid 16-byte header claiming one entry, but no entry bytes follow.
+        header_claiming_one_entry = struct.pack("<IIHHHH", 0, 0, 0, 0, 0, 1)
+        data = build_pe(header_claiming_one_entry)
+        with self.assertRaisesRegex(PEFormatError, "truncated resource directory entry"):
+            has_version_info_resource(data)
+
+    def test_ignores_truncated_version_data_entry(self):
+        data = build_pe(build_version_resource_section())
+        # Cut the file off partway through the 16-byte data-entry structure
+        # that would otherwise point at the VS_VERSIONINFO bytes.
+        truncated = data[: HEADER_SIZE + 72 + 5]
+        self.assertFalse(has_version_info_resource(truncated))
+
+    def test_ignores_version_resource_with_zero_size(self):
+        section = bytearray(build_version_resource_section())
+        struct.pack_into("<I", section, 72 + 4, 0)  # zero the VS_VERSIONINFO size field
+        data = build_pe(bytes(section))
         self.assertFalse(has_version_info_resource(data))
 
-    def test_skips_lang_entry_that_is_marked_as_a_subdirectory(self):
-        data = build_pe(build_resource_section_lang_entry_is_subdirectory())
+    def test_skips_name_entry_that_is_not_itself_a_subdirectory(self):
+        # A well-formed 3-level tree always has a subdirectory at the name
+        # level; clearing that bit models a malformed tree that must be
+        # skipped rather than misread as pointing at resource data.
+        section = bytearray(build_version_resource_section())
+        offset_field = 24 + 16 + 4  # name_offset + directory header + id field
+        current = struct.unpack_from("<I", section, offset_field)[0]
+        struct.pack_into("<I", section, offset_field, current & 0x7FFFFFFF)
+        data = build_pe(bytes(section))
+        self.assertFalse(has_version_info_resource(data))
+
+    def test_skips_lang_entry_that_is_itself_a_subdirectory(self):
+        # The lang level is always a leaf in a well-formed 3-level tree;
+        # setting the subdirectory bit models a deeper tree than this
+        # parser supports, which must be skipped rather than misread.
+        section = bytearray(build_version_resource_section())
+        offset_field = 48 + 16 + 4  # lang_offset + directory header + id field
+        current = struct.unpack_from("<I", section, offset_field)[0]
+        struct.pack_into("<I", section, offset_field, current | 0x80000000)
+        data = build_pe(bytes(section))
         self.assertFalse(has_version_info_resource(data))
 
     def test_keeps_scanning_siblings_after_a_non_version_leaf(self):
+        # Real multi-locale executables have several language entries per
+        # resource; the first one here carries no version data, so the
+        # parser must keep scanning rather than stop at it.
         data = build_pe(build_resource_section_skips_non_version_leaf_then_finds_version_info())
         self.assertTrue(has_version_info_resource(data))
-
-
-class TestResourceDataIsVersionInfo(unittest.TestCase):
-    def test_returns_false_when_entry_is_truncated(self):
-        sections = [(0, 10, 10, 0)]
-        self.assertFalse(
-            _resource_data_is_version_info(
-                b"\x00" * 10, resource_rva=0, data_entry_offset=0, sections=sections
-            )
-        )
-
-    def test_returns_false_for_zero_length_version_data(self):
-        data = struct.pack("<II", 0, 0) + b"\x00" * 8  # version_rva=0, version_size=0
-        sections = [(0, 100, 100, 0)]
-        self.assertFalse(
-            _resource_data_is_version_info(
-                data, resource_rva=0, data_entry_offset=0, sections=sections
-            )
-        )
-
-
-class TestRvaToOffset(unittest.TestCase):
-    def test_finds_rva_in_a_later_section_after_earlier_mismatch(self):
-        sections = [(0x1000, 0x200, 0x200, 0x400), (0x2000, 0x200, 0x200, 0x800)]
-        self.assertEqual(_rva_to_offset(0x2050, sections), 0x850)
-
-    def test_rejects_rva_outside_every_section(self):
-        sections = [(0x1000, 0x200, 0x200, 0x400)]
-        with self.assertRaisesRegex(PEFormatError, "not contained in any section"):
-            _rva_to_offset(0x5000, sections)
-
-
-class TestReadDirectoryEntries(unittest.TestCase):
-    def test_rejects_truncated_directory_header(self):
-        with self.assertRaisesRegex(PEFormatError, "truncated resource directory$"):
-            _read_directory_entries(b"\x00" * 10, 0)
-
-    def test_rejects_truncated_directory_entry(self):
-        header = struct.pack("<IIHHHH", 0, 0, 0, 0, 0, 1)  # declares 1 entry, none follows
-        with self.assertRaisesRegex(PEFormatError, "truncated resource directory entry"):
-            _read_directory_entries(header, 0)
 
 
 if __name__ == "__main__":
