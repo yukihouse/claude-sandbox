@@ -23,12 +23,13 @@ requires = ["uv_build>=0.12.13,<0.13.0"]
 build-backend = "uv_build"
 
 [tool.coverage.run]
-source = ["tetris"]
+source = ["tetris", "tests"]
 branch = true
 relative_files = true
 omit = ["src/tetris/cli.py", "src/tetris/__main__.py", "src/tetris/streamlit_app.py"]
 
 [tool.coverage.report]
+fail_under = 100
 exclude_lines = [
     "pragma: no cover",
     "if __name__ == .__main__.:",
