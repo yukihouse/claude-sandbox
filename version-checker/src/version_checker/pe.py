@@ -129,8 +129,8 @@ def _read_sections(data: bytes, section_table_offset: int, number_of_sections: i
         header = data[offset : offset + 40]
         if len(header) < 40:
             raise PEFormatError("truncated section table")
-        virtual_size, virtual_address, size_of_raw_data, pointer_to_raw_data = (
-            struct.unpack_from("<IIII", header, 8)
+        virtual_size, virtual_address, size_of_raw_data, pointer_to_raw_data = struct.unpack_from(
+            "<IIII", header, 8
         )
         sections.append((virtual_address, virtual_size, size_of_raw_data, pointer_to_raw_data))
     return sections

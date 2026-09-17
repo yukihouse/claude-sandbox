@@ -75,4 +75,7 @@ def render_next_piece_html(next_name: str) -> str:
         ]
         rows_html.append(f'<div style="display:flex;">{"".join(cells_html)}</div>')
     width = size * cell
-    return f'<div style="display:inline-block;background:{_BACKGROUND};width:{width}px;">{"".join(rows_html)}</div>'
+    rows = "".join(rows_html)
+    return (
+        f'<div style="display:inline-block;background:{_BACKGROUND};width:{width}px;">{rows}</div>'
+    )
