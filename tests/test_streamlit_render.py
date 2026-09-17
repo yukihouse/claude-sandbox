@@ -54,7 +54,7 @@ class TestStreamlitRender(unittest.TestCase):
     def test_render_board_html_has_one_row_div_per_board_row(self):
         game = make_game(width=4, height=6)
         html = render_board_html(game)
-        self.assertEqual(html.count('display:flex;'), game.board.height)
+        self.assertEqual(html.count("display:flex;"), game.board.height)
         self.assertIn(f"width:{game.board.width * 24}px", html)
 
     def test_render_board_html_includes_current_piece_color(self):
@@ -69,7 +69,7 @@ class TestStreamlitRender(unittest.TestCase):
             with self.subTest(name=name):
                 html = render_next_piece_html(name)
                 size = shapes.box_size(name)
-                self.assertEqual(html.count('display:flex;'), size)
+                self.assertEqual(html.count("display:flex;"), size)
                 self.assertIn(COLORS[name], html)
                 self.assertIn(f"width:{size * 20}px", html)
 

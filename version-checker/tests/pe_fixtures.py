@@ -30,7 +30,8 @@ def _optional_header32(data_directory: list[tuple[int, int]]) -> bytes:
     fixed = struct.pack(
         "<HBBIIIIIIIIIHHHHHHIIIIHHIIIIII",
         0x10B,  # Magic (PE32)
-        0, 0,  # Major/MinorLinkerVersion
+        0,
+        0,  # Major/MinorLinkerVersion
         0,  # SizeOfCode
         0,  # SizeOfInitializedData
         0,  # SizeOfUninitializedData
@@ -40,16 +41,22 @@ def _optional_header32(data_directory: list[tuple[int, int]]) -> bytes:
         0x400000,  # ImageBase
         0x1000,  # SectionAlignment
         0x200,  # FileAlignment
-        0, 0,  # Major/MinorOperatingSystemVersion
-        0, 0,  # Major/MinorImageVersion
-        0, 0,  # Major/MinorSubsystemVersion
+        0,
+        0,  # Major/MinorOperatingSystemVersion
+        0,
+        0,  # Major/MinorImageVersion
+        0,
+        0,  # Major/MinorSubsystemVersion
         0,  # Win32VersionValue
         0,  # SizeOfImage
         0,  # SizeOfHeaders
         0,  # CheckSum
         2,  # Subsystem
         0,  # DllCharacteristics
-        0, 0, 0, 0,  # Stack/Heap reserve/commit
+        0,
+        0,
+        0,
+        0,  # Stack/Heap reserve/commit
         0,  # LoaderFlags
         len(data_directory),  # NumberOfRvaAndSizes
     )
@@ -59,7 +66,13 @@ def _optional_header32(data_directory: list[tuple[int, int]]) -> bytes:
     return header
 
 
-def _section_header(name: bytes, virtual_size: int, virtual_address: int, size_of_raw_data: int, pointer_to_raw_data: int) -> bytes:
+def _section_header(
+    name: bytes,
+    virtual_size: int,
+    virtual_address: int,
+    size_of_raw_data: int,
+    pointer_to_raw_data: int,
+) -> bytes:
     header = name.ljust(8, b"\x00")[:8] + struct.pack(
         "<IIIIIIHHI",
         virtual_size,
@@ -116,7 +129,9 @@ def build_pe(resource_section: bytes | None) -> bytes:
 
 def _resource_directory(entries: list[tuple[int, int]]) -> bytes:
     header = struct.pack("<IIHHHH", 0, 0, 0, 0, 0, len(entries))
-    body = b"".join(struct.pack("<II", name_or_id, offset_to_data) for name_or_id, offset_to_data in entries)
+    body = b"".join(
+        struct.pack("<II", name_or_id, offset_to_data) for name_or_id, offset_to_data in entries
+    )
     return header + body
 
 
@@ -128,7 +143,7 @@ def build_version_resource_section(resource_type_id: int = 16) -> bytes:
     is unused filler, letting tests build a resource section that has no
     RT_VERSION entry at all.
     """
-    root_offset, name_offset, lang_offset, data_entry_offset, version_offset = 0, 24, 48, 72, 88
+    name_offset, lang_offset, data_entry_offset, version_offset = 24, 48, 72, 88
 
     root_dir = _resource_directory([(resource_type_id, name_offset | 0x80000000)])
     name_dir = _resource_directory([(1, lang_offset | 0x80000000)])

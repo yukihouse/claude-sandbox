@@ -13,6 +13,7 @@ version-checker = "version_checker.cli:main"
 dev = [
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",
+    "ruff>=0.16.8",
 ]
 
 [build-system]
@@ -33,3 +34,10 @@ exclude_lines = [
     "pragma: no cover",
     "if __name__ == .__main__.:",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
