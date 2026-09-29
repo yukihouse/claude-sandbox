@@ -1,0 +1,12 @@
+# header_lines : 6
+# site_code : SPO
+# site_name : South Pole, Antarctica
+# data_fields: site_code year month day hour minute second datetime time_decimal midpoint_time value value_std_dev nvalue latitude longitude altitude elevation intake_height qcflag
+#
+# end header
+site_code year month day hour minute second datetime time_decimal midpoint_time value value_std_dev nvalue latitude longitude altitude elevation intake_height qcflag
+SPO 1975 1 1 0 0 0 1975-01-01T00:00:00Z 1975.0 1975.04 -999.99 -99.99 0 -89.98 -24.8 2821.0 2810.0 11.0 *..
+SPO 1975 2 1 0 0 0 1975-02-01T00:00:00Z 1975.08 1975.12 328.51 0.21 20 -89.98 -24.8 2821.0 2810.0 11.0 ...
+SPO 1975 3 1 0 0 0 1975-03-01T00:00:00Z 1975.16 1975.2 328.38 0.18 25 -89.98 -24.8 2821.0 2810.0 11.0 ...
+SPO 1975 4 1 0 0 0 1975-04-01T00:00:00Z 1975.25 1975.29 328.60 0.30 22 -89.98 -24.8 2821.0 2810.0 11.0 *..
+SPO 1975 5 1 0 0 0 1975-05-01T00:00:00Z 1975.33 1975.37 bad 0.30 22 -89.98 -24.8 2821.0 2810.0 11.0 ...
