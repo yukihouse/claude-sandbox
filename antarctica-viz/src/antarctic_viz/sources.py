@@ -51,6 +51,21 @@ SOUTH_POLE_CO2 = Dataset(
     citation="NOAA GML Carbon Cycle Greenhouse Gases group, South Pole in-situ CO2.",
 )
 
+SOUTH_POLE_CH4 = Dataset(
+    key="spo_ch4",
+    title="南極点 大気メタン濃度 (月別)",
+    provider="NOAA Global Monitoring Laboratory",
+    url=(
+        "https://gml.noaa.gov/aftp/data/trace_gases/ch4/flask/surface/txt/"
+        "ch4_spo_surface-flask_1_ccgg_month.txt"
+    ),
+    homepage="https://gml.noaa.gov/dv/site/?stacode=SPO",
+    description=(
+        "南極点観測所 (SPO) でのフラスコ採取による大気中メタン (CH₄) のモル分率 (ppb)。1983年から。"
+    ),
+    citation="NOAA GML Carbon Cycle Greenhouse Gases group, South Pole flask CH4.",
+)
+
 ICE_CORE_CO2 = Dataset(
     key="ice_core_co2",
     title="アイスコア 大気CO₂濃度 (過去80万年)",
@@ -83,7 +98,7 @@ EDC_TEMPERATURE = Dataset(
     ),
 )
 
-READER_URL_TEMPLATE = "https://legacy.bas.ac.uk/met/READER/surface/{station}.All.temperature.txt"
+READER_URL_TEMPLATE = "https://legacy.bas.ac.uk/met/READER/surface/{station}.All.{element}.txt"
 
 # READER file-name stem -> display label. Syowa first: it is the default station.
 READER_STATIONS: dict[str, str] = {
@@ -106,25 +121,104 @@ READER_STATIONS: dict[str, str] = {
 }
 
 
-def reader_temperature(station: str) -> Dataset:
-    """Monthly mean surface air temperature for a SCAR READER station."""
+@dataclass(frozen=True)
+class ReaderElement:
+    label: str
+    unit: str
+    description: str
+
+
+READER_ELEMENTS: dict[str, ReaderElement] = {
+    "temperature": ReaderElement(
+        "気温", "°C", "有人観測基地の地上気象観測から作成された月平均気温 (°C)。"
+    ),
+    "pressure": ReaderElement(
+        "気圧",
+        "hPa",
+        "有人観測基地の地上気象観測から作成された月平均の海面気圧 (hPa)。"
+        "高原上の基地 (南極点・ボストーク) は海面更正できないため現地気圧です。",
+    ),
+    "wind_speed": ReaderElement(
+        "風速",
+        "m/s",
+        "有人観測基地の地上気象観測から作成された月平均風速。"
+        "READERの値 (ノット) を m/s に換算しています。",
+    ),
+}
+
+# The high-plateau stations publish only station-level pressure, no sea-level reduction.
+READER_STATION_LEVEL_ONLY = frozenset({"Amundsen_Scott", "Vostok"})
+
+
+def reader_series(station: str, element: str = "temperature") -> Dataset:
+    """Monthly mean of one surface element (see ``READER_ELEMENTS``) at a READER station."""
     if station not in READER_STATIONS:
         raise KeyError(f"unknown READER station: {station}")
+    spec = READER_ELEMENTS[element]
+    file_element = element
+    if element == "pressure":
+        file_element = (
+            "station_level_pressure" if station in READER_STATION_LEVEL_ONLY else "msl_pressure"
+        )
     return Dataset(
-        key=f"reader_{station}",
-        title=f"{READER_STATIONS[station]} 月平均気温",
+        key=f"reader_{station}_{element}",
+        title=f"{READER_STATIONS[station]} 月平均{spec.label}",
         provider="SCAR READER / British Antarctic Survey",
-        url=READER_URL_TEMPLATE.format(station=station),
+        url=READER_URL_TEMPLATE.format(station=station, element=file_element),
         homepage="https://legacy.bas.ac.uk/met/READER/",
-        description="有人観測基地の地上気象観測から作成された月平均気温 (°C)。",
+        description=spec.description,
         citation=("Turner, J. et al. (2004) The SCAR READER project, J. Climate 17, 2890-2898."),
+    )
+
+
+def reader_temperature(station: str) -> Dataset:
+    """Monthly mean surface air temperature for a SCAR READER station."""
+    return reader_series(station, "temperature")
+
+
+OZONE_HOLE_ANNUAL = Dataset(
+    key="ozone_hole_annual",
+    title="オゾンホール 面積・最低オゾン全量 (年別)",
+    provider="NASA Ozone Watch",
+    url="https://ozonewatch.gsfc.nasa.gov/statistics/annual_data.txt",
+    homepage="https://ozonewatch.gsfc.nasa.gov/",
+    description=(
+        "衛星 (TOMS・OMI・OMPS) 観測による南半球のオゾンホール。面積は9月7日〜10月13日の"
+        "平均 (百万 km², オゾン全量220 DU未満の領域)、最低オゾン全量は9月21日〜10月16日の"
+        "最小値 (DU)。1979年から。"
+    ),
+    citation="NASA Ozone Watch, NASA Goddard Space Flight Center.",
+)
+
+OZONE_DAILY_URL_TEMPLATE = (
+    "https://ozonewatch.gsfc.nasa.gov/meteorology/figures/ozone/to3areas_{year}_toms+omi+omps.txt"
+)
+
+
+def ozone_hole_daily(year: int) -> Dataset:
+    """Daily ozone-hole area for one year, with the climatological percentiles."""
+    return Dataset(
+        key=f"ozone_hole_daily_{year}",
+        title=f"オゾンホール面積 {year}年 (日別)",
+        provider="NASA Ozone Watch",
+        url=OZONE_DAILY_URL_TEMPLATE.format(year=year),
+        homepage="https://ozonewatch.gsfc.nasa.gov/",
+        description=(
+            "南半球でオゾン全量が220 DU未満の領域の面積 (百万 km²) の日別値と、"
+            "1979年以降の同日の統計 (最小・10%・平均・90%・最大)。"
+        ),
+        citation=OZONE_HOLE_ANNUAL.citation,
     )
 
 
 CATALOG: tuple[Dataset, ...] = (
     SEA_ICE_EXTENT,
     SOUTH_POLE_CO2,
-    reader_temperature("Syowa"),
+    SOUTH_POLE_CH4,
+    OZONE_HOLE_ANNUAL,
+    reader_series("Syowa", "temperature"),
+    reader_series("Syowa", "pressure"),
+    reader_series("Syowa", "wind_speed"),
     ICE_CORE_CO2,
     EDC_TEMPERATURE,
 )

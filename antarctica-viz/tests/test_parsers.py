@@ -1,9 +1,17 @@
 import unittest
+from datetime import date
 
 import pandas as pd
 
 from antarctic_viz import parsers
-from tests.helpers import edc_text, fixture, ice_core_co2_text
+from tests.helpers import (
+    edc_text,
+    fixture,
+    ice_core_co2_text,
+    ozone_annual_text,
+    ozone_daily_text,
+    reader_text,
+)
 
 
 class TestSeaIce(unittest.TestCase):
@@ -54,6 +62,43 @@ class TestReader(unittest.TestCase):
     def test_no_data_raises(self):
         with self.assertRaises(parsers.ParseError):
             parsers.parse_reader_monthly("Year Jan Feb\n")
+
+    def test_wind_is_converted_from_knots_to_metres_per_second(self):
+        knots = parsers.parse_reader_monthly(reader_text(1990, 1991))
+        wind = parsers.parse_reader_wind(reader_text(1990, 1991))
+        self.assertAlmostEqual(wind["value"].iloc[0], knots["value"].iloc[0] * 0.514444)
+
+
+class TestOzone(unittest.TestCase):
+    def test_annual_skips_headers_and_marks_missing(self):
+        text = ozone_annual_text(1979, 1981) + "1982 -9999.0 150.0\n1983 x 1.0\n"
+        df = parsers.parse_ozone_annual(text)
+        self.assertEqual(list(df.columns), ["date", "area", "min_ozone"])
+        self.assertEqual(df["date"].dt.year.tolist(), [1979, 1980, 1981, 1982])
+        self.assertEqual(df["date"].iloc[0], pd.Timestamp("1979-07-01"))
+        self.assertTrue(pd.isna(df["area"].iloc[-1]))
+        self.assertEqual(df["min_ozone"].iloc[-1], 150.0)
+
+    def test_annual_empty_raises(self):
+        with self.assertRaises(parsers.ParseError):
+            parsers.parse_ozone_annual("Year (mil km2) (DU)\n")
+
+    def test_daily_keeps_every_day_and_blanks_unobserved(self):
+        df = parsers.parse_ozone_daily(ozone_daily_text(2024, date(2024, 9, 30)))
+        self.assertEqual(len(df), 366)
+        self.assertEqual(list(df.columns), ["date", *parsers.OZONE_DAILY_COLUMNS])
+        self.assertEqual(df["value"].last_valid_index(), df.index[df["date"] == "2024-09-30"][0])
+        self.assertTrue(df["mean"].notna().all())
+
+    def test_daily_skips_unparseable_rows(self):
+        text = "Date Data Minimum 10% 30% Mean 70% 90% Maximum\n2024-13-01 1 2 3 4 5 6 7 8\n"
+        text += "2024-01-01 x 2 3 4 5 6 7 8\n2024-01-02 1 2 3 4 5 6 7 8\n"
+        df = parsers.parse_ozone_daily(text)
+        self.assertEqual(df["date"].tolist(), [pd.Timestamp("2024-01-02")])
+
+    def test_daily_empty_raises(self):
+        with self.assertRaises(parsers.ParseError):
+            parsers.parse_ozone_daily("Name: Ozone Hole Area\n")
 
 
 class TestUserTable(unittest.TestCase):

@@ -4,7 +4,8 @@ Every parser returns a DataFrame with a ``date`` (Timestamp) column and a float
 ``value`` column, sorted by date, so the analysis and chart code can treat all
 sources the same way. Ice-core records reach 800,000 years back, beyond what a
 Timestamp can hold, so their parsers use an ``age_bp`` column (years before 1950)
-instead of ``date``.
+instead of ``date``. The ozone-hole files carry more than one quantity per row, so
+their parsers add columns next to (or instead of) ``value``.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from datetime import date
 import pandas as pd
 
 MISSING_THRESHOLD = -999.0
+KNOT_IN_MS = 0.514444
 _NUMBER = re.compile(r"^-?\d+(?:\.\d+)?")
 _YEAR = re.compile(r"^\d{4}$")
 
@@ -110,6 +112,66 @@ def parse_reader_monthly(text: str) -> pd.DataFrame:
             if match:
                 rows.append((date(year, month, 1), float(match.group())))
     return _frame(rows, "READER")
+
+
+def parse_reader_wind(text: str) -> pd.DataFrame:
+    """READER wind-speed table, converted from knots to m/s."""
+    df = parse_reader_monthly(text)
+    df["value"] = df["value"] * KNOT_IN_MS
+    return df
+
+
+def parse_ozone_annual(text: str) -> pd.DataFrame:
+    """NASA Ozone Watch annual table: ``Year  O3 hole area (mil km2)  Minimum ozone (DU)``.
+
+    Returns ``date`` (1 July of each year), ``area`` and ``min_ozone``; missing
+    values become NaN.
+    """
+    rows = []
+    for line in text.splitlines():
+        tokens = line.split()
+        if len(tokens) < 3 or not _YEAR.match(tokens[0]):
+            continue
+        try:
+            area, low = (float(t) for t in tokens[1:3])
+        except ValueError:
+            continue
+        rows.append((date(int(tokens[0]), 7, 1), area, low))
+    if not rows:
+        raise ParseError("ozone hole annual: データ行が見つかりませんでした")
+    df = pd.DataFrame(rows, columns=["date", "area", "min_ozone"])
+    df["date"] = pd.to_datetime(df["date"])
+    for column in ("area", "min_ozone"):
+        df[column] = df[column].mask(df[column] <= MISSING_THRESHOLD)
+    return df.sort_values("date").reset_index(drop=True)
+
+
+OZONE_DAILY_COLUMNS = ["value", "minimum", "p10", "p30", "mean", "p70", "p90", "maximum"]
+
+
+def parse_ozone_daily(text: str) -> pd.DataFrame:
+    """NASA Ozone Watch daily area file: ``Date Data Minimum 10% 30% Mean 70% 90% Maximum``.
+
+    Every day of the year is kept so the climatology columns span the whole year;
+    days not yet observed (``-9999``) have a NaN ``value``.
+    """
+    rows = []
+    for line in text.splitlines():
+        tokens = line.split()
+        if len(tokens) < 9:
+            continue
+        try:
+            day = date.fromisoformat(tokens[0])
+            numbers = [float(t) for t in tokens[1:9]]
+        except ValueError:
+            continue
+        rows.append((day, *numbers))
+    if not rows:
+        raise ParseError("ozone hole daily: データ行が見つかりませんでした")
+    df = pd.DataFrame(rows, columns=["date", *OZONE_DAILY_COLUMNS])
+    df["date"] = pd.to_datetime(df["date"])
+    df["value"] = df["value"].mask(df["value"] <= MISSING_THRESHOLD)
+    return df.sort_values("date").reset_index(drop=True)
 
 
 def parse_ice_core_co2(text: str) -> pd.DataFrame:

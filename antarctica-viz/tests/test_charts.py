@@ -1,7 +1,15 @@
 import unittest
+from datetime import date
 
 from antarctic_viz import analysis, charts, parsers
-from tests.helpers import edc_text, gml_text, ice_core_co2_text, reader_text, sea_ice_text
+from tests.helpers import (
+    edc_text,
+    gml_text,
+    ice_core_co2_text,
+    ozone_daily_text,
+    reader_text,
+    sea_ice_text,
+)
 
 
 class TestCharts(unittest.TestCase):
@@ -79,6 +87,16 @@ class TestCharts(unittest.TestCase):
         caption = charts.trend_caption(analysis.Trend(0.05, 0.0, 0.5, 10), "°C")
         self.assertIn("+0.500 °C/10年", caption)
         self.assertIn("n = 10", caption)
+
+
+class TestOzoneChart(unittest.TestCase):
+    def test_season_draws_band_mean_max_and_observed_days_only(self):
+        daily = parsers.parse_ozone_daily(ozone_daily_text(2024, date(2024, 9, 30)))
+        spec = charts.ozone_season(daily).to_dict()
+        self.assertEqual(len(spec["layer"]), 4)
+        self.assertEqual(spec["layer"][0]["mark"]["type"], "area")
+        observed = spec["datasets"][spec["layer"][-1]["data"]["name"]]
+        self.assertEqual(len(observed), 274)  # Jan 1 - Sep 30, leap year
 
 
 class TestIceCoreCharts(unittest.TestCase):

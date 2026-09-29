@@ -11,15 +11,24 @@
 |---|---|---|---|---|
 | 南極海 海氷面積 (Sea Ice Index G02135 v4) | NSIDC / NOAA | 1978年10月〜・日別 | CSV | 年ごとの季節変化の重ね描き、平年差、同日順位、年最小・最大のトレンド |
 | 南極点 大気CO₂ (現場連続観測) | NOAA GML (South Pole Observatory, SPO) | 1975年〜・月別 | テキスト (空白区切り) | 長期トレンド、季節変化 (トレンド除去)、年増加量 |
+| 南極点 大気メタン (フラスコ採取) | NOAA GML (South Pole Observatory, SPO) | 1983年〜・月別 | テキスト (空白区切り) | CO₂と同じ |
+| オゾンホール 面積・最低オゾン全量 | NASA Ozone Watch | 1979年〜・年別／日別 | テキスト (固定幅) | 年ごとの推移、選んだ年の日別面積と平年の帯 |
 | 南極アイスコア CO₂ 合成記録 (Bereiter et al. 2015) | NOAA NCEI Paleoclimatology | 約80万年前〜2001年・不等間隔 | テキスト (タブ区切り) | 自然の変動幅、産業革命前の平均、直接観測との接続 |
 | EPICA Dome C 気温偏差 (Jouzel et al. 2007) | NOAA NCEI Paleoclimatology | 約80万年前〜現在・不等間隔 | テキスト (固定幅) | 氷期サイクル、CO₂との相関 |
-| 観測基地の月平均気温 (READER) | SCAR / British Antarctic Survey | 1950年代〜 (基地により異なる)・月別 | テキスト (年×月の表) | 年平均気温トレンド、月別平年値、偏差ヒートマップ、基地の比較 |
+| 観測基地の月平均 気温・気圧・風速 (READER) | SCAR / British Antarctic Survey | 1950年代〜 (基地により異なる)・月別 | テキスト (年×月の表) | 年平均値のトレンド、月別平年値、偏差ヒートマップ、基地の比較 |
 
 - **海氷面積**: `https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v4.0.csv`
   1987年以前は隔日データ、1987年12月〜1988年1月に欠測があります。
   月平均は10日以上データがある月のみ計算しています。
 - **南極点CO₂**: `https://gml.noaa.gov/aftp/data/trace_gases/co2/in-situ/surface/txt/co2_spo_surface-insitu_1_ccgg_MonthlyData.txt`
   欠測値 (`-999.99`) と品質フラグが `.` で始まらない行は除外しています。
+- **南極点メタン**: `https://gml.noaa.gov/aftp/data/trace_gases/ch4/flask/surface/txt/ch4_spo_surface-flask_1_ccgg_month.txt`
+  南極点のメタンは現場連続観測がないため、フラスコ採取の月平均を使っています (単位 ppb)。
+- **オゾンホール**: 年別 `https://ozonewatch.gsfc.nasa.gov/statistics/annual_data.txt`、
+  日別 `https://ozonewatch.gsfc.nasa.gov/meteorology/figures/ozone/to3areas_<年>_toms+omi+omps.txt`
+  面積はオゾン全量220 DU未満の領域で、年別値は9月7日〜10月13日の平均、最低オゾン全量は
+  9月21日〜10月16日の最小値です。日別ファイルには1979年以降の同日の統計 (最小・10%・平均・90%・最大) が
+  含まれます。1995年は衛星観測がなく日別データはありません (年別値は再解析で補完)。
 - **アイスコア CO₂**: `https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt`
   年代は1950年を基準とした「何年前」(BP) で、最新 (-51) は2001年に当たります。
   自然の変動幅は1750年以前 (200 BP以前)、産業革命前の値は1000〜1750年の平均です。
@@ -27,9 +36,11 @@
   気温は過去1000年平均からの差で、δD から換算した推定値です。
   δD が欠測でも気温がある行は使い、気温のない行は除外しています。
   CO₂との相関は、CO₂の各サンプルの年代に気温を線形補間して計算しています。
-- **READER 気温**: `https://legacy.bas.ac.uk/met/READER/surface/<基地名>.All.temperature.txt`
+- **READER 気温・気圧・風速**: `https://legacy.bas.ac.uk/met/READER/surface/<基地名>.All.<要素>.txt`
+  (要素は `temperature`・`msl_pressure`・`wind_speed`)
   昭和基地 (`Syowa`) のほか、南極点・ボストーク・マクマードなど16基地を選べます。
-  READERは同じ場所で気圧・風速のファイルも公開しています。
+  気圧は海面気圧ですが、海面気圧のない高原上の南極点・ボストークは現地気圧 (`station_level_pressure`) です。
+  風速はノットで公開されているため m/s に換算しています。
 
 ## 候補 (未収録)
 
@@ -43,8 +54,8 @@
   いずれもHTML表中心で、CSVダウンロード機能を使ってこのアプリに読み込めます。
 
 ### 大気・オゾン
-- **NASA Ozone Watch** (<https://ozonewatch.gsfc.nasa.gov/>): オゾンホール面積・最低オゾン全量の日別・年別統計。
-- **NOAA GML 南極点のその他の成分**: メタン、フロン類、エアロゾル、放射などを同じサイトから公開。
+- **NOAA GML 南極点のその他の成分**: 一酸化二窒素、フロン類、エアロゾル、放射などを同じサイトから公開
+  (CO₂とメタンは収録済み)。
 
 ### 気象・雪氷
 - **AMRDC / Antarctic Automatic Weather Stations** (ウィスコンシン大学): 無人気象観測点 (AWS) の高頻度データ。

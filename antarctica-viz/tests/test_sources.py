@@ -31,6 +31,24 @@ class TestCatalog(unittest.TestCase):
         with self.assertRaises(KeyError):
             sources.reader_temperature("Atlantis")
 
+    def test_reader_series_picks_the_element_file(self):
+        wind = sources.reader_series("Syowa", "wind_speed")
+        self.assertTrue(wind.url.endswith("/Syowa.All.wind_speed.txt"))
+        self.assertIn("風速", wind.title)
+        self.assertTrue(
+            sources.reader_series("Syowa", "pressure").url.endswith("/Syowa.All.msl_pressure.txt")
+        )
+
+    def test_plateau_stations_use_station_level_pressure(self):
+        for station in ("Amundsen_Scott", "Vostok"):
+            url = sources.reader_series(station, "pressure").url
+            self.assertTrue(url.endswith(f"/{station}.All.station_level_pressure.txt"))
+
+    def test_ozone_daily_builds_year_url(self):
+        ds = sources.ozone_hole_daily(2024)
+        self.assertIn("to3areas_2024_", ds.url)
+        self.assertEqual(ds.key, "ozone_hole_daily_2024")
+
     def test_catalog_keys_are_unique(self):
         keys = [d.key for d in sources.CATALOG]
         self.assertEqual(len(keys), len(set(keys)))

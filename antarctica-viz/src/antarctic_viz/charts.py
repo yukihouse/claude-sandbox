@@ -367,3 +367,29 @@ def co2_temperature_scatter(pairs: pd.DataFrame) -> alt.Chart:
         )
         .properties(height=340)
     )
+
+
+def ozone_season(daily: pd.DataFrame) -> alt.LayerChart:
+    """One year's daily ozone-hole area against the 1979-onward climatology band."""
+    y_title = "オゾンホール面積 (百万km²)"
+    x = alt.X("date:T", title="", axis=alt.Axis(format="%-m月"))
+    band = alt.Chart(daily).encode(x)
+    line = daily.dropna(subset=["value"])[["date", "value"]]
+    layers: list[alt.Chart] = [
+        band.mark_area(color=BAND_BLUE, opacity=0.45).encode(
+            alt.Y("p10:Q", title=y_title), y2="p90:Q"
+        ),
+        band.mark_line(color=CONTEXT_GRAY, strokeDash=[4, 3], strokeWidth=1.5).encode(y="mean:Q"),
+        band.mark_line(color=CONTEXT_GRAY, strokeWidth=1).encode(y="maximum:Q"),
+        alt.Chart(break_gaps(line))
+        .mark_line(strokeWidth=2.5, color=SERIES[1])
+        .encode(
+            x,
+            alt.Y("value:Q"),
+            tooltip=[
+                alt.Tooltip("date:T", title="日付"),
+                alt.Tooltip("value:Q", title=y_title, format=".2f"),
+            ],
+        ),
+    ]
+    return alt.layer(*layers).properties(height=360)

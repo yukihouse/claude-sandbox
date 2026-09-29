@@ -75,3 +75,35 @@ def edc_text(oldest_bp: int = 800_000, step: int = 1_000) -> str:
         deut = f"{-400 + 8 * temp:.1f}" if bag % 50 else ""
         lines.append(f"{bag:4d} {bag * 0.55:12.2f} {age:16.5f} {deut:>12} {temp:14.2f}")
     return "\n".join(lines) + "\n"
+
+
+def ozone_annual_text(start_year: int = 1979, end_year: int = 2025) -> str:
+    """Ozone Watch annual layout: ``#`` preamble, two header lines, dashes, then rows."""
+    lines = [
+        "# Southern Hemisphere",
+        "      O3 Hole Area Minimum Ozone",
+        "Year     (mil km2)          (DU)",
+        "----  ------------ -------------",
+    ]
+    for year in range(start_year, end_year + 1):
+        area = min(25.0, 1.0 * (year - start_year)) - 0.1 * max(0, year - 2006)
+        lines.append(f"{year} {area:13.1f} {220 - 4 * area:13.1f}")
+    return "\n".join(lines) + "\n"
+
+
+def ozone_daily_text(year: int, last_day: date | None = None) -> str:
+    """Ozone Watch daily area layout; days after ``last_day`` are missing (-9999)."""
+    lines = [
+        "Name: Ozone Hole Area",
+        "Missing: -9999.0",
+        "Date            Data   Minimum     10%     30%    Mean     70%     90% Maximum",
+    ]
+    day = date(year, 1, 1)
+    while day.year == year:
+        season = max(0.0, 20 * math.sin(math.pi * (day.timetuple().tm_yday - 213) / 150))
+        data = season + 1 if last_day is None or day <= last_day else -9999.0
+        stats = [0.0, 0.5 * season, 0.8 * season, season, 1.1 * season, 1.3 * season, 1.5 * season]
+        cells = " ".join(f"{v:7.2f}" for v in stats)
+        lines.append(f"{day.isoformat()} {data:9.2f} {cells}")
+        day += timedelta(days=1)
+    return "\n".join(lines) + "\n"
