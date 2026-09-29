@@ -5,6 +5,10 @@ unit test coverage on pull requests.
 
 ![Coverage badge](https://raw.githubusercontent.com/yukihouse/claude-sandbox/python-coverage-comment-action-data/badge.svg)
 
+This repository also hosts [`antarctica-viz/`](antarctica-viz/), a Streamlit
+web UI for exploring public Antarctic observation data (sea-ice extent, South
+Pole CO₂, research-station temperatures).
+
 ## Development
 
 This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
