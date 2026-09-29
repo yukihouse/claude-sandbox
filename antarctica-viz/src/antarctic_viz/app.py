@@ -476,9 +476,10 @@ def page_station(base: tuple[int, int]) -> None:
             anomalies = analysis.monthly_anomalies(other, clim)
             full = anomalies[anomalies["year"].isin(analysis.complete_years(other))]
             yearly = full.groupby("year", as_index=False)["anomaly"].mean()
-            frames.append(yearly.rename(columns={"anomaly": "value"}).assign(station=name))
+            station_label = sources.READER_STATIONS[name]
+            frames.append(yearly.rename(columns={"anomaly": "value"}).assign(station=station_label))
         if frames:
-            order = [name for name in chosen if any(f["station"].iloc[0] == name for f in frames)]
+            order = [f["station"].iloc[0] for f in frames]
             combined = pd.concat(frames, ignore_index=True)
             st.altair_chart(
                 charts.multi_line(combined, "station", f"年平均{label}偏差 ({unit})", order),

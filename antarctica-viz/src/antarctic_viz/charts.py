@@ -218,10 +218,19 @@ def trend_caption(trend: Trend, unit: str) -> str:
     )
 
 
+def fill_missing_years(df: pd.DataFrame, group: str) -> pd.DataFrame:
+    """Add a null row for every year missing inside each series, so its line breaks there."""
+    parts = []
+    for key, part in df.groupby(group, sort=False):
+        years = pd.RangeIndex(int(part["year"].min()), int(part["year"].max()) + 1, name="year")
+        parts.append(part.set_index("year").reindex(years).assign(**{group: key}).reset_index())
+    return pd.concat(parts, ignore_index=True)
+
+
 def multi_line(df: pd.DataFrame, color_field: str, y_title: str, order: list[str]) -> alt.Chart:
-    """Several series on one axis, colored in fixed categorical order by ``order``."""
+    """Several yearly series on one axis, colored in fixed categorical order by ``order``."""
     return (
-        alt.Chart(df)
+        alt.Chart(fill_missing_years(df, color_field))
         .mark_line(strokeWidth=2, point=alt.OverlayMarkDef(size=20))
         .encode(
             alt.X("year:Q", title="", axis=alt.Axis(format="d")),

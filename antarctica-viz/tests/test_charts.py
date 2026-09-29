@@ -1,6 +1,8 @@
 import unittest
 from datetime import date
 
+import pandas as pd
+
 from antarctic_viz import analysis, charts, parsers
 from tests.helpers import (
     edc_text,
@@ -82,6 +84,15 @@ class TestCharts(unittest.TestCase):
         lines = yearly.rename(columns={"anomaly": "value"}).assign(station="A")
         self.spec(charts.multi_line(lines, "station", "T", ["A"]))
         self.spec(charts.simple_bars(yearly, "year", "anomaly", "A"))
+
+    def test_multi_line_breaks_at_missing_years(self):
+        lines = pd.DataFrame(
+            {"year": [2000, 2001, 2004, 2000, 2001], "value": [1.0] * 5, "station": list("AAABB")}
+        )
+        filled = charts.fill_missing_years(lines, "station")
+        self.assertEqual(filled[filled["station"] == "A"]["year"].tolist(), list(range(2000, 2005)))
+        self.assertEqual(int(filled["value"].isna().sum()), 2)
+        self.assertEqual(len(filled[filled["station"] == "B"]), 2)
 
     def test_trend_caption(self):
         caption = charts.trend_caption(analysis.Trend(0.05, 0.0, 0.5, 10), "°C")
