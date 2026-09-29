@@ -70,8 +70,15 @@ def drop_incomplete_last_month(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def rolling_mean(df: pd.DataFrame, window: int) -> pd.DataFrame:
+    """Trailing mean over ``window`` calendar months of monthly data.
+
+    Missing months count as gaps, so the mean never reaches across a multi-year outage.
+    """
     out = df.copy()
-    out["value"] = out["value"].rolling(window, min_periods=max(1, window // 2)).mean()
+    series = df.set_index("date")["value"]
+    calendar = series.resample("MS").mean()
+    smoothed = calendar.rolling(window, min_periods=max(1, window // 2)).mean()
+    out["value"] = smoothed.reindex(df["date"]).to_numpy()
     return out
 
 
@@ -181,11 +188,11 @@ def seasonal_cycle(monthly: pd.DataFrame) -> pd.DataFrame:
 
 
 def annual_growth(monthly: pd.DataFrame, months_required: int = 12) -> pd.DataFrame:
-    """Year-over-year change in the annual mean, over complete years only."""
+    """Year-over-year change in the annual mean, for consecutive complete years only."""
     years = complete_years(monthly, months_required)
     subset = monthly[monthly["date"].dt.year.isin(years)]
     annual = subset.groupby(subset["date"].dt.year)["value"].mean()
-    growth = annual.diff().dropna()
+    growth = annual.diff()[annual.index.to_series().diff() == 1]
     return pd.DataFrame(
         {
             "year": growth.index.astype(int),

@@ -57,6 +57,12 @@ class TestResampling(unittest.TestCase):
         self.assertEqual(out["value"].tolist(), [1.0, 1.5, 2.5])
         self.assertEqual(df["value"].tolist(), [1.0, 2.0, 3.0])
 
+    def test_rolling_mean_does_not_bridge_gaps(self):
+        dates = ["2000-01-01", "2000-02-01", "2004-01-01", "2004-02-01"]
+        df = series(dates, [1.0, 3.0, 10.0, 20.0])
+        out = analysis.rolling_mean(df, 2)
+        self.assertEqual(out["value"].tolist(), [1.0, 2.0, 10.0, 15.0])
+
 
 class TestClimatology(unittest.TestCase):
     def setUp(self):
@@ -136,3 +142,10 @@ class TestCo2(unittest.TestCase):
         self.assertEqual(growth["year"].tolist(), list(range(2001, 2010)))
         for value in growth["growth"]:
             self.assertAlmostEqual(value, 1.8, places=6)
+
+    def test_annual_growth_skips_gaps_between_complete_years(self):
+        gappy = self.df[self.df["date"].dt.year != 2005]
+        growth = analysis.annual_growth(gappy)
+        self.assertNotIn(2005, growth["year"].tolist())
+        self.assertNotIn(2006, growth["year"].tolist())
+        self.assertIn(2007, growth["year"].tolist())

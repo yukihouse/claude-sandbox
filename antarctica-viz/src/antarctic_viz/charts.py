@@ -20,6 +20,21 @@ def _date_x(title: str = "") -> alt.X:
     return alt.X("date:T", title=title)
 
 
+def break_gaps(df: pd.DataFrame, factor: float = 3.0) -> pd.DataFrame:
+    """Insert a null row inside every gap wider than ``factor`` x the typical spacing.
+
+    Lines then stop at an observing outage instead of drawing a straight bridge across it.
+    """
+    steps = df["date"].diff()
+    if len(df) < 3:
+        return df
+    gap_ends = df.loc[steps > steps.median() * factor, "date"]
+    if gap_ends.empty:
+        return df
+    fillers = pd.DataFrame({"date": gap_ends - steps[gap_ends.index] / 2, "value": float("nan")})
+    return pd.concat([df, fillers]).sort_values("date", kind="stable").reset_index(drop=True)
+
+
 def time_series(
     df: pd.DataFrame,
     y_title: str,
@@ -34,7 +49,7 @@ def time_series(
         alt.Tooltip("value:Q", title=y_title, format=value_format),
     ]
     base = (
-        alt.Chart(df)
+        alt.Chart(break_gaps(df))
         .mark_line(strokeWidth=1, color=SERIES[0], opacity=0.55 if smooth is not None else 1)
         .encode(
             _date_x(), alt.Y("value:Q", title=y_title, scale=alt.Scale(zero=False)), tooltip=tooltip
@@ -43,7 +58,7 @@ def time_series(
     layers: list[alt.Chart] = [base]
     if smooth is not None:
         layers.append(
-            alt.Chart(smooth)
+            alt.Chart(break_gaps(smooth))
             .mark_line(strokeWidth=2, color=SERIES[0])
             .encode(_date_x(), alt.Y("value:Q"), tooltip=tooltip)
         )

@@ -17,6 +17,16 @@ class TestCharts(unittest.TestCase):
         self.assertIn("$schema", spec)
         return spec
 
+    def test_break_gaps_inserts_null_inside_outages_only(self):
+        gappy = self.monthly[~self.monthly["date"].dt.year.between(1980, 1983)]
+        broken = charts.break_gaps(gappy)
+        self.assertEqual(len(broken), len(gappy) + 1)
+        filler = broken[broken["value"].isna()]["date"].iloc[0]
+        self.assertTrue(1980 <= filler.year <= 1983)
+        self.assertIs(charts.break_gaps(self.monthly), self.monthly)
+        short = self.monthly.head(2)
+        self.assertIs(charts.break_gaps(short), short)
+
     def test_time_series_layers(self):
         trend = analysis.linear_trend(self.monthly)
         plain = self.spec(charts.time_series(self.monthly, "T"))
