@@ -7,7 +7,7 @@ import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 from antarctic_viz import sources
-from tests.helpers import gml_text, reader_text, sea_ice_text
+from tests.helpers import edc_text, gml_text, ice_core_co2_text, reader_text, sea_ice_text
 
 APP = str(Path(sources.__file__).with_name("app.py"))
 TEXTS = {
@@ -16,6 +16,8 @@ TEXTS = {
     sources.reader_temperature("Syowa").url: reader_text(1957, 2024),
     sources.reader_temperature("Vostok").url: reader_text(1958, 2024, offset=-45),
     sources.reader_temperature("Halley").url: reader_text(1995, 2024),
+    sources.ICE_CORE_CO2.url: ice_core_co2_text(),
+    sources.EDC_TEMPERATURE.url: edc_text(),
 }
 
 
@@ -81,6 +83,16 @@ class TestPagesWithData(AppCase):
         self.assertEqual(metrics["2023年の年増加量"], "+1.80 ppm/年")
         self.assertTrue(any("ppm/10年" in c.value for c in self.at.caption))
 
+    def test_ice_core_page(self):
+        self.run_page("アイスコア")
+        metrics = self.metrics()
+        self.assertEqual(metrics["自然の変動幅 (1750年以前)"], "185〜285 ppm")
+        self.assertEqual(metrics["産業革命前 (1000〜1750年の平均)"], "280 ppm")
+        self.assertIn("南極点 直接観測 (2024-06)", metrics)
+        self.assertIn("相関係数 r", metrics)
+        self.assertEqual(len(self.at.tabs), 3)
+        self.assertEqual(len(self.at.error), 0)
+
     def test_temperature_page_and_station_comparison(self):
         at = self.run_page("基地の気温")
         self.assertEqual(self.metrics()["年平均気温のトレンド"], "+0.20 °C/10年")
@@ -117,7 +129,7 @@ class TestOffline(AppCase):
     texts = {}
 
     def test_every_data_page_reports_the_failure(self):
-        for page in ("概要", "海氷面積", "南極点 CO₂", "基地の気温"):
+        for page in ("概要", "海氷面積", "南極点 CO₂", "アイスコア", "基地の気温"):
             with self.subTest(page=page):
                 self.run_page(page)
                 self.assertGreater(len(self.at.error), 0)
@@ -137,6 +149,33 @@ class TestShortRecords(AppCase):
     def test_single_complete_year_has_no_co2_growth(self):
         self.run_page("南極点 CO₂")
         self.assertEqual(list(self.metrics()), ["最新値 (2025-06)"])
+
+
+class TestIceCoreWithoutCompanions(AppCase):
+    texts = {sources.ICE_CORE_CO2.url: ice_core_co2_text()}
+
+    def test_co2_alone_still_renders(self):
+        self.run_page("アイスコア")
+        metrics = self.metrics()
+        self.assertIn("自然の変動幅 (1750年以前)", metrics)
+        self.assertFalse(any(label.startswith("南極点") for label in metrics))
+        self.assertNotIn("相関係数 r", metrics)
+        captions = [c.value for c in self.at.caption]
+        self.assertTrue(any("南極点の直接観測を取得できなかった" in c for c in captions))
+        self.assertTrue(any("気温データを取得できなかった" in i.value for i in self.at.info))
+
+
+class TestIceCoreModernOnly(AppCase):
+    texts = {
+        sources.ICE_CORE_CO2.url: "-51\t368\n-20\t340\n",
+        sources.EDC_TEMPERATURE.url: "1 0 -50 -400 0.1\n2 0.5 -45 -401 0.2\n",
+    }
+
+    def test_no_preindustrial_mean_or_correlation_without_overlap(self):
+        self.run_page("アイスコア")
+        metrics = self.metrics()
+        self.assertNotIn("産業革命前 (1000〜1750年の平均)", metrics)
+        self.assertNotIn("相関係数 r", metrics)
 
 
 class TestUpload(AppCase):

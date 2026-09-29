@@ -51,6 +51,38 @@ SOUTH_POLE_CO2 = Dataset(
     citation="NOAA GML Carbon Cycle Greenhouse Gases group, South Pole in-situ CO2.",
 )
 
+ICE_CORE_CO2 = Dataset(
+    key="ice_core_co2",
+    title="アイスコア 大気CO₂濃度 (過去80万年)",
+    provider="NOAA NCEI Paleoclimatology",
+    url="https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt",
+    homepage="https://www.ncei.noaa.gov/access/paleo-search/study/17975",
+    description=(
+        "EPICA Dome C・ボストーク・ロードームなど南極の複数のアイスコアの気泡から復元した"
+        "大気CO₂濃度 (ppm) の合成記録。約80万年前から2001年まで。"
+    ),
+    citation=(
+        "Bereiter, B. et al. (2015) Revision of the EPICA Dome C CO2 record from 800 to "
+        "600 kyr before present, Geophys. Res. Lett. 42, 542-549."
+    ),
+)
+
+EDC_TEMPERATURE = Dataset(
+    key="edc_temperature",
+    title="EPICA Dome C 気温偏差 (過去80万年)",
+    provider="NOAA NCEI Paleoclimatology",
+    url="https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/epica_domec/edc3deuttemp2007.txt",
+    homepage="https://www.ncei.noaa.gov/access/paleo-search/study/6080",
+    description=(
+        "EPICA Dome C アイスコアの水素同位体比 (δD) から推定した南極の気温。"
+        "過去1000年平均からの差 (°C)、年代はEDC3。"
+    ),
+    citation=(
+        "Jouzel, J. et al. (2007) Orbital and Millennial Antarctic Climate Variability over "
+        "the Past 800,000 Years, Science 317, 793-797."
+    ),
+)
+
 READER_URL_TEMPLATE = "https://legacy.bas.ac.uk/met/READER/surface/{station}.All.temperature.txt"
 
 # READER file-name stem -> display label. Syowa first: it is the default station.
@@ -93,6 +125,8 @@ CATALOG: tuple[Dataset, ...] = (
     SEA_ICE_EXTENT,
     SOUTH_POLE_CO2,
     reader_temperature("Syowa"),
+    ICE_CORE_CO2,
+    EDC_TEMPERATURE,
 )
 
 

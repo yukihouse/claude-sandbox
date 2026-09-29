@@ -2,7 +2,9 @@
 
 Every parser returns a DataFrame with a ``date`` (Timestamp) column and a float
 ``value`` column, sorted by date, so the analysis and chart code can treat all
-sources the same way.
+sources the same way. Ice-core records reach 800,000 years back, beyond what a
+Timestamp can hold, so their parsers use an ``age_bp`` column (years before 1950)
+instead of ``date``.
 """
 
 from __future__ import annotations
@@ -28,6 +30,13 @@ def _frame(rows: list[tuple[date, float]], source: str) -> pd.DataFrame:
     df["date"] = pd.to_datetime(df["date"])
     df["value"] = df["value"].astype(float)
     return df.sort_values("date").drop_duplicates("date", keep="last").reset_index(drop=True)
+
+
+def _age_frame(rows: list[tuple[float, float]], source: str) -> pd.DataFrame:
+    if not rows:
+        raise ParseError(f"{source}: データ行が見つかりませんでした")
+    df = pd.DataFrame(rows, columns=["age_bp", "value"]).astype(float)
+    return df.sort_values("age_bp").drop_duplicates("age_bp", keep="last").reset_index(drop=True)
 
 
 def parse_sea_ice_daily(text: str) -> pd.DataFrame:
@@ -101,6 +110,43 @@ def parse_reader_monthly(text: str) -> pd.DataFrame:
             if match:
                 rows.append((date(year, month, 1), float(match.group())))
     return _frame(rows, "READER")
+
+
+def parse_ice_core_co2(text: str) -> pd.DataFrame:
+    """NOAA NCEI Antarctic composite CO2 (``age_gas_calBP  co2_ppm  co2_1s_ppm``).
+
+    ``#`` comment lines and the column header are skipped.
+    """
+    rows = []
+    for line in text.splitlines():
+        if line.lstrip("\ufeff").startswith("#"):
+            continue
+        tokens = line.split()
+        if len(tokens) < 2:
+            continue
+        try:
+            rows.append((float(tokens[0]), float(tokens[1])))
+        except ValueError:
+            continue
+    return _age_frame(rows, "ice core CO2")
+
+
+def parse_edc_temperature(text: str) -> pd.DataFrame:
+    """EPICA Dome C table: ``Bag  ztop  Age  Deuterium  Temperature``.
+
+    Rows missing the deuterium value still end with the temperature, while rows
+    with only three columns carry no temperature and are skipped.
+    """
+    rows = []
+    for line in text.splitlines():
+        tokens = line.split()
+        if len(tokens) < 4 or not tokens[0].isdigit():
+            continue
+        try:
+            rows.append((float(tokens[2]), float(tokens[-1])))
+        except ValueError:
+            continue
+    return _age_frame(rows, "EPICA Dome C")
 
 
 def parse_user_table(df: pd.DataFrame, date_col: str, value_col: str) -> pd.DataFrame:

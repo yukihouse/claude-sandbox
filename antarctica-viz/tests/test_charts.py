@@ -1,7 +1,7 @@
 import unittest
 
 from antarctic_viz import analysis, charts, parsers
-from tests.helpers import reader_text, sea_ice_text
+from tests.helpers import edc_text, gml_text, ice_core_co2_text, reader_text, sea_ice_text
 
 
 class TestCharts(unittest.TestCase):
@@ -79,3 +79,36 @@ class TestCharts(unittest.TestCase):
         caption = charts.trend_caption(analysis.Trend(0.05, 0.0, 0.5, 10), "°C")
         self.assertIn("+0.500 °C/10年", caption)
         self.assertIn("n = 10", caption)
+
+
+class TestIceCoreCharts(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.co2 = parsers.parse_ice_core_co2(ice_core_co2_text())
+        cls.temperature = parsers.parse_edc_temperature(edc_text())
+
+    def test_paleo_co2_reference_line_is_optional(self):
+        self.assertEqual(len(charts.paleo_co2(self.co2).to_dict()["layer"]), 1)
+        spec = charts.paleo_co2(self.co2, modern=424.0).to_dict()
+        self.assertEqual(len(spec["layer"]), 3)
+        self.assertIn("現在 424 ppm", str(spec))
+
+    def test_paleo_axes_run_past_to_present(self):
+        spec = charts.paleo_temperature(self.temperature).to_dict()
+        self.assertTrue(spec["encoding"]["x"]["scale"]["reverse"])
+
+    def test_recent_co2_joins_instrumental_after_since_year(self):
+        instrumental = analysis.instrumental_as_age(parsers.parse_gml_monthly(gml_text(1976, 1980)))
+        spec = charts.recent_co2(self.co2, instrumental, since_year=1000).to_dict()
+        rows = next(iter(spec["datasets"].values()))
+        self.assertEqual({r["source"] for r in rows}, {"アイスコア", "南極点 直接観測"})
+        self.assertGreaterEqual(min(r["year"] for r in rows), 1000)
+        ice_only = charts.recent_co2(self.co2, None, since_year=0).to_dict()
+        rows = next(iter(ice_only["datasets"].values()))
+        self.assertEqual({r["source"] for r in rows}, {"アイスコア"})
+
+    def test_scatter_encodes_co2_against_temperature(self):
+        pairs = analysis.paired_on_ages(self.co2, self.temperature)
+        spec = charts.co2_temperature_scatter(pairs).to_dict()
+        self.assertEqual(spec["encoding"]["x"]["field"], "co2")
+        self.assertEqual(spec["encoding"]["y"]["field"], "temperature")

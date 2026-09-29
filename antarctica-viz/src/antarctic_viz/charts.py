@@ -252,3 +252,118 @@ def simple_bars(df: pd.DataFrame, x: str, y: str, y_title: str) -> alt.Chart:
         )
         .properties(height=260)
     )
+
+
+# Fixed axis span and y-axis width keep the stacked paleo charts aligned.
+_PALEO_Y_EXTENT = 40
+_PALEO_DOMAIN_KA = [-0.1, 810]
+
+
+def _ka_x() -> alt.X:
+    # Reversed so time runs left (past) to right (present).
+    return alt.X(
+        "ka:Q",
+        title="千年前",
+        scale=alt.Scale(domain=_PALEO_DOMAIN_KA, reverse=True, nice=False, clamp=True),
+        axis=alt.Axis(format="d"),
+    )
+
+
+def _with_ka(df: pd.DataFrame) -> pd.DataFrame:
+    return df.assign(ka=df["age_bp"] / 1000)
+
+
+def paleo_co2(co2: pd.DataFrame, *, modern: float | None = None) -> alt.LayerChart:
+    """800 kyr ice-core CO2, with the latest direct measurement as a dashed reference."""
+    line = (
+        alt.Chart(_with_ka(co2))
+        .mark_line(strokeWidth=1.5, color=SERIES[0])
+        .encode(
+            _ka_x(),
+            alt.Y(
+                "value:Q",
+                title="CO₂ (ppm)",
+                scale=alt.Scale(zero=False),
+                axis=alt.Axis(minExtent=_PALEO_Y_EXTENT),
+            ),
+            tooltip=[
+                alt.Tooltip("ka:Q", title="千年前", format=",.1f"),
+                alt.Tooltip("value:Q", title="CO₂ (ppm)", format=".1f"),
+            ],
+        )
+    )
+    layers: list[alt.Chart] = [line]
+    if modern is not None:
+        rule = pd.DataFrame({"value": [modern], "label": [f"現在 {modern:.0f} ppm"]})
+        layers.append(
+            alt.Chart(rule).mark_rule(color=SERIES[1], strokeDash=[6, 4]).encode(y="value:Q")
+        )
+        layers.append(
+            alt.Chart(rule)
+            .mark_text(align="left", dx=4, dy=-6, color=SERIES[1], x=0)
+            .encode(y="value:Q", text="label:N")
+        )
+    return alt.layer(*layers).properties(height=260)
+
+
+def paleo_temperature(temperature: pd.DataFrame) -> alt.Chart:
+    """Antarctic temperature anomaly on the same reversed age axis as ``paleo_co2``."""
+    return (
+        alt.Chart(_with_ka(temperature))
+        .mark_line(strokeWidth=1, color=SERIES[3])
+        .encode(
+            _ka_x(),
+            alt.Y("value:Q", title="気温偏差 (°C)", axis=alt.Axis(minExtent=_PALEO_Y_EXTENT)),
+            tooltip=[
+                alt.Tooltip("ka:Q", title="千年前", format=",.1f"),
+                alt.Tooltip("value:Q", title="気温偏差 (°C)", format="+.2f"),
+            ],
+        )
+        .properties(height=200)
+    )
+
+
+def recent_co2(ice: pd.DataFrame, instrumental: pd.DataFrame | None, since_year: int) -> alt.Chart:
+    """Ice-core CO2 joined to direct South Pole measurements on a calendar-year axis."""
+    parts = [ice.assign(source="アイスコア")]
+    if instrumental is not None:
+        parts.append(instrumental.assign(source="南極点 直接観測"))
+    df = pd.concat(parts, ignore_index=True)
+    df["year"] = 1950 - df["age_bp"]
+    df = df[df["year"] >= since_year]
+    order = ["アイスコア", "南極点 直接観測"]
+    return (
+        alt.Chart(df)
+        .mark_line(strokeWidth=2, point=alt.OverlayMarkDef(size=12))
+        .encode(
+            alt.X("year:Q", title="西暦年", scale=alt.Scale(nice=False), axis=alt.Axis(format="d")),
+            alt.Y("value:Q", title="CO₂ (ppm)", scale=alt.Scale(zero=False)),
+            color=alt.Color("source:N", title="", scale=alt.Scale(domain=order, range=SERIES[:2])),
+            tooltip=[
+                alt.Tooltip("source:N", title="データ"),
+                alt.Tooltip("year:Q", title="年", format=".0f"),
+                alt.Tooltip("value:Q", title="CO₂ (ppm)", format=".1f"),
+            ],
+        )
+        .properties(height=320)
+        .interactive(bind_y=False)
+    )
+
+
+def co2_temperature_scatter(pairs: pd.DataFrame) -> alt.Chart:
+    """CO2 against interpolated temperature, shaded by age."""
+    return (
+        alt.Chart(_with_ka(pairs))
+        .mark_circle(size=18, opacity=0.7)
+        .encode(
+            alt.X("co2:Q", title="CO₂ (ppm)", scale=alt.Scale(zero=False)),
+            alt.Y("temperature:Q", title="気温偏差 (°C)"),
+            color=alt.Color("ka:Q", title="千年前", scale=alt.Scale(scheme="blues", reverse=True)),
+            tooltip=[
+                alt.Tooltip("ka:Q", title="千年前", format=",.1f"),
+                alt.Tooltip("co2:Q", title="CO₂ (ppm)", format=".1f"),
+                alt.Tooltip("temperature:Q", title="気温偏差 (°C)", format="+.2f"),
+            ],
+        )
+        .properties(height=340)
+    )

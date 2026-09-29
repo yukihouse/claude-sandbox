@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 
 from antarctic_viz import analysis, parsers
-from tests.helpers import gml_text, reader_text, sea_ice_text
+from tests.helpers import edc_text, gml_text, ice_core_co2_text, reader_text, sea_ice_text
 
 
 def series(dates, values):
@@ -149,3 +149,36 @@ class TestCo2(unittest.TestCase):
         self.assertNotIn(2005, growth["year"].tolist())
         self.assertNotIn(2006, growth["year"].tolist())
         self.assertIn(2007, growth["year"].tolist())
+
+
+class TestIceCore(unittest.TestCase):
+    def setUp(self):
+        self.co2 = parsers.parse_ice_core_co2(ice_core_co2_text())
+        self.temperature = parsers.parse_edc_temperature(edc_text())
+
+    def test_summary_excludes_industrial_era_from_natural_range(self):
+        summary = analysis.ice_core_summary(self.co2)
+        self.assertAlmostEqual(summary.max_value, 285.0, places=0)
+        self.assertAlmostEqual(summary.min_value, 185.0, places=0)
+        self.assertLess(summary.max_value, self.co2["value"].max())
+        self.assertEqual(summary.preindustrial, 280.0)
+        self.assertGreater(summary.min_age_bp, 1000)
+
+    def test_summary_of_modern_only_record(self):
+        recent = self.co2[self.co2["age_bp"] < 50]
+        summary = analysis.ice_core_summary(recent)
+        self.assertEqual(summary.max_value, recent["value"].max())
+        self.assertIsNone(summary.preindustrial)
+
+    def test_instrumental_as_age(self):
+        df = series(["1950-01-01", "2000-01-01"], [310.0, 370.0])
+        aged = analysis.instrumental_as_age(df)
+        self.assertEqual(aged["age_bp"].tolist(), [0.0, -50.0])
+        self.assertEqual(aged["value"].tolist(), [310.0, 370.0])
+
+    def test_paired_on_ages_interpolates_within_overlap(self):
+        pairs = analysis.paired_on_ages(self.co2, self.temperature)
+        self.assertEqual(list(pairs.columns), ["age_bp", "co2", "temperature"])
+        self.assertGreaterEqual(pairs["age_bp"].min(), 0)
+        self.assertLessEqual(pairs["age_bp"].max(), self.temperature["age_bp"].max())
+        self.assertGreater(pairs["co2"].corr(pairs["temperature"]), 0.9)

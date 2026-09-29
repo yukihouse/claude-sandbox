@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 
 from antarctic_viz import parsers
-from tests.helpers import fixture
+from tests.helpers import edc_text, fixture, ice_core_co2_text
 
 
 class TestSeaIce(unittest.TestCase):
@@ -72,3 +72,35 @@ class TestUserTable(unittest.TestCase):
         raw = pd.DataFrame({"time": ["nope"], "v": ["x"]})
         with self.assertRaises(parsers.ParseError):
             parsers.parse_user_table(raw, "time", "v")
+
+
+class TestIceCore(unittest.TestCase):
+    def test_co2_skips_comments_bom_and_column_header(self):
+        df = parsers.parse_ice_core_co2(ice_core_co2_text())
+        self.assertEqual(list(df.columns), ["age_bp", "value"])
+        self.assertEqual(df["age_bp"].iloc[0], -51.0)
+        self.assertTrue(df["age_bp"].is_monotonic_increasing)
+        self.assertGreater(df["age_bp"].iloc[-1], 790_000)
+
+    def test_co2_ignores_short_and_non_numeric_rows(self):
+        df = parsers.parse_ice_core_co2("age co2\n100\n200\t280.5\tx\nfoo\tbar\n")
+        self.assertEqual(df.to_dict("list"), {"age_bp": [200.0], "value": [280.5]})
+
+    def test_co2_empty_raises(self):
+        with self.assertRaises(parsers.ParseError):
+            parsers.parse_ice_core_co2("# only comments\n")
+
+    def test_edc_keeps_rows_missing_deuterium_and_skips_rows_missing_temperature(self):
+        df = parsers.parse_edc_temperature(edc_text())
+        self.assertEqual(len(df), 800)
+        self.assertNotIn(-50.0, df["age_bp"].tolist())
+        self.assertAlmostEqual(df["value"].iloc[0], -4.0)
+
+    def test_edc_skips_unparseable_rows(self):
+        text = "Column 1: Bag number here\n12 6.6 x -390.9 0.88\n13 7.15 46.8 -385.1 1.84\n"
+        df = parsers.parse_edc_temperature(text)
+        self.assertEqual(df.to_dict("list"), {"age_bp": [46.8], "value": [1.84]})
+
+    def test_edc_empty_raises(self):
+        with self.assertRaises(parsers.ParseError):
+            parsers.parse_edc_temperature("Bag ztop Age Deuterium Temperature\n")

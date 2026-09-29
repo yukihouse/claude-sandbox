@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 
 DEFAULT_BASE_PERIOD = (1981, 2010)
+PRESENT_YEAR = 1950  # "before present" in radiocarbon/ice-core convention
+PREINDUSTRIAL_AGE_BP = (200.0, 950.0)  # 1000–1750 CE
 _REFERENCE_YEAR = 2001  # non-leap year used to map month/day onto a day-of-year axis
 
 
@@ -198,5 +200,51 @@ def annual_growth(monthly: pd.DataFrame, months_required: int = 12) -> pd.DataFr
             "year": growth.index.astype(int),
             "mean": annual.loc[growth.index].to_numpy(),
             "growth": growth.to_numpy(),
+        }
+    )
+
+
+@dataclass(frozen=True)
+class IceCoreSummary:
+    min_value: float
+    min_age_bp: float
+    max_value: float
+    max_age_bp: float
+    preindustrial: float | None
+
+
+def ice_core_summary(co2: pd.DataFrame) -> IceCoreSummary:
+    """Natural range (before 1750 CE) and the 1000–1750 CE mean of an ice-core record."""
+    natural = co2[co2["age_bp"] >= PREINDUSTRIAL_AGE_BP[0]]
+    if natural.empty:
+        natural = co2
+    low = natural.loc[natural["value"].idxmin()]
+    high = natural.loc[natural["value"].idxmax()]
+    pre = co2[co2["age_bp"].between(*PREINDUSTRIAL_AGE_BP)]["value"]
+    return IceCoreSummary(
+        min_value=float(low["value"]),
+        min_age_bp=float(low["age_bp"]),
+        max_value=float(high["value"]),
+        max_age_bp=float(high["age_bp"]),
+        preindustrial=float(pre.mean()) if not pre.empty else None,
+    )
+
+
+def instrumental_as_age(df: pd.DataFrame) -> pd.DataFrame:
+    """Re-express a dated series on the ice-core ``age_bp`` axis."""
+    return pd.DataFrame(
+        {"age_bp": PRESENT_YEAR - decimal_year(df["date"]).to_numpy(), "value": df["value"]}
+    )
+
+
+def paired_on_ages(co2: pd.DataFrame, temperature: pd.DataFrame) -> pd.DataFrame:
+    """Temperature interpolated onto each CO2 sample age within the overlapping span."""
+    ages = temperature["age_bp"]
+    inside = co2[co2["age_bp"].between(ages.min(), ages.max())]
+    return pd.DataFrame(
+        {
+            "age_bp": inside["age_bp"].to_numpy(),
+            "co2": inside["value"].to_numpy(),
+            "temperature": np.interp(inside["age_bp"], ages, temperature["value"]),
         }
     )

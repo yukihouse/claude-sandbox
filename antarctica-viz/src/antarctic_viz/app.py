@@ -19,8 +19,10 @@ PARSERS: dict[str, Callable[[str], pd.DataFrame]] = {
     "sea_ice": parsers.parse_sea_ice_daily,
     "gml": parsers.parse_gml_monthly,
     "reader": parsers.parse_reader_monthly,
+    "ice_co2": parsers.parse_ice_core_co2,
+    "edc_temp": parsers.parse_edc_temperature,
 }
-PAGES = ["概要", "海氷面積", "南極点 CO₂", "基地の気温", "CSVを分析", "データソース"]
+PAGES = ["概要", "海氷面積", "南極点 CO₂", "アイスコア", "基地の気温", "CSVを分析", "データソース"]
 SOURCES_DOC = Path(__file__).with_name("data_sources.md")
 
 
@@ -227,6 +229,80 @@ def page_co2(base: tuple[int, int]) -> None:
     source_note(dataset)
 
 
+def page_ice_core(base: tuple[int, int]) -> None:
+    st.title("アイスコア: 過去80万年のCO₂と気温")
+    st.write(
+        "南極の氷床を掘削した氷の気泡には、当時の大気がそのまま閉じ込められています。"
+        "現在の南極点での直接観測と並べると、今のCO₂濃度を自然の変動幅と比べられます。"
+    )
+    co2 = load_or_report(sources.ICE_CORE_CO2, "ice_co2")
+    if co2 is None:
+        return
+    temperature = load_or_report(sources.EDC_TEMPERATURE, "edc_temp")
+    try:
+        max_age = st.session_state.get("max_age", sources.DEFAULT_MAX_AGE)
+        spo = load(sources.SOUTH_POLE_CO2.url, "gml", max_age)
+    except (sources.FetchError, parsers.ParseError):
+        spo = None
+        st.caption("南極点の直接観測を取得できなかったため、現在値との比較は省略しています。")
+
+    summary = analysis.ice_core_summary(co2)
+    c1, c2, c3 = st.columns(3)
+    c1.metric(
+        "自然の変動幅 (1750年以前)",
+        f"{summary.min_value:.0f}〜{summary.max_value:.0f} ppm",
+        help=(
+            f"最小: 約{summary.min_age_bp / 1000:,.0f}千年前 / "
+            f"最大: 約{summary.max_age_bp / 1000:,.0f}千年前"
+        ),
+    )
+    if summary.preindustrial is not None:
+        c2.metric("産業革命前 (1000〜1750年の平均)", f"{summary.preindustrial:.0f} ppm")
+    modern = None
+    if spo is not None:
+        latest = spo.iloc[-1]
+        modern = float(latest["value"])
+        c3.metric(
+            f"南極点 直接観測 ({latest['date']:%Y-%m})",
+            f"{modern:.0f} ppm",
+            f"{modern - summary.max_value:+.0f} ppm (自然の最大値比)",
+            delta_color="inverse",
+        )
+
+    tab_long, tab_recent, tab_relation = st.tabs(["80万年", "過去2000年", "CO₂と気温の関係"])
+    with tab_long:
+        st.altair_chart(charts.paleo_co2(co2, modern=modern), width="stretch")
+        if temperature is not None:
+            st.altair_chart(charts.paleo_temperature(temperature), width="stretch")
+        st.caption(
+            "上: アイスコアのCO₂ (破線は南極点の最新値) / 下: EPICA Dome C の気温偏差 "
+            "(過去1000年平均との差)。約10万年周期で氷期と間氷期が繰り返されています。"
+        )
+    with tab_recent:
+        instrumental = analysis.instrumental_as_age(spo) if spo is not None else None
+        st.altair_chart(charts.recent_co2(co2, instrumental, since_year=0), width="stretch")
+        st.caption(
+            "アイスコア (直近はロードーム) の記録は2001年まで。1975年以降は南極点での"
+            "直接観測と重なり、両者がよく一致することを確認できます。"
+        )
+    with tab_relation:
+        if temperature is None:
+            st.info("気温データを取得できなかったため表示できません。")
+        else:
+            pairs = analysis.paired_on_ages(co2, temperature)
+            if len(pairs) >= 2:
+                r = pairs["co2"].corr(pairs["temperature"])
+                st.metric("相関係数 r", f"{r:.2f}", help=f"{len(pairs)} 組のサンプルで計算")
+            st.altair_chart(charts.co2_temperature_scatter(pairs), width="stretch")
+            st.caption(
+                "CO₂の各サンプルの年代に気温を線形補間して対応させています。"
+                "相関は氷期サイクルでの両者の連動を示しますが、因果の向きや時間差は示しません。"
+            )
+    csv_download(co2, "ice_core_co2")
+    source_note(sources.ICE_CORE_CO2)
+    source_note(sources.EDC_TEMPERATURE)
+
+
 def page_temperature(base: tuple[int, int]) -> None:
     st.title("南極観測基地の気温")
     names = list(sources.READER_STATIONS)
@@ -346,6 +422,7 @@ RENDERERS = {
     "概要": page_overview,
     "海氷面積": page_sea_ice,
     "南極点 CO₂": page_co2,
+    "アイスコア": page_ice_core,
     "基地の気温": page_temperature,
     "CSVを分析": page_upload,
     "データソース": page_sources,

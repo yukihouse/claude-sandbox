@@ -11,6 +11,8 @@
 |---|---|---|---|---|
 | 南極海 海氷面積 (Sea Ice Index G02135 v4) | NSIDC / NOAA | 1978年10月〜・日別 | CSV | 年ごとの季節変化の重ね描き、平年差、同日順位、年最小・最大のトレンド |
 | 南極点 大気CO₂ (現場連続観測) | NOAA GML (South Pole Observatory, SPO) | 1975年〜・月別 | テキスト (空白区切り) | 長期トレンド、季節変化 (トレンド除去)、年増加量 |
+| 南極アイスコア CO₂ 合成記録 (Bereiter et al. 2015) | NOAA NCEI Paleoclimatology | 約80万年前〜2001年・不等間隔 | テキスト (タブ区切り) | 自然の変動幅、産業革命前の平均、直接観測との接続 |
+| EPICA Dome C 気温偏差 (Jouzel et al. 2007) | NOAA NCEI Paleoclimatology | 約80万年前〜現在・不等間隔 | テキスト (固定幅) | 氷期サイクル、CO₂との相関 |
 | 観測基地の月平均気温 (READER) | SCAR / British Antarctic Survey | 1950年代〜 (基地により異なる)・月別 | テキスト (年×月の表) | 年平均気温トレンド、月別平年値、偏差ヒートマップ、基地の比較 |
 
 - **海氷面積**: `https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v4.0.csv`
@@ -18,6 +20,13 @@
   月平均は10日以上データがある月のみ計算しています。
 - **南極点CO₂**: `https://gml.noaa.gov/aftp/data/trace_gases/co2/in-situ/surface/txt/co2_spo_surface-insitu_1_ccgg_MonthlyData.txt`
   欠測値 (`-999.99`) と品質フラグが `.` で始まらない行は除外しています。
+- **アイスコア CO₂**: `https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt`
+  年代は1950年を基準とした「何年前」(BP) で、最新 (-51) は2001年に当たります。
+  自然の変動幅は1750年以前 (200 BP以前)、産業革命前の値は1000〜1750年の平均です。
+- **EPICA Dome C 気温**: `https://www.ncei.noaa.gov/pub/data/paleo/icecore/antarctica/epica_domec/edc3deuttemp2007.txt`
+  気温は過去1000年平均からの差で、δD から換算した推定値です。
+  δD が欠測でも気温がある行は使い、気温のない行は除外しています。
+  CO₂との相関は、CO₂の各サンプルの年代に気温を線形補間して計算しています。
 - **READER 気温**: `https://legacy.bas.ac.uk/met/READER/surface/<基地名>.All.temperature.txt`
   昭和基地 (`Syowa`) のほか、南極点・ボストーク・マクマードなど16基地を選べます。
   READERは同じ場所で気圧・風速のファイルも公開しています。
@@ -43,7 +52,8 @@
 - **ERA5 再解析** (Copernicus): 格子データ。アカウント登録と容量の大きいNetCDF処理が必要です。
 
 ### 古気候・地理
-- **氷床コア記録** (NOAA NCEI Paleoclimatology / PANGAEA): EPICA Dome C・ボストークの気温・CO₂の復元値。
+- **その他の氷床コア記録** (NOAA NCEI Paleoclimatology / PANGAEA): ボストークの気温、メタン (CH₄)、
+  ドームふじ (日本) のδ¹⁸O など。CO₂とEPICA Dome C の気温は収録済みです。
 - **SCAR Antarctic Digital Database / Quantarctica**: 海岸線・基地位置などの地理データ (地図表示の追加に使えます)。
 
 ## 利用上の注意
