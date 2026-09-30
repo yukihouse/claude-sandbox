@@ -216,7 +216,19 @@ def page_sea_ice(base: tuple[int, int]) -> None:
                 date=pd.to_datetime(summary["year"].astype(str) + "-07-01")
             )
             st.caption(f"{label}: " + charts.trend_caption(analysis.linear_trend(frame), "百万km²"))
-        st.dataframe(summary, hide_index=True)
+        st.dataframe(
+            summary,
+            hide_index=True,
+            column_config={
+                "year": st.column_config.NumberColumn("年", format="%d"),
+                "mean": st.column_config.NumberColumn("年平均", format="%.2f"),
+                "min": st.column_config.NumberColumn("年最小", format="%.2f"),
+                "min_date": st.column_config.DateColumn("年最小の日", format="YYYY-MM-DD"),
+                "max": st.column_config.NumberColumn("年最大", format="%.2f"),
+                "max_date": st.column_config.DateColumn("年最大の日", format="YYYY-MM-DD"),
+                "count": st.column_config.NumberColumn("日数", format="%d"),
+            },
+        )
     csv_download(df, "sea_ice_extent_south_daily")
     source_note(dataset)
 

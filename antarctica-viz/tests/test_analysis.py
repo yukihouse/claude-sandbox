@@ -54,14 +54,16 @@ class TestResampling(unittest.TestCase):
     def test_rolling_mean_does_not_mutate_input(self):
         df = series(["2000-01-01", "2000-02-01", "2000-03-01"], [1.0, 2.0, 3.0])
         out = analysis.rolling_mean(df, 2)
-        self.assertEqual(out["value"].tolist(), [1.0, 1.5, 2.5])
+        self.assertTrue(pd.isna(out["value"].iloc[0]))
+        self.assertEqual(out["value"].tolist()[1:], [1.5, 2.5])
         self.assertEqual(df["value"].tolist(), [1.0, 2.0, 3.0])
 
     def test_rolling_mean_does_not_bridge_gaps(self):
         dates = ["2000-01-01", "2000-02-01", "2004-01-01", "2004-02-01"]
         df = series(dates, [1.0, 3.0, 10.0, 20.0])
         out = analysis.rolling_mean(df, 2)
-        self.assertEqual(out["value"].tolist(), [1.0, 2.0, 10.0, 15.0])
+        self.assertEqual(out["value"].isna().tolist(), [True, False, True, False])
+        self.assertEqual(out["value"].dropna().tolist(), [2.0, 15.0])
 
 
 class TestClimatology(unittest.TestCase):
