@@ -26,8 +26,15 @@ uv sync --extra streamlit
 uv run streamlit run src/tetris/streamlit_app.py
 ```
 
-Controls are on-screen buttons (move left/right, rotate, soft drop, hard
-drop), plus an optional auto-drop toggle and speed slider in the sidebar.
+Pieces fall on their own (classic gravity); controls are on-screen buttons
+(move left/right, rotate, soft drop, hard drop), plus an auto-drop on/off
+toggle and speed slider in the sidebar.
+
+[`.streamlit/config.toml`](.streamlit/config.toml) applies when running the
+command above from the repo root, mirroring antarctica-viz's own launch
+defaults: listen on this machine only (`server.address=localhost`) and hide
+Streamlit's "Deploy" button (`client.toolbarMode=viewer`), so the app is
+never published to the network or Streamlit Community Cloud by accident.
 
 ## Coverage on pull requests
 

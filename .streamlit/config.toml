@@ -1,0 +1,14 @@
+# Applies when running `uv run streamlit run src/tetris/streamlit_app.py`
+# from the repo root. Mirrors antarctica-viz's own launch defaults
+# (see antarctica-viz/src/antarctic_viz/cli.py): listen on this machine
+# only, and hide Streamlit's "Deploy" button so the app is never published
+# to the network or Streamlit Community Cloud by accident.
+[server]
+address = "localhost"
+showEmailPrompt = false
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "viewer"

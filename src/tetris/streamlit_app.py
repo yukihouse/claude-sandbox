@@ -27,7 +27,7 @@ def _init_state() -> None:
     if "game" not in st.session_state:
         st.session_state.game = _new_game()
     if "auto_drop" not in st.session_state:
-        st.session_state.auto_drop = False
+        st.session_state.auto_drop = True
     if "speed" not in st.session_state:
         st.session_state.speed = 0.8
 
