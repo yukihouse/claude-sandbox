@@ -30,6 +30,9 @@ uv run antarctic-viz
 - 初回起動時のメールアドレスの質問を出さない (`server.showEmailPrompt=false`)
 - Streamlit への利用統計を送らない (`browser.gatherUsageStats=false`)
 - このPCからの接続だけを受け付ける (`server.address=localhost`)
+- 右上の Deploy・Rerun・Clear cache などの開発者向けメニューを出さない (`client.toolbarMode=viewer`)
+
+開発中は `uv run antarctic-viz --dev` で起動すると、開発者向けメニューが表示されます。
 
 同じネットワークの別の端末から開きたいときは、`uv run antarctic-viz --server.address 0.0.0.0`
 のように上書きできます (外部に公開されるので注意してください)。
