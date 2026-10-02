@@ -6,18 +6,19 @@
 |----------------------------------- | -------: | -------: | -------: | -------: | -------: | --------: |
 | src/antarctic\_viz/\_\_init\_\_.py |        1 |        0 |        0 |        0 |     100% |           |
 | src/antarctic\_viz/analysis.py     |      132 |        0 |       10 |        0 |     100% |           |
-| src/antarctic\_viz/app.py          |      274 |        0 |       56 |        0 |     100% |           |
-| src/antarctic\_viz/charts.py       |       88 |        0 |       14 |        0 |     100% |           |
-| src/antarctic\_viz/parsers.py      |      102 |        0 |       42 |        0 |     100% |           |
-| src/antarctic\_viz/sources.py      |       50 |        0 |        6 |        0 |     100% |           |
+| src/antarctic\_viz/app.py          |      336 |        0 |       70 |        0 |     100% |           |
+| src/antarctic\_viz/charts.py       |      101 |        0 |       16 |        0 |     100% |           |
+| src/antarctic\_viz/parsers.py      |      204 |        0 |       72 |        0 |     100% |           |
+| src/antarctic\_viz/sources.py      |       71 |        0 |       10 |        0 |     100% |           |
 | tests/\_\_init\_\_.py              |        0 |        0 |        0 |        0 |     100% |           |
-| tests/helpers.py                   |       49 |        0 |       12 |        0 |     100% |           |
-| tests/test\_analysis.py            |      145 |        0 |        2 |        0 |     100% |           |
-| tests/test\_app.py                 |      153 |        0 |        6 |        0 |     100% |           |
-| tests/test\_charts.py              |       90 |        0 |        0 |        0 |     100% |           |
-| tests/test\_parsers.py             |       77 |        0 |        0 |        0 |     100% |           |
-| tests/test\_sources.py             |       64 |        0 |        0 |        0 |     100% |           |
-| **TOTAL**                          | **1225** |    **0** |  **148** |    **0** | **100%** |           |
+| tests/helpers.py                   |       66 |        0 |       16 |        0 |     100% |           |
+| tests/test\_analysis.py            |      147 |        0 |        2 |        0 |     100% |           |
+| tests/test\_app.py                 |      206 |        0 |        6 |        0 |     100% |           |
+| tests/test\_charts.py              |      106 |        0 |        0 |        0 |     100% |           |
+| tests/test\_cli.py                 |       21 |        0 |        0 |        0 |     100% |           |
+| tests/test\_parsers.py             |      152 |        0 |        2 |        0 |     100% |           |
+| tests/test\_sources.py             |       84 |        0 |        2 |        0 |     100% |           |
+| **TOTAL**                          | **1627** |    **0** |  **206** |    **0** | **100%** |           |
 
 
 ## Setup coverage badge
