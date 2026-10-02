@@ -56,7 +56,8 @@ def load_or_report(dataset: sources.Dataset, parser: str) -> pd.DataFrame | None
     except (sources.FetchError, parsers.ParseError) as exc:
         st.error(f"**{dataset.title}** を読み込めませんでした。\n\n{exc}")
         st.caption(
-            "ネットワーク接続を確認してください。一度取得できたデータは "
+            "提供元のサーバーの障害か、ネットワーク接続の問題が考えられます。"
+            "一度取得できたデータは "
             f"`{sources.DEFAULT_CACHE_DIR}` にキャッシュされ、オフラインでも表示できます。"
         )
         return None

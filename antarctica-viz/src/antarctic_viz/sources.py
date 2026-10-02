@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+import urllib.error
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -261,6 +262,12 @@ def fetch_text(
     except OSError as exc:  # URLError and timeouts are OSErrors
         if path.exists():
             return path.read_text(encoding="utf-8")
+        if isinstance(exc, urllib.error.HTTPError):
+            raise FetchError(
+                f"{url} を取得できませんでした: 提供元のサーバーがエラーを返しました "
+                f"(HTTP {exc.code})。提供元の一時的な障害の可能性があります。"
+                "時間をおいて再度お試しください。"
+            ) from exc
         raise FetchError(f"{url} を取得できませんでした: {exc}") from exc
 
     path.parent.mkdir(parents=True, exist_ok=True)

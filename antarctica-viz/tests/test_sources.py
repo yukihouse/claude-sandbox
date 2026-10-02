@@ -100,6 +100,15 @@ class TestFetchText(unittest.TestCase):
         )
         self.assertEqual(text, "hello")
 
+    def test_server_error_without_cache_names_the_provider(self):
+        def unavailable(request, timeout):
+            raise urllib.error.HTTPError(request.full_url, 503, "Service Unavailable", {}, None)
+
+        with self.assertRaises(sources.FetchError) as ctx:
+            sources.fetch_text("https://x/c", cache_dir=self.cache, opener=unavailable)
+        self.assertIn("HTTP 503", str(ctx.exception))
+        self.assertIn("提供元", str(ctx.exception))
+
     def test_offline_without_cache_raises_fetch_error(self):
         with self.assertRaises(sources.FetchError):
             sources.fetch_text("https://x/b", cache_dir=self.cache, opener=self.failing)

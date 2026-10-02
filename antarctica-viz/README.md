@@ -20,10 +20,22 @@
 ```bash
 cd antarctica-viz
 uv sync
-uv run antarctic-viz        # = streamlit run src/antarctic_viz/app.py
+uv run antarctic-viz
 ```
 
-ブラウザで <http://localhost:8501> を開きます。データは初回表示時に各機関のサーバーから
+ブラウザで <http://localhost:8501> を開きます。
+
+`antarctic-viz` は次の設定で Streamlit を起動します。
+
+- 初回起動時のメールアドレスの質問を出さない (`server.showEmailPrompt=false`)
+- Streamlit への利用統計を送らない (`browser.gatherUsageStats=false`)
+- このPCからの接続だけを受け付ける (`server.address=localhost`)
+
+同じネットワークの別の端末から開きたいときは、`uv run antarctic-viz --server.address 0.0.0.0`
+のように上書きできます (外部に公開されるので注意してください)。
+`streamlit run src/antarctic_viz/app.py` で直接起動した場合、これらの設定は使われません。
+
+データは初回表示時に各機関のサーバーから
 ダウンロードされ、`~/.cache/antarctic-viz/` に24時間キャッシュされます
 (取得に失敗したときは古いキャッシュで表示を続けます)。
 
