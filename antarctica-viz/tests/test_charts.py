@@ -1,7 +1,17 @@
 import unittest
+from datetime import date
+
+import pandas as pd
 
 from antarctic_viz import analysis, charts, parsers
-from tests.helpers import edc_text, gml_text, ice_core_co2_text, reader_text, sea_ice_text
+from tests.helpers import (
+    edc_text,
+    gml_text,
+    ice_core_co2_text,
+    ozone_daily_text,
+    reader_text,
+    sea_ice_text,
+)
 
 
 class TestCharts(unittest.TestCase):
@@ -75,10 +85,29 @@ class TestCharts(unittest.TestCase):
         self.spec(charts.multi_line(lines, "station", "T", ["A"]))
         self.spec(charts.simple_bars(yearly, "year", "anomaly", "A"))
 
+    def test_multi_line_breaks_at_missing_years(self):
+        lines = pd.DataFrame(
+            {"year": [2000, 2001, 2004, 2000, 2001], "value": [1.0] * 5, "station": list("AAABB")}
+        )
+        filled = charts.fill_missing_years(lines, "station")
+        self.assertEqual(filled[filled["station"] == "A"]["year"].tolist(), list(range(2000, 2005)))
+        self.assertEqual(int(filled["value"].isna().sum()), 2)
+        self.assertEqual(len(filled[filled["station"] == "B"]), 2)
+
     def test_trend_caption(self):
         caption = charts.trend_caption(analysis.Trend(0.05, 0.0, 0.5, 10), "°C")
         self.assertIn("+0.500 °C/10年", caption)
         self.assertIn("n = 10", caption)
+
+
+class TestOzoneChart(unittest.TestCase):
+    def test_season_draws_band_mean_max_and_observed_days_only(self):
+        daily = parsers.parse_ozone_daily(ozone_daily_text(2024, date(2024, 9, 30)))
+        spec = charts.ozone_season(daily).to_dict()
+        self.assertEqual(len(spec["layer"]), 4)
+        self.assertEqual(spec["layer"][0]["mark"]["type"], "area")
+        observed = spec["datasets"][spec["layer"][-1]["data"]["name"]]
+        self.assertEqual(len(observed), 274)  # Jan 1 - Sep 30, leap year
 
 
 class TestIceCoreCharts(unittest.TestCase):

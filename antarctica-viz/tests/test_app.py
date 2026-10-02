@@ -7,12 +7,28 @@ import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 from antarctic_viz import sources
-from tests.helpers import edc_text, gml_text, ice_core_co2_text, reader_text, sea_ice_text
+from tests.helpers import (
+    FIXTURES,
+    edc_text,
+    gml_text,
+    ice_core_co2_text,
+    ozone_annual_text,
+    ozone_daily_text,
+    reader_text,
+    sea_ice_text,
+)
 
 APP = str(Path(sources.__file__).with_name("app.py"))
+THIS_YEAR = date.today().year
 TEXTS = {
     sources.SEA_ICE_EXTENT.url: sea_ice_text(1979, date(2025, 9, 15)),
     sources.SOUTH_POLE_CO2.url: gml_text(1976, 2024),
+    sources.SOUTH_POLE_CH4.url: gml_text(1984, 2024).replace(" ...", "").replace("qcflag", ""),
+    sources.OZONE_HOLE_ANNUAL.url: ozone_annual_text(1979, 2025),
+    sources.ozone_hole_daily(THIS_YEAR).url: ozone_daily_text(THIS_YEAR, date(THIS_YEAR, 9, 26)),
+    sources.ozone_hole_daily(1995).url: ozone_daily_text(1995, date(1994, 12, 31)),
+    sources.reader_series("Syowa", "wind_speed").url: reader_text(1957, 2024, offset=30),
+    sources.reader_series("Vostok", "pressure").url: reader_text(1958, 2024, offset=640),
     sources.reader_temperature("Syowa").url: reader_text(1957, 2024),
     sources.reader_temperature("Vostok").url: reader_text(1958, 2024, offset=-45),
     sources.reader_temperature("Halley").url: reader_text(1995, 2024),
@@ -60,6 +76,8 @@ class TestPagesWithData(AppCase):
         self.assertIn("海氷面積 (2025-09-15)", metrics)
         self.assertIn("南極点 CO₂ (2024-06)", metrics)
         self.assertEqual(metrics["昭和基地 月平均気温 (2024-06)"], "-4.2 °C")
+        self.assertIn("南極点 CH₄ (2024-06)", metrics)
+        self.assertEqual(metrics["オゾンホール面積 (2025年)"], "23.1 百万km²")
         self.assertEqual(len(self.at.error), 0)
 
     def test_sea_ice_page(self):
@@ -78,10 +96,39 @@ class TestPagesWithData(AppCase):
         self.assertNotIn("平年 (同日中央値) との差", self.metrics())
 
     def test_co2_page(self):
-        self.run_page("南極点 CO₂")
+        self.run_page("南極点 温室効果ガス")
         metrics = self.metrics()
         self.assertEqual(metrics["2023年の年増加量"], "+1.80 ppm/年")
         self.assertTrue(any("ppm/10年" in c.value for c in self.at.caption))
+
+    def test_methane_page(self):
+        at = self.run_page("南極点 温室効果ガス")
+        at.main.radio[0].set_value("CH₄").run()
+        self.assertEqual(len(at.exception), 0)
+        self.assertEqual(self.metrics()["2023年の年増加量"], "+1.80 ppb/年")
+        self.assertIn("メタン", at.subheader[0].value)
+
+    def test_ozone_page(self):
+        at = self.run_page("オゾンホール")
+        metrics = self.metrics()
+        self.assertEqual(metrics["2025年の面積"], "23.1 百万km²")
+        self.assertEqual(metrics["2025年の最低オゾン全量"], "128 DU")
+        self.assertEqual(metrics["観測史上最大 (2004年)"], "25.0 百万km²")
+        self.assertIn(f"最新値 ({THIS_YEAR}-09-26)", metrics)
+        self.assertEqual(at.selectbox[0].value, THIS_YEAR)
+        self.assertEqual(len(at.error), 0)
+
+    def test_ozone_year_without_observations(self):
+        at = self.run_page("オゾンホール")
+        at.selectbox[0].set_value(1995).run()
+        self.assertTrue(any("1995年の日別データはありません" in i.value for i in at.info))
+
+    def test_ozone_year_that_cannot_be_fetched(self):
+        at = self.run_page("オゾンホール")
+        at.selectbox[0].set_value(2000).run()
+        self.assertEqual(len(at.exception), 0)
+        self.assertTrue(any("2000年" in e.value for e in at.error))
+        self.assertIn("2025年の面積", self.metrics())
 
     def test_ice_core_page(self):
         self.run_page("アイスコア")
@@ -94,13 +141,23 @@ class TestPagesWithData(AppCase):
         self.assertEqual(len(self.at.error), 0)
 
     def test_temperature_page_and_station_comparison(self):
-        at = self.run_page("基地の気温")
+        at = self.run_page("基地の気象")
         self.assertEqual(self.metrics()["年平均気温のトレンド"], "+0.20 °C/10年")
         at.selectbox[0].set_value("Vostok").run()
         self.assertEqual(at.multiselect[0].value, ["Vostok"])
         at.multiselect[0].set_value(["Vostok", "Syowa", "Mawson"]).run()
         self.assertEqual(len(at.exception), 0)
         self.assertTrue(any("Mawson" in e.value for e in at.error))
+
+    def test_station_wind_and_pressure(self):
+        at = self.run_page("基地の気象")
+        at.main.radio[0].set_value("wind_speed").run()
+        self.assertEqual(len(at.exception), 0)
+        self.assertEqual(self.metrics()["年平均風速のトレンド"], "+0.10 m/s/10年")
+        at.selectbox[0].set_value("Vostok").run()
+        at.main.radio[0].set_value("pressure").run()
+        self.assertEqual(self.metrics()["年平均気圧のトレンド"], "+0.20 hPa/10年")
+        self.assertTrue(any("hPa/10年" in c.value for c in at.caption))
 
     def test_sources_page_renders_research_notes(self):
         self.run_page("データソース")
@@ -120,7 +177,7 @@ class TestBasePeriodOutsideData(AppCase):
         self.assertNotIn("平年 (同日中央値) との差", self.metrics())
 
     def test_temperature_comparison_skips_station_without_base(self):
-        at = self.run_page("基地の気温", base=(1960, 1990))
+        at = self.run_page("基地の気象", base=(1960, 1990))
         at.multiselect[0].set_value(["Syowa", "Halley"]).run()
         self.assertTrue(any("1960–1990" in w.value for w in at.warning))
 
@@ -129,7 +186,14 @@ class TestOffline(AppCase):
     texts = {}
 
     def test_every_data_page_reports_the_failure(self):
-        for page in ("概要", "海氷面積", "南極点 CO₂", "アイスコア", "基地の気温"):
+        for page in (
+            "概要",
+            "海氷面積",
+            "南極点 温室効果ガス",
+            "オゾンホール",
+            "アイスコア",
+            "基地の気象",
+        ):
             with self.subTest(page=page):
                 self.run_page(page)
                 self.assertGreater(len(self.at.error), 0)
@@ -143,12 +207,23 @@ class TestShortRecords(AppCase):
     }
 
     def test_single_year_has_no_temperature_trend(self):
-        self.run_page("基地の気温")
+        self.run_page("基地の気象")
         self.assertNotIn("年平均気温のトレンド", self.metrics())
 
     def test_single_complete_year_has_no_co2_growth(self):
-        self.run_page("南極点 CO₂")
+        self.run_page("南極点 温室効果ガス")
         self.assertEqual(list(self.metrics()), ["最新値 (2025-06)"])
+
+
+class TestOzoneWithoutMinimum(AppCase):
+    texts = {sources.OZONE_HOLE_ANNUAL.url: "1990 18.0 -9999.0\n1991 19.0 -9999.0\n"}
+
+    def test_area_only_skips_minimum_metric_and_daily_fails_softly(self):
+        self.run_page("オゾンホール")
+        metrics = self.metrics()
+        self.assertEqual(metrics["1991年の面積"], "19.0 百万km²")
+        self.assertFalse(any("最低オゾン全量" in label for label in metrics))
+        self.assertEqual(len(self.at.error), 1)
 
 
 class TestIceCoreWithoutCompanions(AppCase):
@@ -200,6 +275,15 @@ class TestUpload(AppCase):
         at.text_input[0].set_value("°C").run()
         self.assertTrue(any("°C/10年" in c.value for c in at.caption))
         self.assertGreater(len(at.get("vega_lite_chart")), 1)
+
+    def test_jma_download_is_analysed(self):
+        at = self.upload((FIXTURES / "jma_syowa_monthly.csv").read_bytes())
+        self.assertEqual(at.selectbox[0].value, "年月")
+        self.assertEqual(at.selectbox[1].value, "平均気温(℃)")
+        self.assertEqual(at.text_input[0].value, "℃")
+        self.assertTrue(any("℃/10年" in c.value for c in at.caption))
+        self.assertEqual(len(at.error), 0)
+        self.assertGreater(len(at.get("vega_lite_chart")), 0)
 
     def test_single_row_has_no_trend(self):
         at = self.upload(b"date,v\n2020-01-01,1\n")

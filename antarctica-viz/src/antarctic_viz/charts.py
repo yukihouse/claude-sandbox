@@ -218,10 +218,19 @@ def trend_caption(trend: Trend, unit: str) -> str:
     )
 
 
+def fill_missing_years(df: pd.DataFrame, group: str) -> pd.DataFrame:
+    """Add a null row for every year missing inside each series, so its line breaks there."""
+    parts = []
+    for key, part in df.groupby(group, sort=False):
+        years = pd.RangeIndex(int(part["year"].min()), int(part["year"].max()) + 1, name="year")
+        parts.append(part.set_index("year").reindex(years).assign(**{group: key}).reset_index())
+    return pd.concat(parts, ignore_index=True)
+
+
 def multi_line(df: pd.DataFrame, color_field: str, y_title: str, order: list[str]) -> alt.Chart:
-    """Several series on one axis, colored in fixed categorical order by ``order``."""
+    """Several yearly series on one axis, colored in fixed categorical order by ``order``."""
     return (
-        alt.Chart(df)
+        alt.Chart(fill_missing_years(df, color_field))
         .mark_line(strokeWidth=2, point=alt.OverlayMarkDef(size=20))
         .encode(
             alt.X("year:Q", title="", axis=alt.Axis(format="d")),
@@ -367,3 +376,29 @@ def co2_temperature_scatter(pairs: pd.DataFrame) -> alt.Chart:
         )
         .properties(height=340)
     )
+
+
+def ozone_season(daily: pd.DataFrame) -> alt.LayerChart:
+    """One year's daily ozone-hole area against the 1979-onward climatology band."""
+    y_title = "オゾンホール面積 (百万km²)"
+    x = alt.X("date:T", title="", axis=alt.Axis(format="%-m月"))
+    band = alt.Chart(daily).encode(x)
+    line = daily.dropna(subset=["value"])[["date", "value"]]
+    layers: list[alt.Chart] = [
+        band.mark_area(color=BAND_BLUE, opacity=0.45).encode(
+            alt.Y("p10:Q", title=y_title), y2="p90:Q"
+        ),
+        band.mark_line(color=CONTEXT_GRAY, strokeDash=[4, 3], strokeWidth=1.5).encode(y="mean:Q"),
+        band.mark_line(color=CONTEXT_GRAY, strokeWidth=1).encode(y="maximum:Q"),
+        alt.Chart(break_gaps(line))
+        .mark_line(strokeWidth=2.5, color=SERIES[1])
+        .encode(
+            x,
+            alt.Y("value:Q"),
+            tooltip=[
+                alt.Tooltip("date:T", title="日付"),
+                alt.Tooltip("value:Q", title=y_title, format=".2f"),
+            ],
+        ),
+    ]
+    return alt.layer(*layers).properties(height=360)

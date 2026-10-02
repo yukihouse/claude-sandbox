@@ -5,9 +5,8 @@ Run with ``uv run antarctic-viz`` (or ``uv run streamlit run src/antarctic_viz/a
 
 from __future__ import annotations
 
-import csv
-import io
 from collections.abc import Callable
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
@@ -19,10 +18,29 @@ PARSERS: dict[str, Callable[[str], pd.DataFrame]] = {
     "sea_ice": parsers.parse_sea_ice_daily,
     "gml": parsers.parse_gml_monthly,
     "reader": parsers.parse_reader_monthly,
+    "reader_wind": parsers.parse_reader_wind,
+    "ozone_annual": parsers.parse_ozone_annual,
+    "ozone_daily": parsers.parse_ozone_daily,
     "ice_co2": parsers.parse_ice_core_co2,
     "edc_temp": parsers.parse_edc_temperature,
 }
-PAGES = ["概要", "海氷面積", "南極点 CO₂", "アイスコア", "基地の気温", "CSVを分析", "データソース"]
+PAGES = [
+    "概要",
+    "海氷面積",
+    "南極点 温室効果ガス",
+    "オゾンホール",
+    "アイスコア",
+    "基地の気象",
+    "CSVを分析",
+    "データソース",
+]
+# Gas label -> (dataset, unit, download file stem)
+GASES: dict[str, tuple[sources.Dataset, str, str]] = {
+    "CO₂": (sources.SOUTH_POLE_CO2, "ppm", "co2_south_pole_monthly"),
+    "CH₄": (sources.SOUTH_POLE_CH4, "ppb", "ch4_south_pole_monthly"),
+}
+READER_PARSERS = {"wind_speed": "reader_wind"}
+FIRST_OZONE_YEAR = 1979
 SOURCES_DOC = Path(__file__).with_name("data_sources.md")
 
 
@@ -38,7 +56,8 @@ def load_or_report(dataset: sources.Dataset, parser: str) -> pd.DataFrame | None
     except (sources.FetchError, parsers.ParseError) as exc:
         st.error(f"**{dataset.title}** を読み込めませんでした。\n\n{exc}")
         st.caption(
-            "ネットワーク接続を確認してください。一度取得できたデータは "
+            "提供元のサーバーの障害か、ネットワーク接続の問題が考えられます。"
+            "一度取得できたデータは "
             f"`{sources.DEFAULT_CACHE_DIR}` にキャッシュされ、オフラインでも表示できます。"
         )
         return None
@@ -102,6 +121,19 @@ def page_overview(base: tuple[int, int]) -> None:
     if syowa is not None:
         latest = syowa.iloc[-1]
         cols[2].metric(f"昭和基地 月平均気温 ({latest['date']:%Y-%m})", f"{latest['value']:.1f} °C")
+    cols = st.columns(3)
+    ch4 = load_or_report(sources.SOUTH_POLE_CH4, "gml")
+    if ch4 is not None:
+        latest = ch4.iloc[-1]
+        cols[0].metric(f"南極点 CH₄ ({latest['date']:%Y-%m})", f"{latest['value']:.0f} ppb")
+    ozone = load_or_report(sources.OZONE_HOLE_ANNUAL, "ozone_annual")
+    if ozone is not None:
+        latest = ozone.dropna(subset=["area"]).iloc[-1]
+        cols[1].metric(
+            f"オゾンホール面積 ({latest['date']:%Y}年)",
+            f"{latest['area']:.1f} 百万km²",
+            help="9月7日〜10月13日の平均",
+        )
 
     st.subheader("収録データセット")
     st.dataframe(
@@ -183,14 +215,28 @@ def page_sea_ice(base: tuple[int, int]) -> None:
                 date=pd.to_datetime(summary["year"].astype(str) + "-07-01")
             )
             st.caption(f"{label}: " + charts.trend_caption(analysis.linear_trend(frame), "百万km²"))
-        st.dataframe(summary, hide_index=True)
+        st.dataframe(
+            summary,
+            hide_index=True,
+            column_config={
+                "year": st.column_config.NumberColumn("年", format="%d"),
+                "mean": st.column_config.NumberColumn("年平均", format="%.2f"),
+                "min": st.column_config.NumberColumn("年最小", format="%.2f"),
+                "min_date": st.column_config.DateColumn("年最小の日", format="YYYY-MM-DD"),
+                "max": st.column_config.NumberColumn("年最大", format="%.2f"),
+                "max_date": st.column_config.DateColumn("年最大の日", format="YYYY-MM-DD"),
+                "count": st.column_config.NumberColumn("日数", format="%d"),
+            },
+        )
     csv_download(df, "sea_ice_extent_south_daily")
     source_note(dataset)
 
 
-def page_co2(base: tuple[int, int]) -> None:
-    dataset = sources.SOUTH_POLE_CO2
-    st.title(dataset.title)
+def page_greenhouse(base: tuple[int, int]) -> None:
+    st.title("南極点の温室効果ガス")
+    gas = st.radio("成分", list(GASES), horizontal=True)
+    dataset, unit, stem = GASES[gas]
+    st.subheader(dataset.title)
     df = load_or_report(dataset, "gml")
     if df is None:
         return
@@ -198,34 +244,100 @@ def page_co2(base: tuple[int, int]) -> None:
     growth = analysis.annual_growth(df)
     c1, c2 = st.columns(2)
     latest = df.iloc[-1]
-    c1.metric(f"最新値 ({latest['date']:%Y-%m})", f"{latest['value']:.2f} ppm")
+    c1.metric(f"最新値 ({latest['date']:%Y-%m})", f"{latest['value']:.2f} {unit}")
     if not growth.empty:
         last = growth.iloc[-1]
-        c2.metric(f"{int(last['year'])}年の年増加量", f"{last['growth']:+.2f} ppm/年")
+        c2.metric(f"{int(last['year'])}年の年増加量", f"{last['growth']:+.2f} {unit}/年")
     st.altair_chart(
         charts.time_series(
             df,
-            "CO₂ (ppm)",
+            f"{gas} ({unit})",
             smooth=analysis.rolling_mean(df, 12),
             trend=analysis.trend_line(df, trend),
         ),
         width="stretch",
     )
-    st.caption(charts.trend_caption(trend, "ppm"))
+    st.caption(charts.trend_caption(trend, unit))
     left, right = st.columns(2)
     with left:
         st.subheader("平均的な季節変化 (トレンド除去)")
         st.altair_chart(
-            charts.seasonal_bars(analysis.seasonal_cycle(df), "偏差 (ppm)"),
+            charts.seasonal_bars(analysis.seasonal_cycle(df), f"偏差 ({unit})"),
             width="stretch",
         )
     with right:
         st.subheader("年平均の前年差")
         st.altair_chart(
-            charts.simple_bars(growth, "year", "growth", "増加量 (ppm/年)"),
+            charts.simple_bars(growth, "year", "growth", f"増加量 ({unit}/年)"),
             width="stretch",
         )
-    csv_download(df, "co2_south_pole_monthly")
+    csv_download(df, stem)
+    source_note(dataset)
+
+
+def page_ozone(base: tuple[int, int]) -> None:
+    dataset = sources.OZONE_HOLE_ANNUAL
+    st.title("南極のオゾンホール")
+    st.write(
+        "南半球の春 (9〜10月) には、フロン類に由来する塩素によって南極上空のオゾンが"
+        "大きく壊されます。オゾン全量が220 DU未満の領域をオゾンホールと呼びます。"
+    )
+    annual = load_or_report(dataset, "ozone_annual")
+    if annual is None:
+        return
+    area = annual.dropna(subset=["area"])
+    latest = area.iloc[-1]
+    rank = int((area["area"] > latest["area"]).sum()) + 1
+    peak = area.loc[area["area"].idxmax()]
+    c1, c2, c3 = st.columns(3)
+    c1.metric(
+        f"{latest['date']:%Y}年の面積",
+        f"{latest['area']:.1f} 百万km²",
+        help=f"9月7日〜10月13日の平均。{len(area)} 年中 {rank} 番目の大きさ",
+    )
+    low = annual.dropna(subset=["min_ozone"])
+    if not low.empty:
+        last_low = low.iloc[-1]
+        c2.metric(f"{last_low['date']:%Y}年の最低オゾン全量", f"{last_low['min_ozone']:.0f} DU")
+    c3.metric(f"観測史上最大 ({peak['date']:%Y}年)", f"{peak['area']:.1f} 百万km²")
+
+    tab_annual, tab_daily = st.tabs(["年ごとの推移", "日別の季節変化"])
+    with tab_annual:
+        for column, title in (("area", "面積 (百万km²)"), ("min_ozone", "最低オゾン全量 (DU)")):
+            series = annual[["date", column]].dropna().rename(columns={column: "value"})
+            st.altair_chart(charts.time_series(series, title, value_format=".1f"), width="stretch")
+        st.caption(
+            "面積は9月7日〜10月13日の平均、最低オゾン全量は9月21日〜10月16日の最小値です。"
+            "1995年など衛星観測のない年は再解析データで補われています。"
+        )
+        st.dataframe(annual, hide_index=True)
+    with tab_daily:
+        years = list(range(date.today().year, FIRST_OZONE_YEAR - 1, -1))
+        year = st.selectbox("年", years)
+        daily_dataset = sources.ozone_hole_daily(year)
+        daily = load_or_report(daily_dataset, "ozone_daily")
+        if daily is not None:
+            observed = daily.dropna(subset=["value"])
+            if observed.empty:
+                st.info(f"{year}年の日別データはありません (衛星観測の空白期間など)。")
+            else:
+                last = observed.iloc[-1]
+                top = observed.loc[observed["value"].idxmax()]
+                d1, d2 = st.columns(2)
+                d1.metric(
+                    f"最新値 ({last['date']:%Y-%m-%d})",
+                    f"{last['value']:.2f} 百万km²",
+                    f"{last['value'] - last['mean']:+.2f} 百万km² (同日平均との差)",
+                    delta_color="inverse",
+                )
+                d2.metric(f"{year}年の最大 ({top['date']:%m-%d})", f"{top['value']:.2f} 百万km²")
+                st.altair_chart(charts.ozone_season(daily), width="stretch")
+                st.caption(
+                    "オレンジの線: 選んだ年 / 水色の帯: 1979年以降の同日の10–90パーセンタイル / "
+                    "破線: 平均 / 灰色の線: 最大"
+                )
+            source_note(daily_dataset)
+    csv_download(annual, "ozone_hole_annual")
     source_note(dataset)
 
 
@@ -303,12 +415,21 @@ def page_ice_core(base: tuple[int, int]) -> None:
     source_note(sources.EDC_TEMPERATURE)
 
 
-def page_temperature(base: tuple[int, int]) -> None:
-    st.title("南極観測基地の気温")
+def page_station(base: tuple[int, int]) -> None:
+    st.title("南極観測基地の気象")
     names = list(sources.READER_STATIONS)
     station = st.selectbox("観測基地", names, format_func=sources.READER_STATIONS.__getitem__)
-    dataset = sources.reader_temperature(station)
-    df = load_or_report(dataset, "reader")
+    element = st.radio(
+        "要素",
+        list(sources.READER_ELEMENTS),
+        horizontal=True,
+        format_func=lambda key: sources.READER_ELEMENTS[key].label,
+    )
+    spec = sources.READER_ELEMENTS[element]
+    label, unit = spec.label, spec.unit
+    parser = READER_PARSERS.get(element, "reader")
+    dataset = sources.reader_series(station, element)
+    df = load_or_report(dataset, parser)
     if df is None:
         return
     full_years = analysis.complete_years(df)
@@ -321,30 +442,32 @@ def page_temperature(base: tuple[int, int]) -> None:
     trend = None
     if len(annual_df) >= 2:
         trend = analysis.linear_trend(annual_df)
-        c2.metric("年平均気温のトレンド", f"{trend.slope_per_decade:+.2f} °C/10年")
+        c2.metric(f"年平均{label}のトレンド", f"{trend.slope_per_decade:+.2f} {unit}/10年")
 
     tab_series, tab_anom, tab_compare = st.tabs(["時系列", "月別偏差", "基地の比較"])
     with tab_series:
         st.altair_chart(
-            charts.time_series(df, "気温 (°C)", smooth=analysis.rolling_mean(df, 12)),
+            charts.time_series(df, f"{label} ({unit})", smooth=analysis.rolling_mean(df, 12)),
             width="stretch",
         )
         if trend is not None:
-            st.subheader("年平均気温")
+            st.subheader(f"年平均{label}")
             st.altair_chart(
                 charts.time_series(
-                    annual_df, "年平均気温 (°C)", trend=analysis.trend_line(annual_df, trend)
+                    annual_df,
+                    f"年平均{label} ({unit})",
+                    trend=analysis.trend_line(annual_df, trend),
                 ),
                 width="stretch",
             )
-            st.caption(charts.trend_caption(trend, "°C") + " (12か月揃った年のみ)")
+            st.caption(charts.trend_caption(trend, unit) + " (12か月揃った年のみ)")
         clim = climatology_or_warn(df, base)
         if clim is not None:
             st.subheader(f"月別平年値 ({base[0]}–{base[1]}年)")
             cycle = pd.DataFrame({"month": clim.index.astype(int), "value": clim.to_numpy()})
-            st.altair_chart(charts.seasonal_bars(cycle, "気温 (°C)"), width="stretch")
+            st.altair_chart(charts.seasonal_bars(cycle, f"{label} ({unit})"), width="stretch")
     with tab_anom:
-        anomaly_section(df, base, "°C", reverse=False)
+        anomaly_section(df, base, unit, reverse=False)
     with tab_compare:
         chosen = st.multiselect(
             "比較する基地 (最大5)",
@@ -355,7 +478,7 @@ def page_temperature(base: tuple[int, int]) -> None:
         )
         frames = []
         for name in chosen:
-            other = load_or_report(sources.reader_temperature(name), "reader")
+            other = load_or_report(sources.reader_series(name, element), parser)
             if other is None:
                 continue
             clim = climatology_or_warn(other, base)
@@ -364,38 +487,40 @@ def page_temperature(base: tuple[int, int]) -> None:
             anomalies = analysis.monthly_anomalies(other, clim)
             full = anomalies[anomalies["year"].isin(analysis.complete_years(other))]
             yearly = full.groupby("year", as_index=False)["anomaly"].mean()
-            frames.append(yearly.rename(columns={"anomaly": "value"}).assign(station=name))
+            station_label = sources.READER_STATIONS[name]
+            frames.append(yearly.rename(columns={"anomaly": "value"}).assign(station=station_label))
         if frames:
-            order = [name for name in chosen if any(f["station"].iloc[0] == name for f in frames)]
+            order = [f["station"].iloc[0] for f in frames]
             combined = pd.concat(frames, ignore_index=True)
             st.altair_chart(
-                charts.multi_line(combined, "station", "年平均気温偏差 (°C)", order),
+                charts.multi_line(combined, "station", f"年平均{label}偏差 ({unit})", order),
                 width="stretch",
             )
             st.caption(f"各基地の {base[0]}–{base[1]}年平均からの偏差 (12か月揃った年のみ)")
-    csv_download(df, f"temperature_{station}")
+    csv_download(df, f"{element}_{station}")
     source_note(dataset)
 
 
 def page_upload(base: tuple[int, int]) -> None:
     st.title("CSVを分析")
     st.write(
-        "国立極地研究所 (NIPR) の極域データセンター、PANGAEA などからダウンロードした"
-        "時系列CSVを読み込み、同じ手法 (トレンド・季節変化・偏差) で分析できます。"
+        "気象庁「過去の気象データ・ダウンロード」(昭和基地) や PANGAEA などからダウンロードした"
+        "時系列データを読み込み、同じ手法 (トレンド・季節変化・偏差) で分析できます。"
+        "気象庁のCSV (Shift_JIS・複数行の見出し) と PANGAEA のテキスト形式はそのまま読み込めます。"
     )
-    uploaded = st.file_uploader("CSVファイル", type=["csv", "txt"])
+    uploaded = st.file_uploader("CSVファイル", type=["csv", "txt", "tab", "tsv"])
     if uploaded is None:
         return
     try:
-        raw = pd.read_csv(io.BytesIO(uploaded.getvalue()), sep=None, engine="python", comment="#")
-    except (ValueError, csv.Error) as exc:  # ParserError/EmptyDataError are ValueErrors
+        raw = parsers.read_upload(uploaded.getvalue())
+    except parsers.ParseError as exc:
         st.error(f"CSVを読み込めませんでした: {exc}")
         return
     st.dataframe(raw.head(20))
     columns = list(raw.columns)
     date_col = st.selectbox("日付の列", columns)
     value_col = st.selectbox("値の列", columns, index=min(1, len(columns) - 1))
-    unit = st.text_input("単位", "")
+    unit = st.text_input("単位", parsers.unit_from_label(str(value_col)))
     try:
         df = parsers.parse_user_table(raw, date_col, value_col)
     except parsers.ParseError as exc:
@@ -421,9 +546,10 @@ def page_sources(base: tuple[int, int]) -> None:
 RENDERERS = {
     "概要": page_overview,
     "海氷面積": page_sea_ice,
-    "南極点 CO₂": page_co2,
+    "南極点 温室効果ガス": page_greenhouse,
+    "オゾンホール": page_ozone,
     "アイスコア": page_ice_core,
-    "基地の気温": page_temperature,
+    "基地の気象": page_station,
     "CSVを分析": page_upload,
     "データソース": page_sources,
 }

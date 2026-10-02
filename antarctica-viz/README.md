@@ -6,10 +6,11 @@
 | ページ | データ | 分析 |
 |---|---|---|
 | 海氷面積 | NSIDC Sea Ice Index (南半球・日別) | 年ごとの重ね描き＋平年の帯、同日順位、月別偏差ヒートマップ、年最小・最大のトレンド |
-| 南極点 CO₂ | NOAA GML 南極点観測所 (月別) | 長期トレンド、トレンド除去後の季節変化、年増加量 |
+| 南極点 温室効果ガス | NOAA GML 南極点観測所 (CO₂・CH₄、月別) | 長期トレンド、トレンド除去後の季節変化、年増加量 |
+| オゾンホール | NASA Ozone Watch (年別・日別) | 面積と最低オゾン全量の推移、選んだ年の日別面積と平年の帯の比較 |
 | アイスコア | NOAA NCEI (南極アイスコアCO₂合成記録・EPICA Dome C 気温) | 過去80万年のCO₂と気温、自然の変動幅・産業革命前との比較、南極点の直接観測との接続、CO₂と気温の相関 |
-| 基地の気温 | SCAR READER (昭和基地ほか16基地・月別) | 年平均気温のトレンド、月別平年値、偏差ヒートマップ、複数基地の比較 |
-| CSVを分析 | 手元のCSV (国立極地研究所などから入手したデータ) | 上記と同じトレンド・偏差分析 |
+| 基地の気象 | SCAR READER (昭和基地ほか16基地の気温・気圧・風速、月別) | 年平均値のトレンド、月別平年値、偏差ヒートマップ、複数基地の比較 |
+| CSVを分析 | 手元のCSV (気象庁の昭和基地データ・PANGAEA のテキスト形式はそのまま読み込み可) | 上記と同じトレンド・偏差分析 |
 | データソース | 調査メモ | 収録済み・候補のデータ一覧 ([`data_sources.md`](src/antarctic_viz/data_sources.md)) |
 
 気候値・偏差の基準期間はサイドバーで変更できます (既定値は1981–2010年)。
@@ -19,10 +20,25 @@
 ```bash
 cd antarctica-viz
 uv sync
-uv run antarctic-viz        # = streamlit run src/antarctic_viz/app.py
+uv run antarctic-viz
 ```
 
-ブラウザで <http://localhost:8501> を開きます。データは初回表示時に各機関のサーバーから
+ブラウザで <http://localhost:8501> を開きます。
+
+`antarctic-viz` は次の設定で Streamlit を起動します。
+
+- 初回起動時のメールアドレスの質問を出さない (`server.showEmailPrompt=false`)
+- Streamlit への利用統計を送らない (`browser.gatherUsageStats=false`)
+- このPCからの接続だけを受け付ける (`server.address=localhost`)
+- 右上の Deploy・Rerun・Clear cache などの開発者向けメニューを出さない (`client.toolbarMode=viewer`)
+
+開発中は `uv run antarctic-viz --dev` で起動すると、開発者向けメニューが表示されます。
+
+同じネットワークの別の端末から開きたいときは、`uv run antarctic-viz --server.address 0.0.0.0`
+のように上書きできます (外部に公開されるので注意してください)。
+`streamlit run src/antarctic_viz/app.py` で直接起動した場合、これらの設定は使われません。
+
+データは初回表示時に各機関のサーバーから
 ダウンロードされ、`~/.cache/antarctic-viz/` に24時間キャッシュされます
 (取得に失敗したときは古いキャッシュで表示を続けます)。
 

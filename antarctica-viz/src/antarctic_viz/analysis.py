@@ -74,12 +74,14 @@ def drop_incomplete_last_month(df: pd.DataFrame) -> pd.DataFrame:
 def rolling_mean(df: pd.DataFrame, window: int) -> pd.DataFrame:
     """Trailing mean over ``window`` calendar months of monthly data.
 
-    Missing months count as gaps, so the mean never reaches across a multi-year outage.
+    Only complete windows are averaged: with a strong seasonal cycle, a partial window
+    (at the start of the record or next to missing months) would be biased toward
+    the season it happens to cover.
     """
     out = df.copy()
     series = df.set_index("date")["value"]
     calendar = series.resample("MS").mean()
-    smoothed = calendar.rolling(window, min_periods=max(1, window // 2)).mean()
+    smoothed = calendar.rolling(window, min_periods=window).mean()
     out["value"] = smoothed.reindex(df["date"]).to_numpy()
     return out
 
