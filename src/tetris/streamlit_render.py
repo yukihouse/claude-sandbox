@@ -1,8 +1,7 @@
 """Pure HTML-rendering helpers for the Streamlit UI.
 
 Kept separate from streamlit_app.py (and free of any Streamlit import) so
-this logic can be unit tested without the streamlit package installed,
-mirroring how board.py/game.py are tested independently of cli.py.
+this logic can be unit tested without the streamlit package installed.
 """
 
 from __future__ import annotations

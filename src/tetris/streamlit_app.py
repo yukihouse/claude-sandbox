@@ -1,9 +1,9 @@
 """A Streamlit web UI for the Tetris game.
 
-This module is interactive and excluded from coverage measurement, same as
-cli.py; the game logic it drives lives in board.py and game.py (fully unit
-tested), and the HTML rendering it uses lives in streamlit_render.py (also
-unit tested, since it has no dependency on streamlit itself).
+This module is interactive and excluded from coverage measurement; the game
+logic it drives lives in board.py and game.py (fully unit tested), and the
+HTML rendering it uses lives in streamlit_render.py (also unit tested, since
+it has no dependency on streamlit itself).
 
 Run with:
     uv run streamlit run src/tetris/streamlit_app.py

@@ -6,11 +6,6 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "uv"
-    directory: "/version-checker"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "uv"
     directory: "/antarctica-viz"
     schedule:
       interval: "weekly"
