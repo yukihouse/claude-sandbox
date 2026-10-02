@@ -10,6 +10,8 @@ their parsers add columns next to (or instead of) ``value``.
 
 from __future__ import annotations
 
+import csv
+import io
 import re
 from datetime import date
 
@@ -209,6 +211,98 @@ def parse_edc_temperature(text: str) -> pd.DataFrame:
         except ValueError:
             continue
     return _age_frame(rows, "EPICA Dome C")
+
+
+JMA_DOWNLOAD_MARKER = "ダウンロードした時刻"
+# Sub-header labels of the JMA columns that qualify a value rather than hold one.
+JMA_FLAG_LABELS = frozenset({"品質情報", "均質番号", "現象なし情報"})
+
+
+def decode_upload(data: bytes) -> str:
+    """UTF-8 (with or without BOM) first, then Shift_JIS (CP932) as JMA writes it."""
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        pass
+    try:
+        return data.decode("cp932")
+    except UnicodeDecodeError as exc:
+        raise ParseError(
+            "文字コードを判別できませんでした (UTF-8 または Shift_JIS のみ対応)"
+        ) from exc
+
+
+def _looks_like_date(cell: str) -> bool:
+    return bool(re.match(r"^\d{4}[-/]\d{1,2}", cell.strip()))
+
+
+def _read_jma(text: str) -> pd.DataFrame:
+    """JMA download CSV: a timestamp line, then several header rows, then data.
+
+    The header rows are station, element and a sub-header naming the quality /
+    homogeneity columns; those flag columns are dropped and the rest are named
+    after their element (prefixed with the station when there are several).
+    """
+    rows = list(csv.reader(io.StringIO(text)))[1:]
+    rows = [row for row in rows if any(cell.strip() for cell in row)]
+    start = next((i for i, row in enumerate(rows) if row and _looks_like_date(row[0])), None)
+    if start is None or start == 0:
+        raise ParseError("気象庁形式のCSVからデータ行が見つかりませんでした")
+    header, body = rows[:start], rows[start:]
+    width = max(len(row) for row in rows)
+    columns = [[row[j].strip() if j < len(row) else "" for row in header] for j in range(width)]
+    stations = {col[0] for col in columns[1:] if len(header) >= 3 and col[0]}
+    keep, names = [0], [columns[0][-2] or columns[0][-1] or "年月日"]
+    for j, col in enumerate(columns[1:], start=1):
+        if JMA_FLAG_LABELS & set(col):
+            continue
+        labels = [cell for cell in col if cell]
+        if len(stations) <= 1 and len(labels) > 1:
+            labels = labels[1:]
+        name = " ".join(labels) or f"列{j}"
+        while name in names:
+            name += "'"
+        keep.append(j)
+        names.append(name)
+    data = [[row[j] if j < len(row) else "" for j in keep] for row in body]
+    return pd.DataFrame(data, columns=names)
+
+
+def _strip_pangaea_header(text: str) -> str:
+    """PANGAEA text export: drop the ``/* DATA DESCRIPTION ... */`` block."""
+    end = text.find("\n*/")
+    if end < 0:
+        raise ParseError("PANGAEA形式の説明ブロック (/* ... */) の終わりが見つかりませんでした")
+    return text[end + len("\n*/") :].lstrip("\r\n")
+
+
+def read_upload(data: bytes) -> pd.DataFrame:
+    """Read an uploaded table, recognising JMA and PANGAEA downloads.
+
+    Anything else is read as delimited text with the delimiter sniffed and ``#``
+    comment lines skipped.
+    """
+    text = decode_upload(data)
+    if text.lstrip().startswith(JMA_DOWNLOAD_MARKER):
+        return _read_jma(text)
+    if text.lstrip().startswith("/*"):
+        text = _strip_pangaea_header(text)
+        sep = "\t"
+    else:
+        sep = None
+    try:
+        return pd.read_csv(io.StringIO(text), sep=sep, engine="python", comment="#")
+    except (ValueError, csv.Error) as exc:  # ParserError/EmptyDataError are ValueErrors
+        raise ParseError(str(exc)) from exc
+
+
+_UNIT_SUFFIX = re.compile(r"[(\[（［]([^()\[\]（）［］]+)[)\]）］]\s*$")
+
+
+def unit_from_label(label: str) -> str:
+    """Unit written at the end of a column name, e.g. ``平均気温(℃)`` or ``t [°C]``."""
+    match = _UNIT_SUFFIX.search(label)
+    return match.group(1).strip() if match else ""
 
 
 def parse_user_table(df: pd.DataFrame, date_col: str, value_col: str) -> pd.DataFrame:

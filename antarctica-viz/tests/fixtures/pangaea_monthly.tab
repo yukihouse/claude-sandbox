@@ -1,0 +1,22 @@
+/* DATA DESCRIPTION:
+Citation:	Fernandoy, Francisco; Meyer, Hanno; Oerter, Hans; Wilhelms, Frank; Graf, Wolfgang; Schwander, Jakob (2010): Monthly mean δ¹⁸O values of ice core DML94C07_38 from 1981 to 2007 [dataset]. PANGAEA, https://doi.org/10.1594/PANGAEA.753171, 
+	In supplement to: Fernandoy, F et al. (2010): Temporal and Spatial variation of stable-isotope ratios and accumulation rates in the hinterland of Neumayer station, East Antarctica. Journal of Glaciology, 56(198), 673-687, https://doi.org/10.3189/002214310793146296
+Project(s):	European Project for Ice Coring in Antarctica (EPICA) (URI: https://en.wikipedia.org/wiki/European_Project_for_Ice_Coring_in_Antarctica)
+Funding:	Fifth Framework Programme (FP5), grant/award no. EVK2-CT-2000-00077: European Project for Ice Coring in Antarctica (URI: https://cordis.europa.eu/project/id/EVK2-CT-2000-00077)
+	Fourth Framework Programme (FP4), grant/award no. ENV4980702: European Project for Ice Coring in Antarctica (URI: https://cordis.europa.eu/project/id/ENV4980702)
+Coverage:	LATITUDE: -71.162100 * LONGITUDE: -6.698900
+	DATE/TIME START: 1981-01-15T00:00:00 * DATE/TIME END: 2007-01-15T00:00:00
+	MINIMUM ELEVATION: 690.0 m * MAXIMUM ELEVATION: 690.0 m
+Event(s):	DML94C07_38 (B38) * LATITUDE: -71.162100 * LONGITUDE: -6.698900 * DATE/TIME START: 2007-01-14T00:00:00 * DATE/TIME END: 2007-01-19T23:59:00 * ELEVATION: 690.0 m * RECOVERY: 84 m * LOCATION: Dronning Maud Land, Antarctica * CAMPAIGN: Pre-IPICS * BASIS: Sampling/drilling ice * METHOD/DEVICE: Ice drill (ICEDRILL) * COMMENT: Location: Halvfaryggen North
+Parameter(s):	DATE/TIME (Date/Time) * GEOCODE
+	Temperature, ice/snow [°C] (t) * PI: König-Langlo, Gert (https://orcid.org/0000-0002-6100-4107, gert.koenig-langlo@awi.de, https://www.awi.de/en/about-us/organisation/staff/single-view/gert-koenig-langlo.html) * METHOD/DEVICE: Thermometer * COMMENT: measured at Neumayer Station
+	δ18O, water [‰ SMOW] (δ18O H2O) * PI: Oerter, Hans (hans@oerterweb.de) * METHOD/DEVICE: Mass spectrometer Finnigan Delta-S
+License:	Creative Commons Attribution 3.0 Unported (CC-BY-3.0) (URI: https://creativecommons.org/licenses/by/3.0/)
+Size:	625 data points
+*/
+Date/Time	t [°C]	δ18O H2O [‰ SMOW]
+2007-01	-4.0	-17.5400
+2006-12	-6.3	-19.5880
+2006-11	-8.6	-19.2383
+2006-10	-20.3	-21.2443
+2006-09	-21.2	-21.6967

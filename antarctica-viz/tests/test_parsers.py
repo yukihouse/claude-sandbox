@@ -5,6 +5,7 @@ import pandas as pd
 
 from antarctic_viz import parsers
 from tests.helpers import (
+    FIXTURES,
     edc_text,
     fixture,
     ice_core_co2_text,
@@ -149,3 +150,69 @@ class TestIceCore(unittest.TestCase):
     def test_edc_empty_raises(self):
         with self.assertRaises(parsers.ParseError):
             parsers.parse_edc_temperature("Bag ztop Age Deuterium Temperature\n")
+
+
+class TestReadUpload(unittest.TestCase):
+    def test_plain_utf8_csv_with_bom_and_comments(self):
+        raw = parsers.read_upload("\ufeff# note\ndate;v\n2020-01-01;1\n".encode())
+        self.assertEqual(list(raw.columns), ["date", "v"])
+
+    def test_undecodable_bytes_raise(self):
+        with self.assertRaises(parsers.ParseError):
+            parsers.read_upload(b"date,v\n\x81 ,1\n")
+
+    def test_empty_file_raises(self):
+        with self.assertRaises(parsers.ParseError):
+            parsers.read_upload(b"")
+
+    def test_jma_download_drops_header_rows_and_flag_columns(self):
+        raw = parsers.read_upload((FIXTURES / "jma_syowa_monthly.csv").read_bytes())
+        self.assertEqual(list(raw.columns), ["年月", "平均気温(℃)"])
+        self.assertEqual(len(raw), 14)
+        df = parsers.parse_user_table(raw, "年月", "平均気温(℃)")
+        self.assertEqual(df["date"].iloc[0], pd.Timestamp("1981-01-01"))
+        self.assertAlmostEqual(df["value"].iloc[0], -1.2)
+
+    def test_jma_several_stations_and_repeated_elements(self):
+        text = (
+            "ダウンロードした時刻：2026/10/02 15:24:37\n\n"
+            ",昭和,昭和,昭和,南極点,\n"
+            "年月日,平均気温(℃),平均気温(℃),平均気温(℃),平均気温(℃),\n"
+            ",,品質情報,均質番号,,\n"
+            "2025/1/1,-1.0,8,1,-28.0\n"
+        )
+        raw = parsers.read_upload(text.encode("cp932"))
+        self.assertEqual(
+            list(raw.columns), ["年月日", "昭和 平均気温(℃)", "南極点 平均気温(℃)", "列5"]
+        )
+        single = text.replace("南極点", "昭和")
+        raw = parsers.read_upload(single.encode("cp932"))
+        self.assertEqual(list(raw.columns), ["年月日", "平均気温(℃)", "平均気温(℃)'", "列5"])
+
+    def test_jma_without_data_rows_raises(self):
+        for text in (
+            "ダウンロードした時刻：x\n,昭和\n年月,平均気温\n",
+            "ダウンロードした時刻：x\n2025/1,1.0\n",
+        ):
+            with self.subTest(text=text), self.assertRaises(parsers.ParseError):
+                parsers.read_upload(text.encode("cp932"))
+
+    def test_pangaea_text_export(self):
+        raw = parsers.read_upload((FIXTURES / "pangaea_monthly.tab").read_bytes())
+        self.assertEqual(list(raw.columns), ["Date/Time", "t [°C]", "δ18O H2O [‰ SMOW]"])
+        self.assertEqual(len(raw), 5)
+        df = parsers.parse_user_table(raw, "Date/Time", "t [°C]")
+        self.assertEqual(df["date"].iloc[-1], pd.Timestamp("2007-01-01"))
+
+    def test_pangaea_without_closing_marker_raises(self):
+        with self.assertRaises(parsers.ParseError):
+            parsers.read_upload(b"/* DATA DESCRIPTION:\nCitation:\tx\n")
+
+
+class TestUnitFromLabel(unittest.TestCase):
+    def test_unit_in_brackets_at_end(self):
+        self.assertEqual(parsers.unit_from_label("平均気温(℃)"), "℃")
+        self.assertEqual(parsers.unit_from_label("t [°C]"), "°C")
+        self.assertEqual(parsers.unit_from_label("δ18O H2O [‰ SMOW]"), "‰ SMOW")
+        self.assertEqual(parsers.unit_from_label("気圧（hPa）"), "hPa")
+        self.assertEqual(parsers.unit_from_label("value"), "")

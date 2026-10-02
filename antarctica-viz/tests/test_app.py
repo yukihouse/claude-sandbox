@@ -8,6 +8,7 @@ from streamlit.testing.v1 import AppTest
 
 from antarctic_viz import sources
 from tests.helpers import (
+    FIXTURES,
     edc_text,
     gml_text,
     ice_core_co2_text,
@@ -274,6 +275,15 @@ class TestUpload(AppCase):
         at.text_input[0].set_value("°C").run()
         self.assertTrue(any("°C/10年" in c.value for c in at.caption))
         self.assertGreater(len(at.get("vega_lite_chart")), 1)
+
+    def test_jma_download_is_analysed(self):
+        at = self.upload((FIXTURES / "jma_syowa_monthly.csv").read_bytes())
+        self.assertEqual(at.selectbox[0].value, "年月")
+        self.assertEqual(at.selectbox[1].value, "平均気温(℃)")
+        self.assertEqual(at.text_input[0].value, "℃")
+        self.assertTrue(any("℃/10年" in c.value for c in at.caption))
+        self.assertEqual(len(at.error), 0)
+        self.assertGreater(len(at.get("vega_lite_chart")), 0)
 
     def test_single_row_has_no_trend(self):
         at = self.upload(b"date,v\n2020-01-01,1\n")

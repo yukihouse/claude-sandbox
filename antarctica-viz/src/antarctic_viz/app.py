@@ -5,8 +5,6 @@ Run with ``uv run antarctic-viz`` (or ``uv run streamlit run src/antarctic_viz/a
 
 from __future__ import annotations
 
-import csv
-import io
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
@@ -505,22 +503,23 @@ def page_station(base: tuple[int, int]) -> None:
 def page_upload(base: tuple[int, int]) -> None:
     st.title("CSVを分析")
     st.write(
-        "国立極地研究所 (NIPR) の極域データセンター、PANGAEA などからダウンロードした"
-        "時系列CSVを読み込み、同じ手法 (トレンド・季節変化・偏差) で分析できます。"
+        "気象庁「過去の気象データ・ダウンロード」(昭和基地) や PANGAEA などからダウンロードした"
+        "時系列データを読み込み、同じ手法 (トレンド・季節変化・偏差) で分析できます。"
+        "気象庁のCSV (Shift_JIS・複数行の見出し) と PANGAEA のテキスト形式はそのまま読み込めます。"
     )
-    uploaded = st.file_uploader("CSVファイル", type=["csv", "txt"])
+    uploaded = st.file_uploader("CSVファイル", type=["csv", "txt", "tab", "tsv"])
     if uploaded is None:
         return
     try:
-        raw = pd.read_csv(io.BytesIO(uploaded.getvalue()), sep=None, engine="python", comment="#")
-    except (ValueError, csv.Error) as exc:  # ParserError/EmptyDataError are ValueErrors
+        raw = parsers.read_upload(uploaded.getvalue())
+    except parsers.ParseError as exc:
         st.error(f"CSVを読み込めませんでした: {exc}")
         return
     st.dataframe(raw.head(20))
     columns = list(raw.columns)
     date_col = st.selectbox("日付の列", columns)
     value_col = st.selectbox("値の列", columns, index=min(1, len(columns) - 1))
-    unit = st.text_input("単位", "")
+    unit = st.text_input("単位", parsers.unit_from_label(str(value_col)))
     try:
         df = parsers.parse_user_table(raw, date_col, value_col)
     except parsers.ParseError as exc:
