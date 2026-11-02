@@ -15,7 +15,7 @@ tetris = "tetris:main"
 [dependency-groups]
 dev = [
     "coverage>=7.0",
-    "ruff>=0.16.9",
+    "ruff>=0.17.1",
 ]
 
 [build-system]
