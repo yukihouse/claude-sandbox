@@ -227,14 +227,21 @@ def fill_missing_years(df: pd.DataFrame, group: str) -> pd.DataFrame:
     return pd.concat(parts, ignore_index=True)
 
 
-def multi_line(df: pd.DataFrame, color_field: str, y_title: str, order: list[str]) -> alt.Chart:
+def multi_line(
+    df: pd.DataFrame,
+    color_field: str,
+    y_title: str,
+    order: list[str],
+    *,
+    value_format: str = "+.2f",
+) -> alt.Chart:
     """Several yearly series on one axis, colored in fixed categorical order by ``order``."""
     return (
         alt.Chart(fill_missing_years(df, color_field))
         .mark_line(strokeWidth=2, point=alt.OverlayMarkDef(size=20))
         .encode(
             alt.X("year:Q", title="", axis=alt.Axis(format="d")),
-            alt.Y("value:Q", title=y_title),
+            alt.Y("value:Q", title=y_title, scale=alt.Scale(zero=False)),
             color=alt.Color(
                 f"{color_field}:N",
                 title="",
@@ -243,7 +250,7 @@ def multi_line(df: pd.DataFrame, color_field: str, y_title: str, order: list[str
             tooltip=[
                 alt.Tooltip(f"{color_field}:N", title="系列"),
                 alt.Tooltip("year:Q", title="年", format="d"),
-                alt.Tooltip("value:Q", title=y_title, format="+.2f"),
+                alt.Tooltip("value:Q", title=y_title, format=value_format),
             ],
         )
         .properties(height=320)

@@ -24,6 +24,8 @@ TEXTS = {
     sources.SEA_ICE_EXTENT.url: sea_ice_text(1979, date(2025, 9, 15)),
     sources.SOUTH_POLE_CO2.url: gml_text(1976, 2024),
     sources.SOUTH_POLE_CH4.url: gml_text(1984, 2024).replace(" ...", "").replace("qcflag", ""),
+    sources.SYOWA_CO2.url: gml_text(1986, 2024).replace(" ...", "").replace("qcflag", ""),
+    sources.SYOWA_CH4.url: gml_text(1986, 2024).replace(" ...", "").replace("qcflag", ""),
     sources.OZONE_HOLE_ANNUAL.url: ozone_annual_text(1979, 2025),
     sources.ozone_hole_daily(THIS_YEAR).url: ozone_daily_text(THIS_YEAR, date(THIS_YEAR, 9, 26)),
     sources.ozone_hole_daily(1995).url: ozone_daily_text(1995, date(1994, 12, 31)),
@@ -77,6 +79,7 @@ class TestPagesWithData(AppCase):
         self.assertIn("南極点 CO₂ (2024-06)", metrics)
         self.assertEqual(metrics["昭和基地 月平均気温 (2024-06)"], "-4.2 °C")
         self.assertIn("南極点 CH₄ (2024-06)", metrics)
+        self.assertIn("昭和基地 CO₂ (2024-06)", metrics)
         self.assertEqual(metrics["オゾンホール面積 (2025年)"], "23.1 百万km²")
         self.assertEqual(len(self.at.error), 0)
 
@@ -96,14 +99,25 @@ class TestPagesWithData(AppCase):
         self.assertNotIn("平年 (同日中央値) との差", self.metrics())
 
     def test_co2_page(self):
-        self.run_page("南極点 温室効果ガス")
+        self.run_page("温室効果ガス")
         metrics = self.metrics()
         self.assertEqual(metrics["2023年の年増加量"], "+1.80 ppm/年")
         self.assertTrue(any("ppm/10年" in c.value for c in self.at.caption))
 
+    def test_syowa_station_and_comparison(self):
+        at = self.run_page("温室効果ガス")
+        self.assertIn("観測所の比較 (CO₂ 年平均)", [h.value for h in at.subheader])
+        self.assertTrue(any("(昭和基地 − 南極点) は平均" in c.value for c in at.caption))
+        at.main.radio[0].set_value("昭和基地").run()
+        at.main.radio[1].set_value("CH₄").run()
+        self.assertEqual(len(at.exception), 0)
+        self.assertIn("昭和基地 大気メタン", at.subheader[0].value)
+        self.assertIn("観測所の比較 (CH₄ 年平均)", [h.value for h in at.subheader])
+        self.assertEqual(len(at.info), 0)
+
     def test_methane_page(self):
-        at = self.run_page("南極点 温室効果ガス")
-        at.main.radio[0].set_value("CH₄").run()
+        at = self.run_page("温室効果ガス")
+        at.main.radio[1].set_value("CH₄").run()
         self.assertEqual(len(at.exception), 0)
         self.assertEqual(self.metrics()["2023年の年増加量"], "+1.80 ppb/年")
         self.assertIn("メタン", at.subheader[0].value)
@@ -189,7 +203,7 @@ class TestOffline(AppCase):
         for page in (
             "概要",
             "海氷面積",
-            "南極点 温室効果ガス",
+            "温室効果ガス",
             "オゾンホール",
             "アイスコア",
             "基地の気象",
@@ -211,8 +225,9 @@ class TestShortRecords(AppCase):
         self.assertNotIn("年平均気温のトレンド", self.metrics())
 
     def test_single_complete_year_has_no_co2_growth(self):
-        self.run_page("南極点 温室効果ガス")
+        self.run_page("温室効果ガス")
         self.assertEqual(list(self.metrics()), ["最新値 (2025-06)"])
+        self.assertTrue(any("比較に必要なデータ" in i.value for i in self.at.info))
 
 
 class TestOzoneWithoutMinimum(AppCase):
@@ -224,6 +239,18 @@ class TestOzoneWithoutMinimum(AppCase):
         self.assertEqual(metrics["1991年の面積"], "19.0 百万km²")
         self.assertFalse(any("最低オゾン全量" in label for label in metrics))
         self.assertEqual(len(self.at.error), 1)
+
+
+class TestStationsWithoutOverlap(AppCase):
+    texts = {
+        sources.SOUTH_POLE_CO2.url: gml_text(1976, 1980),
+        sources.SYOWA_CO2.url: gml_text(1990, 1995),
+    }
+
+    def test_comparison_without_common_years_has_no_difference_note(self):
+        self.run_page("温室効果ガス")
+        self.assertIn("観測所の比較 (CO₂ 年平均)", [h.value for h in self.at.subheader])
+        self.assertFalse(any("は平均" in c.value for c in self.at.caption))
 
 
 class TestIceCoreWithoutCompanions(AppCase):

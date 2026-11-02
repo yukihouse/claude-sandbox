@@ -12,6 +12,7 @@
 | 南極海 海氷面積 (Sea Ice Index G02135 v4) | NSIDC / NOAA | 1978年10月〜・日別 | CSV | 年ごとの季節変化の重ね描き、平年差、同日順位、年最小・最大のトレンド |
 | 南極点 大気CO₂ (現場連続観測) | NOAA GML (South Pole Observatory, SPO) | 1975年〜・月別 | テキスト (空白区切り) | 長期トレンド、季節変化 (トレンド除去)、年増加量 |
 | 南極点 大気メタン (フラスコ採取) | NOAA GML (South Pole Observatory, SPO) | 1983年〜・月別 | テキスト (空白区切り) | CO₂と同じ |
+| 昭和基地 大気CO₂・メタン (フラスコ採取) | NOAA GML (Syowa Station, SYO) | 1986年〜・月別 | テキスト (空白区切り) | 南極点と同じ分析、南極点との比較 |
 | オゾンホール 面積・最低オゾン全量 | NASA Ozone Watch | 1979年〜・年別／日別 | テキスト (固定幅) | 年ごとの推移、選んだ年の日別面積と平年の帯 |
 | 南極アイスコア CO₂ 合成記録 (Bereiter et al. 2015) | NOAA NCEI Paleoclimatology | 約80万年前〜2001年・不等間隔 | テキスト (タブ区切り) | 自然の変動幅、産業革命前の平均、直接観測との接続 |
 | EPICA Dome C 気温偏差 (Jouzel et al. 2007) | NOAA NCEI Paleoclimatology | 約80万年前〜現在・不等間隔 | テキスト (固定幅) | 氷期サイクル、CO₂との相関 |
@@ -24,6 +25,9 @@
   欠測値 (`-999.99`) と品質フラグが `.` で始まらない行は除外しています。
 - **南極点メタン**: `https://gml.noaa.gov/aftp/data/trace_gases/ch4/flask/surface/txt/ch4_spo_surface-flask_1_ccgg_month.txt`
   南極点のメタンは現場連続観測がないため、フラスコ採取の月平均を使っています (単位 ppb)。
+- **昭和基地 CO₂・メタン**: `https://gml.noaa.gov/aftp/data/trace_gases/<co2|ch4>/flask/surface/txt/<co2|ch4>_syo_surface-flask_1_ccgg_month.txt`
+  NOAA の全球観測網の観測所 SYO として、フラスコ採取の月平均が1986年から公開されています。
+  南極点と並べると、南極の離れた2地点で濃度がほぼそろって増えていることを確かめられます。
 - **オゾンホール**: 年別 `https://ozonewatch.gsfc.nasa.gov/statistics/annual_data.txt`、
   日別 `https://ozonewatch.gsfc.nasa.gov/meteorology/figures/ozone/to3areas_<年>_toms+omi+omps.txt`
   面積はオゾン全量220 DU未満の領域で、年別値は9月7日〜10月13日の平均、最低オゾン全量は

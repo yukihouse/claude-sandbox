@@ -67,6 +67,28 @@ SOUTH_POLE_CH4 = Dataset(
     citation="NOAA GML Carbon Cycle Greenhouse Gases group, South Pole flask CH4.",
 )
 
+
+def _syowa_flask(gas: str, label: str, unit: str) -> Dataset:
+    return Dataset(
+        key=f"syo_{gas}",
+        title=f"昭和基地 大気{label}濃度 (月別)",
+        provider="NOAA Global Monitoring Laboratory",
+        url=(
+            f"https://gml.noaa.gov/aftp/data/trace_gases/{gas}/flask/surface/txt/"
+            f"{gas}_syo_surface-flask_1_ccgg_month.txt"
+        ),
+        homepage="https://gml.noaa.gov/dv/site/?stacode=SYO",
+        description=(
+            f"昭和基地 (SYO) で採取されたフラスコ試料による大気中{label}のモル分率 ({unit})。"
+            "NOAA の全球観測網の一地点として1986年から。"
+        ),
+        citation=f"NOAA GML Carbon Cycle Greenhouse Gases group, Syowa flask {gas.upper()}.",
+    )
+
+
+SYOWA_CO2 = _syowa_flask("co2", "CO₂", "ppm")
+SYOWA_CH4 = _syowa_flask("ch4", "メタン (CH₄)", "ppb")
+
 ICE_CORE_CO2 = Dataset(
     key="ice_core_co2",
     title="アイスコア 大気CO₂濃度 (過去80万年)",
@@ -216,6 +238,8 @@ CATALOG: tuple[Dataset, ...] = (
     SEA_ICE_EXTENT,
     SOUTH_POLE_CO2,
     SOUTH_POLE_CH4,
+    SYOWA_CO2,
+    SYOWA_CH4,
     OZONE_HOLE_ANNUAL,
     reader_series("Syowa", "temperature"),
     reader_series("Syowa", "pressure"),
