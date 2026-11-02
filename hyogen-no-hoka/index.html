@@ -3,27 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>烽火連城</title>
+<title>氷原の烽火</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <style>
-/* Layout: a one-screen war table. Slim ink header, the celadon map fills the middle, a command tray sits at the bottom. */
+/* Layout: a one-screen expedition chart. Slim header, the ice-sheet map fills the middle, a command tray sits at the bottom. */
 :root {
-  --paper: #e4ebe0;
-  --tray: #f1f5ee;
-  --terrain: #cfdccd;
-  --terrain-deep: #b7c9b5;
-  --ink: #1d2a27;
-  --ink-soft: #55665f;
-  --line: #a3b5a6;
-  --player: #2c5a9a;
-  --enemy: #a5412b;
-  --bandit: #ad7f1a;
-  --neutral: #858d84;
-  --seal: #b5302a;
-  --scrim: rgba(29, 42, 39, 0.55);
+  --paper: #e7eef2;
+  --tray: #f5f8fa;
+  --terrain: #dde8ee;
+  --terrain-deep: #c2d2dc;
+  --ink: #18242e;
+  --ink-soft: #526271;
+  --line: #a8b9c5;
+  --player: #2a63a8;
+  --enemy: #b8432c;
+  --bandit: #ad7e1a;
+  --neutral: #86929b;
+  --seal: #b8432c;
+  --scrim: rgba(24, 36, 46, 0.55);
   --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --font-ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
   color-scheme: light;
@@ -105,7 +105,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
 }
 .card {
   width: min(440px, 100%); background: var(--tray); border: 1px solid var(--line); border-radius: 4px;
-  padding: 24px; display: grid; gap: 16px; text-align: center; box-shadow: 0 18px 50px rgba(29, 42, 39, 0.35);
+  padding: 24px; display: grid; gap: 16px; text-align: center; box-shadow: 0 18px 50px rgba(24, 36, 46, 0.35);
 }
 .card h2 { margin: 0; font-family: var(--font-display); font-size: 26px; letter-spacing: 0.12em; }
 .card p { margin: 0; color: var(--ink-soft); line-height: 1.7; }
@@ -114,7 +114,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
   min-height: 48px; border-radius: 4px; border: 1px solid var(--ink); background: var(--ink); color: var(--tray);
   font-weight: 700; letter-spacing: 0.08em;
 }
-.primary:hover { background: #2c3d39; }
+.primary:hover { background: #263645; }
 .secondary { min-height: 44px; border-radius: 4px; border: 1px solid var(--line); background: transparent; }
 .secondary:hover { border-color: var(--ink-soft); }
 
@@ -124,7 +124,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
 .title-mark { position: relative; display: flex; gap: 18px; align-items: flex-start; justify-self: end; order: 2; }
 .title-mark h1 {
   margin: 0; writing-mode: vertical-rl; font-family: var(--font-display); font-weight: 800;
-  font-size: clamp(56px, 9vw, 92px); line-height: 1; letter-spacing: 0.14em; color: var(--ink);
+  font-size: clamp(52px, 8vw, 80px); line-height: 1; letter-spacing: 0.14em; color: var(--ink);
 }
 .title-mark .sub { writing-mode: vertical-rl; font-family: var(--font-display); font-size: 16px; letter-spacing: 0.4em; color: var(--ink-soft); padding-top: 8px; }
 .seal {
@@ -148,11 +148,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
 .howto { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.7; }
 
 /* story */
-#story { place-items: end center; background: rgba(29, 42, 39, 0.35); cursor: pointer; }
+#story { place-items: end center; background: rgba(24, 36, 46, 0.35); cursor: pointer; }
 .dialog {
   width: min(720px, 100%); display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start;
   background: var(--tray); border: 1px solid var(--line); border-radius: 4px; padding: 18px 20px 14px;
-  box-shadow: 0 18px 50px rgba(29, 42, 39, 0.35);
+  box-shadow: 0 18px 50px rgba(24, 36, 46, 0.35);
 }
 .portrait {
   width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
@@ -185,7 +185,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
 @media (max-width: 640px) {
   .title-wrap { grid-template-columns: 1fr; gap: 28px; }
   .title-mark { justify-self: center; order: 0; }
-  .title-mark h1 { font-size: 64px; }
+  .title-mark h1 { font-size: 56px; }
   .chapter h1 { font-size: 17px; }
   .item { padding: 6px 8px 7px; }
   .item .iname { font-size: 15px; }
@@ -203,23 +203,23 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
 <body>
 <div id="app">
   <header class="bar">
-    <div class="chapter"><small id="chapNo">第一章</small><h1 id="chapName">落城の夜</h1></div>
+    <div class="chapter"><small id="chapNo">第一章</small><h1 id="chapName">白い夜明け</h1></div>
     <button class="ghost" id="pauseBtn" type="button">一時停止</button>
   </header>
-  <div class="field" id="field"><canvas id="map" aria-label="戦場の地図"></canvas></div>
+  <div class="field" id="field"><canvas id="map" aria-label="南極の地図"></canvas></div>
   <div class="tray">
     <div class="order" id="order">
-      <span class="hint" id="hint">自軍の城（藍色）をタップして出陣</span>
+      <span class="hint" id="hint">自軍の基地（青）をタップして出動</span>
       <div class="sendbar" id="sendbar" hidden>
-        <label for="ratio">送る兵</label>
+        <label for="ratio">送る隊員</label>
         <input id="ratio" type="range" min="10" max="100" step="10" value="50">
         <output id="ratioOut" for="ratio">50%・0人</output>
       </div>
     </div>
     <div class="items">
-      <button class="item" id="it-reinforce" type="button"><span class="iname">援軍</span><span class="idesc">自軍の城に兵 +15</span><span class="icount">1</span></button>
-      <button class="item" id="it-gale" type="button"><span class="iname">疾風</span><span class="idesc">進軍が12秒間 2倍速</span><span class="icount">1</span></button>
-      <button class="item" id="it-wall" type="button"><span class="iname">堅城</span><span class="idesc">城の守りが20秒間 2倍</span><span class="icount">1</span></button>
+      <button class="item" id="it-reinforce" type="button"><span class="iname">補給便</span><span class="idesc">自軍の基地に隊員 +15</span><span class="icount">1</span></button>
+      <button class="item" id="it-gale" type="button"><span class="iname">雪上車</span><span class="idesc">移動が12秒間 2倍速</span><span class="icount">1</span></button>
+      <button class="item" id="it-wall" type="button"><span class="iname">防寒壁</span><span class="idesc">基地の守りが20秒間 2倍</span><span class="icount">1</span></button>
     </div>
   </div>
 </div>
@@ -227,24 +227,24 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
 <div class="overlay" id="title">
   <div class="title-wrap">
     <div class="title-mark">
-      <span class="sub">翠嶺奪還記</span>
-      <h1>烽火連城</h1>
-      <span class="seal">翠嶺<br>之印</span>
+      <span class="sub">南極基地奪還記</span>
+      <h1>氷原の烽火</h1>
+      <span class="seal">南極<br>観測</span>
     </div>
     <div class="menu">
-      <p class="lede">都は落ちた。けれど山と河は残っている。<br>若き将・蒼真とともに、城をひとつずつ取り戻せ。</p>
-      <button class="primary" id="startBtn" type="button">出陣する</button>
+      <p class="lede">南極の観測基地は、黒氷社に占拠された。<br>オーロラ隊の隊長・凪とともに、基地をひとつずつ取り戻せ。</p>
+      <button class="primary" id="startBtn" type="button">出動する</button>
       <ul class="chapters" id="chapters"></ul>
-      <p class="howto">遊び方：自軍の城をタップ → スライダーで送る兵の割合を決める → 攻める城をタップ。城から城へドラッグしても出陣できます。城の兵は時間とともに増えます（中立の城は増えません）。</p>
+      <p class="howto">遊び方：自軍の基地をタップ → バーで送る隊員の割合を決める → 向かう基地をタップ。基地から基地へドラッグしても出動できます。基地の隊員は時間とともに増えます（無人基地は増えません）。</p>
     </div>
   </div>
 </div>
 
 <div class="overlay" id="story" hidden>
   <div class="dialog">
-    <div class="portrait" id="portrait">蒼</div>
+    <div class="portrait" id="portrait">凪</div>
     <div class="speech">
-      <div class="who"><b id="whoName">蒼真</b><span id="whoRole">翠嶺の若き将</span></div>
+      <div class="who"><b id="whoName">凪</b><span id="whoRole">オーロラ隊 隊長</span></div>
       <p class="line" id="storyLine"></p>
     </div>
     <div class="dialog-foot"><small id="storyProg">タップで次へ</small><button class="skip" id="skipBtn" type="button">会話をとばす</button></div>
@@ -254,17 +254,17 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
 <div class="overlay" id="result" hidden>
   <div class="card">
     <div class="stamp" id="resStamp">勝利</div>
-    <h2 id="resTitle">落城の夜</h2>
+    <h2 id="resTitle">白い夜明け</h2>
     <p id="resText"></p>
-    <div class="stats"><div><small>経過時間</small><b id="resTime">0:00</b></div><div><small>奪った城</small><b id="resCap">0</b></div></div>
+    <div class="stats"><div><small>経過時間</small><b id="resTime">0:00</b></div><div><small>制圧した基地</small><b id="resCap">0</b></div></div>
     <div class="btns" id="resBtns"></div>
   </div>
 </div>
 
 <div class="overlay" id="pause" hidden>
   <div class="card">
-    <h2>陣中にて</h2>
-    <p>戦は止まっています。</p>
+    <h2>作戦中断</h2>
+    <p>時間は止まっています。</p>
     <div class="btns">
       <button class="primary" id="resumeBtn" type="button">再開する</button>
       <button class="secondary" id="retryBtn" type="button">この章をやり直す</button>
@@ -295,115 +295,116 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const CHARS = {
   narr:     { name: '', role: '', mark: '', color: 'transparent' },
-  soma:     { name: '蒼真', role: '翠嶺の若き将', mark: '蒼', color: '#2c5a9a' },
-  rin:      { name: '琳', role: '軍師', mark: '琳', color: '#2f7a6d' },
-  gantetsu: { name: '岩鉄', role: '先王の老将', mark: '岩', color: '#6b5434' },
-  karasu:   { name: '鴉丸', role: '黒鉄帝国の将', mark: '鴉', color: '#a5412b' },
-  sekiro:   { name: '赤狼', role: '赤狼党の頭', mark: '狼', color: '#ad7f1a' },
-  kokuyo:   { name: '黒曜帝', role: '黒鉄帝国の皇帝', mark: '曜', color: '#3a2f3a' },
+  nagi:     { name: '凪', role: 'オーロラ隊 隊長', mark: '凪', color: '#2a63a8' },
+  minato:   { name: '湊', role: '通信・作戦担当', mark: '湊', color: '#2f7f8a' },
+  gen:      { name: '源', role: '越冬十回のベテラン隊員', mark: '源', color: '#5b6470' },
+  kuki:     { name: '九鬼', role: '黒氷社 現場指揮官', mark: '鬼', color: '#b8432c' },
+  saku:     { name: '朔', role: '漂流団の頭', mark: '朔', color: '#ad7e1a' },
+  himuro:   { name: '氷室', role: '黒氷社 総帥', mark: '氷', color: '#3a3340' },
 };
 
-// castle: [x, y, owner(0 neutral / 1 player / 2 黒鉄 / 3 赤狼党), level, troops]
+// base: [x, y, owner(0 無人 / 1 オーロラ隊 / 2 黒氷社 / 3 漂流団), level(1 観測小屋 / 2 基地 / 3 本部), crew]
+// "rivers" are crevasse fields: crossing one halves movement speed.
 const STAGES = [
   {
-    no: '第一章', name: '落城の夜',
+    no: '第一章', name: '白い夜明け',
     castles: [[0.2,0.5,1,2,20],[0.55,0.25,0,1,6],[0.55,0.75,0,1,8],[0.85,0.5,0,2,14],[1.3,0.5,2,1,10],[1.15,0.18,0,1,10],[1.15,0.82,0,1,10]],
     rivers: [],
     ai: { interval: 4.5, greed: 1.15, focus: 0.8 },
     items: { reinforce: 1, gale: 1, wall: 1 },
     pre: [
-      ['narr', '翠嶺国の都は、黒鉄帝国の夜襲で落ちた。山と河だけが、昔のまま残っている。'],
-      ['soma', '城は奪われた。それでも、この山河がある限り、翠嶺は終わらない。'],
-      ['rin', '蒼真様、まずは手元の兵をまとめましょう。自軍の城をタップし、送る兵の数を決めて、攻める城をタップするのです。'],
-      ['rin', '中立の城は兵が増えません。先に押さえれば、そのぶんこちらの兵が育ちます。'],
-      ['soma', 'わかった。夜明けまでに、あの黒鉄の旗を降ろすぞ。'],
+      ['narr', '氷床の下に眠る資源を狙い、黒氷社が南極の観測基地をつぎつぎと占拠した。'],
+      ['nagi', '基地は奪われた。でも、ここにはまだ仲間がいる。'],
+      ['minato', '凪隊長、まずは手元の隊員をまとめましょう。自軍の基地をタップして、送る人数をバーで決め、向かう基地をタップしてください。'],
+      ['minato', '無人の基地は隊員が増えません。先に押さえれば、そのぶんこちらが有利になります。'],
+      ['nagi', '了解。白夜のうちに、海岸の基地を取り戻す。'],
     ],
     post: [
-      ['gantetsu', 'ほう、若いのにやりおる。わしは岩鉄。先王に仕えておった者じゃ。'],
-      ['gantetsu', '生き残りの兵を連れてきた。好きに使うがいい。'],
-      ['rin', '心強い味方です。次は西の渓谷。黒鉄の将、鴉丸の砦があります。'],
+      ['gen', 'やるじゃないか、若いの。わしは源。越冬はこれで十一回目だ。'],
+      ['gen', '散り散りになっていた隊員を集めておいた。好きに使ってくれ。'],
+      ['minato', '心強いです。次は内陸の氷河地帯。黒氷社の九鬼が拠点を構えています。'],
     ],
   },
   {
-    no: '第二章', name: '渓谷の砦',
+    no: '第二章', name: '氷河の基地',
     castles: [[0.15,0.8,1,2,25],[0.3,0.5,1,1,10],[0.6,0.85,0,1,10],[0.52,0.45,0,2,18],[0.92,0.2,0,1,12],[0.97,0.62,0,1,10],[0.3,0.17,0,1,8],[1.32,0.22,2,2,25],[1.27,0.68,2,1,14]],
     rivers: [{ w: 0.05, pts: [[0.73,-0.05],[0.68,0.3],[0.79,0.55],[0.71,0.8],[0.77,1.05]] }],
     ai: { interval: 4.2, greed: 1.2, focus: 1.0 },
     items: { reinforce: 1, gale: 1, wall: 2 },
     pre: [
-      ['karasu', '翠嶺の残党か。谷ごと踏み潰してくれる。'],
-      ['rin', '渓谷の川は流れが速く、渡る兵の足が半分になります。'],
-      ['gantetsu', '「堅城」の札を使えば、城の守りがしばらく倍になる。攻められそうな城に使うんじゃ。'],
-      ['soma', '守って、溜めて、一気に攻める。行くぞ。'],
+      ['kuki', 'オーロラ隊の生き残りか。氷河ごと埋めてやる。'],
+      ['minato', '氷河のクレバス帯は足場が悪く、渡る隊員の足が半分になります。'],
+      ['gen', '「防寒壁」を張れば、基地の守りがしばらく倍になる。狙われそうな基地に使うんだ。'],
+      ['nagi', '守って、溜めて、一気に出る。行こう。'],
     ],
     post: [
-      ['karasu', 'くっ……この借りは必ず返す。'],
-      ['soma', '逃げたか。だが砦は取り戻した。'],
-      ['rin', '北の山には、赤狼という山賊が根城を構えています。黒鉄とも争っているとか。'],
+      ['kuki', 'ちっ……覚えていろ。'],
+      ['nagi', '退いたか。でも基地は取り戻した。'],
+      ['minato', '山脈の向こうに、朔という人が率いる漂流団がいます。黒氷社とも揉めているようです。'],
     ],
   },
   {
-    no: '第三章', name: '山賊の山',
+    no: '第三章', name: '三つ巴の氷原',
     castles: [[0.15,0.5,1,2,25],[0.75,0.12,3,2,25],[1.02,0.27,3,1,12],[1.35,0.85,2,2,30],[1.05,0.78,2,1,12],[0.4,0.22,0,1,8],[0.4,0.78,0,1,8],[0.72,0.5,0,3,30],[1.33,0.45,0,1,10]],
     rivers: [],
     ai: { interval: 3.8, greed: 1.2, focus: 0.9 },
     items: { reinforce: 1, gale: 1, wall: 1 },
     pre: [
-      ['sekiro', '翠嶺だろうが黒鉄だろうが、俺の山に入るやつは全員敵だ！'],
-      ['rin', '三つ巴です。山賊と黒鉄を争わせ、弱ったほうを叩くのが上策でしょう。'],
-      ['gantetsu', '真ん中の大城は兵の伸びが速い。取れれば大きいぞ。'],
-      ['soma', '焦らず、隙を待つ。'],
+      ['saku', 'オーロラ隊も黒氷社も関係ねえ。この氷原の基地は俺たちのものだ！'],
+      ['minato', '三つ巴です。漂流団と黒氷社を争わせて、弱ったほうを狙いましょう。'],
+      ['gen', '真ん中の大きな基地は人の集まりが速い。取れれば大きいぞ。'],
+      ['nagi', '焦らず、隙を待つ。'],
     ],
     post: [
-      ['sekiro', '……負けだ。あんたの戦、嫌いじゃねえ。'],
-      ['sekiro', '黒鉄の連中には仲間をやられた。手を貸してやる。'],
-      ['rin', '赤狼党が加わり、「援軍」の札が増えました。'],
-      ['soma', '次は大河だ。渡りきれば、王都はもう目の前になる。'],
+      ['saku', '……負けだ。あんたのやり方、嫌いじゃねえ。'],
+      ['saku', '黒氷社には仲間の補給を止められた。手を貸すぜ。'],
+      ['minato', '漂流団が加わって、「補給便」が増えました。'],
+      ['nagi', '次は大クレバスだ。越えれば、南極点はもう目の前になる。'],
     ],
   },
   {
-    no: '第四章', name: '大河を越えて',
+    no: '第四章', name: '大クレバスを越えて',
     castles: [[0.15,0.3,1,2,30],[0.2,0.75,1,1,15],[0.45,0.5,1,1,12],[0.58,0.14,0,1,10],[0.58,0.86,0,1,10],[0.97,0.15,2,1,15],[0.95,0.5,2,2,25],[0.97,0.85,2,1,15],[1.32,0.3,2,2,25],[1.3,0.75,2,1,18]],
     rivers: [{ w: 0.07, pts: [[0.77,-0.05],[0.73,0.25],[0.81,0.5],[0.73,0.75],[0.78,1.05]] }],
     ai: { interval: 3.4, greed: 1.25, focus: 1.0 },
     items: { reinforce: 2, gale: 2, wall: 1 },
     pre: [
-      ['karasu', '大河を越えさせるな。岸の砦で迎え撃て！'],
-      ['rin', '河の中では兵の足が半分になります。「疾風」で一気に渡るのも手です。'],
-      ['sekiro', '正面から行くなら、俺たちが道を開けてやるさ。'],
-      ['soma', '全軍、渡河の用意を。'],
+      ['kuki', '大クレバスを越えさせるな。手前の基地で食い止めろ！'],
+      ['minato', 'クレバスの中では足が半分になります。「雪上車」で一気に渡るのも手です。'],
+      ['saku', '正面から行くなら、俺たちが道を開けてやる。'],
+      ['nagi', '全隊、渡る準備を。'],
     ],
     post: [
-      ['karasu', '黒曜帝……申し訳ありませぬ……'],
-      ['gantetsu', '鴉丸は退いた。残るは王都の本城のみじゃ。'],
-      ['soma', '父上の城だ。必ず取り戻す。'],
+      ['kuki', '総帥……申し訳ありません……'],
+      ['gen', '九鬼は退いた。残るは南極点の本部だけだ。'],
+      ['nagi', 'あそこは私たちの最初の基地だった。必ず取り戻す。'],
     ],
   },
   {
-    no: '終章', name: '王都奪還',
+    no: '終章', name: '南極点',
     castles: [[0.12,0.5,1,2,35],[0.3,0.2,1,1,15],[0.3,0.8,1,1,15],[0.55,0.5,0,2,20],[0.76,0.2,2,1,18],[0.76,0.8,2,1,18],[1.0,0.36,2,2,25],[1.0,0.64,2,2,25],[1.33,0.5,2,3,60],[1.25,0.14,2,1,15],[1.25,0.86,2,1,15]],
     rivers: [],
     ai: { interval: 3.0, greed: 1.3, focus: 1.1 },
     items: { reinforce: 2, gale: 1, wall: 2 },
     pre: [
-      ['kokuyo', 'よくここまで来たな、翠嶺の小僧。だが王都の守りは鉄壁だ。'],
-      ['rin', '本城は兵の伸びがいちばん速い城です。まわりの城から切り崩しましょう。'],
-      ['sekiro', '派手にいこうぜ、大将。'],
-      ['gantetsu', '先王も見ておられよう。'],
-      ['soma', '山河はここにある。翠嶺の旗を、もう一度王都に掲げる！'],
+      ['himuro', 'よく来たな、オーロラ隊。だが南極点の本部は落ちんよ。'],
+      ['minato', '本部は人の集まりがいちばん速い基地です。まわりから切り崩しましょう。'],
+      ['saku', '派手にいこうぜ、隊長。'],
+      ['gen', '最後の越冬にふさわしい仕事だ。'],
+      ['nagi', 'この氷原は誰のものでもない。だから、取り戻す！'],
     ],
     post: [
-      ['kokuyo', '馬鹿な……この私が……'],
-      ['narr', '王都の楼閣に、ふたたび翠嶺の藍の旗がひるがえった。'],
-      ['rin', '終わりましたね、蒼真様。'],
-      ['soma', 'いや、ここからだ。焼けた町を建て直そう。山河があれば、国はまたつくれる。'],
+      ['himuro', '馬鹿な……この私が……'],
+      ['narr', '南極点の本部に、ふたたびオーロラ隊の旗がひるがえった。'],
+      ['minato', '終わりましたね、凪隊長。'],
+      ['nagi', 'ううん、ここからだよ。壊された観測機器を直して、また空と氷を調べよう。'],
       ['narr', '― 完 ―'],
     ],
   },
 ];
 
 // ---------- progress ----------
-const STORE_KEY = 'hoka-renjo:v1';
+const STORE_KEY = 'hyogen-no-hoka:v1';
 let progress = { unlocked: 1, cleared: [] };
 try {
   const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
@@ -479,7 +480,7 @@ function arrive(a, c) {
   const def = c.troops * mult;
   if (a.n > def) {
     c.owner = a.owner; c.troops = a.n - def; c.wallUntil = 0; c.flash = 1;
-    if (a.owner === 1) { S.captured++; floater(c, '奪取', COLOR[1]); }
+    if (a.owner === 1) { S.captured++; floater(c, '制圧', COLOR[1]); }
     else if (S.selected === c.id) deselect();
   } else {
     c.troops -= a.n / mult;
@@ -609,7 +610,7 @@ function select(c) { S.selected = c.id; S.mode = null; updateTray(); }
 function deselect() { if (S) { S.selected = null; } updateTray(); }
 function sendRatio(from, to) {
   const n = Math.floor(from.troops * (+ratio.value) / 100);
-  if (n < 1) { floater(from, '兵が足りない', INK); return; }
+  if (n < 1) { floater(from, '隊員が足りない', INK); return; }
   send(from, to, n);
 }
 function useItem(kind) {
@@ -625,7 +626,7 @@ function applyItem(kind, c) {
   if (c.owner !== 1 || S.items[kind] <= 0) return;
   S.items[kind]--;
   if (kind === 'reinforce') { c.troops += 15; floater(c, '+15', COLOR[1]); }
-  if (kind === 'wall') { c.wallUntil = Math.max(c.wallUntil, S.t) + 20; floater(c, '堅城', COLOR[1]); }
+  if (kind === 'wall') { c.wallUntil = Math.max(c.wallUntil, S.t) + 20; floater(c, '防寒壁', COLOR[1]); }
   S.mode = null; updateTray();
 }
 
@@ -635,8 +636,8 @@ function updateTray() {
   order.classList.toggle('targeting', !!(S && S.mode));
   sendbar.hidden = !sel;
   hint.hidden = !!sel;
-  if (S && S.mode) hint.textContent = S.mode === 'reinforce' ? '援軍を送る自軍の城をタップ（もう一度押すと取り消し）' : '守りを固める自軍の城をタップ（もう一度押すと取り消し）';
-  else hint.textContent = '自軍の城（藍色）をタップして出陣';
+  if (S && S.mode) hint.textContent = S.mode === 'reinforce' ? '補給便を届ける自軍の基地をタップ（もう一度押すと取り消し）' : '防寒壁を張る自軍の基地をタップ（もう一度押すと取り消し）';
+  else hint.textContent = '自軍の基地（青）をタップして出動';
   for (const k of Object.keys(itemBtns)) {
     const b = itemBtns[k], n = S ? S.items[k] : 0;
     b.querySelector('.icount').textContent = n;
@@ -654,7 +655,7 @@ function tickTray() {
   }
   const g = itemBtns.gale;
   const left = Math.ceil(S.galeUntil - S.t);
-  g.querySelector('.idesc').textContent = left > 0 ? `発動中 あと${left}秒` : '進軍が12秒間 2倍速';
+  g.querySelector('.idesc').textContent = left > 0 ? `発動中 あと${left}秒` : '移動が12秒間 2倍速';
   if (S.t - lastTrayTick > 0.5 || S.t < lastTrayTick) { lastTrayTick = S.t; updateTray(); }
 }
 
@@ -704,19 +705,31 @@ function buildTerrain() {
         p ? g.lineTo(px, py) : g.moveTo(px, py);
       }
       g.closePath();
-      if (ring === 3) { g.fillStyle = 'rgba(29,42,39,0.05)'; g.fill(); }
-      g.strokeStyle = 'rgba(29,42,39,0.13)'; g.lineWidth = 1; g.stroke();
+      if (ring === 3) { g.fillStyle = 'rgba(24,36,46,0.05)'; g.fill(); }
+      g.strokeStyle = 'rgba(24,36,46,0.13)'; g.lineWidth = 1; g.stroke();
     }
   }
 
-  // rivers
+  // crevasse fields: a pale band with jagged cracks across it
   for (const r of def.rivers) {
     const pts = r.pts.map(([x, y]) => toS(x, y));
-    const trace = () => { g.beginPath(); g.moveTo(...pts[0]); for (let k = 1; k < pts.length - 1; k++) { const mx = (pts[k][0] + pts[k + 1][0]) / 2, my = (pts[k][1] + pts[k + 1][1]) / 2; g.quadraticCurveTo(pts[k][0], pts[k][1], mx, my); } g.lineTo(...pts[pts.length - 1]); };
     g.lineCap = 'round'; g.lineJoin = 'round';
-    trace(); g.strokeStyle = '#97b9b8'; g.lineWidth = r.w * s; g.stroke();
-    trace(); g.strokeStyle = '#b4cfcb'; g.lineWidth = r.w * s * 0.45; g.stroke();
-    trace(); g.strokeStyle = 'rgba(29,42,39,0.25)'; g.lineWidth = 1; g.setLineDash([2, 6]); g.stroke(); g.setLineDash([]);
+    g.beginPath(); g.moveTo(...pts[0]); for (let k = 1; k < pts.length; k++) g.lineTo(...pts[k]);
+    g.strokeStyle = 'rgba(140,178,204,0.55)'; g.lineWidth = r.w * s; g.stroke();
+    g.strokeStyle = 'rgba(24,60,92,0.5)'; g.lineWidth = 1.4;
+    for (let k = 0; k < pts.length - 1; k++) {
+      const [ax, ay] = pts[k], [bx, by] = pts[k + 1];
+      const len = Math.hypot(bx - ax, by - ay), nx = -(by - ay) / len, ny = (bx - ax) / len;
+      for (let d = 6; d < len; d += 9 + rnd() * 8) {
+        const cx = ax + (bx - ax) * d / len, cy = ay + (by - ay) * d / len;
+        const half = r.w * s * (0.15 + rnd() * 0.3), off = (rnd() - 0.5) * r.w * s * 0.4;
+        g.beginPath();
+        g.moveTo(cx + nx * (off - half), cy + ny * (off - half));
+        g.lineTo(cx + nx * off + (rnd() - 0.5) * 4, cy + ny * off + (rnd() - 0.5) * 4);
+        g.lineTo(cx + nx * (off + half), cy + ny * (off + half));
+        g.stroke();
+      }
+    }
   }
 
   // mountains and woods, kept clear of castles and rivers
@@ -729,29 +742,32 @@ function buildTerrain() {
     const sz = (0.018 + rnd() * 0.014) * s;
     const [px, py] = toS(x, y);
     g.beginPath(); g.moveTo(px - sz, py); g.lineTo(px - sz * 0.15, py - sz * 1.25); g.lineTo(px + sz * 0.55, py - sz * 0.35); g.lineTo(px + sz * 0.9, py - sz * 0.75); g.lineTo(px + sz * 1.6, py); g.closePath();
-    g.fillStyle = TERRAIN_DEEP; g.fill();
-    g.strokeStyle = 'rgba(29,42,39,0.45)'; g.lineWidth = 1.3; g.stroke();
+    g.fillStyle = 'rgba(78,90,101,0.55)'; g.fill();
+    g.strokeStyle = 'rgba(24,36,46,0.5)'; g.lineWidth = 1.2; g.stroke();
+    g.beginPath(); g.moveTo(px - sz * 0.45, py - sz * 0.68); g.lineTo(px - sz * 0.15, py - sz * 1.25); g.lineTo(px + sz * 0.2, py - sz * 0.75); g.closePath(); g.fillStyle = '#f5f8fa'; g.fill();
   }
   for (let k = 0; k < 22; k++) {
     const x = rnd() * W, y = rnd() * H;
     if (!clear(x, y, 0.08)) continue;
-    for (let d = 0; d < 5; d++) {
-      const [px, py] = toS(x + (rnd() - 0.5) * 0.05, y + (rnd() - 0.5) * 0.04);
-      g.beginPath(); g.arc(px, py, 2 + rnd() * 2, 0, Math.PI * 2); g.fillStyle = 'rgba(47,90,70,0.22)'; g.fill();
+    g.strokeStyle = 'rgba(24,36,46,0.16)'; g.lineWidth = 1.2; g.lineCap = 'round';
+    for (let d = 0; d < 4; d++) {
+      const [px, py] = toS(x + (rnd() - 0.5) * 0.06, y + (rnd() - 0.5) * 0.05);
+      const l = 6 + rnd() * 8;
+      g.beginPath(); g.moveTo(px - l, py + l * 0.25); g.lineTo(px + l, py - l * 0.25); g.stroke();
     }
   }
 
   // map frame + scale bar
   const [fx0, fy0] = view.portrait ? [view.ox, view.oy] : [view.ox, view.oy];
   const fw = (view.portrait ? H : W) * s, fh = (view.portrait ? W : H) * s;
-  g.strokeStyle = 'rgba(29,42,39,0.35)'; g.lineWidth = 1;
+  g.strokeStyle = 'rgba(24,36,46,0.35)'; g.lineWidth = 1;
   g.strokeRect(fx0 - 14, fy0 - 14, fw + 28, fh + 28);
   const bar = 0.2 * s, bx = fx0 - 6, by = fy0 + fh + 8;
   if (by + 4 < view.ch) {
-    g.fillStyle = 'rgba(29,42,39,0.6)';
-    g.fillRect(bx, by, bar / 2, 2); g.fillStyle = 'rgba(29,42,39,0.25)'; g.fillRect(bx + bar / 2, by, bar / 2, 2);
-    g.fillStyle = 'rgba(29,42,39,0.6)'; g.font = `11px ${UI_FONT}`; g.textBaseline = 'middle';
-    g.fillText('十里', bx + bar + 6, by + 1);
+    g.fillStyle = 'rgba(24,36,46,0.6)';
+    g.fillRect(bx, by, bar / 2, 2); g.fillStyle = 'rgba(24,36,46,0.25)'; g.fillRect(bx + bar / 2, by, bar / 2, 2);
+    g.fillStyle = 'rgba(24,36,46,0.6)'; g.font = `11px ${UI_FONT}`; g.textBaseline = 'middle';
+    g.fillText('100 km', bx + bar + 6, by + 1);
   }
   terrain = off;
 }
@@ -765,22 +781,24 @@ function inRiverDef(def, x, y, extra) {
 }
 
 function drawKeep(x, y, s, level) {
-  ctx.fillStyle = 'rgba(244,246,241,0.95)';
-  ctx.fillRect(x - s * 0.5, y + s * 0.08, s, s * 0.34);
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
-  ctx.fillRect(x - s * 0.1, y + s * 0.2, s * 0.2, s * 0.22);
-  let w = s * 0.78, base = y + s * 0.08;
-  ctx.fillStyle = 'rgba(244,246,241,0.95)';
-  for (let k = 0; k < level; k++) {
-    const h = s * 0.2;
-    ctx.beginPath();
-    ctx.moveTo(x - w / 2 - s * 0.08, base); ctx.lineTo(x + w / 2 + s * 0.08, base);
-    ctx.lineTo(x + w / 2 - s * 0.08, base - h); ctx.lineTo(x - w / 2 + s * 0.08, base - h);
-    ctx.closePath(); ctx.fill();
-    base -= h + s * 0.06;
-    if (k < level - 1) ctx.fillRect(x - w * 0.3, base, w * 0.6, s * 0.06);
-    w *= 0.68;
-  }
+  const snow = 'rgba(245,248,250,0.96)';
+  ctx.fillStyle = snow; ctx.strokeStyle = snow;
+  const g = y + s * 0.34;
+  ctx.fillRect(x - s * 0.55, g - s * 0.03, s * 1.1, s * 0.07);
+  const hx = level === 1 ? x - s * 0.24 : x - s * 0.52;
+  ctx.fillRect(hx, g - s * 0.42, s * 0.46, s * 0.28);
+  ctx.fillRect(hx + s * 0.05, g - s * 0.14, s * 0.06, s * 0.14);
+  ctx.fillRect(hx + s * 0.35, g - s * 0.14, s * 0.06, s * 0.14);
+  ctx.fillStyle = 'rgba(24,36,46,0.3)';
+  ctx.fillRect(hx + s * 0.1, g - s * 0.35, s * 0.1, s * 0.08);
+  ctx.fillRect(hx + s * 0.26, g - s * 0.35, s * 0.1, s * 0.08);
+  ctx.fillStyle = snow;
+  if (level >= 2) { ctx.beginPath(); ctx.arc(x + s * 0.24, g, s * 0.3, Math.PI, 0); ctx.closePath(); ctx.fill(); }
+  const ax = level >= 2 ? x + s * 0.24 : x + s * 0.36;
+  const top = g - s * (level === 3 ? 0.98 : 0.72);
+  ctx.lineWidth = Math.max(1.2, s * 0.06);
+  ctx.beginPath(); ctx.moveTo(ax, level >= 2 ? g - s * 0.28 : g); ctx.lineTo(ax, top); ctx.stroke();
+  if (level === 3) { ctx.beginPath(); ctx.arc(ax, top, s * 0.09, 0, Math.PI * 2); ctx.fill(); }
 }
 
 function hitCastle(px, py) {
@@ -809,7 +827,7 @@ function render(now) {
     const tgt = hitCastle(pointer.x, pointer.y);
     let ex = pointer.x, ey = pointer.y;
     if (tgt && tgt !== from) [ex, ey] = toS(tgt.x, tgt.y);
-    ctx.strokeStyle = 'rgba(44,90,154,0.75)'; ctx.lineWidth = 2.5; ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = 'rgba(42,99,168,0.75)'; ctx.lineWidth = 2.5; ctx.setLineDash([8, 6]);
     ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
   }
 
@@ -819,14 +837,14 @@ function render(now) {
     const r = radius(c), col = COLOR[c.owner], L = LEVEL[c.level];
     // growth ring
     ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(29,42,39,0.12)';
+    ctx.strokeStyle = 'rgba(24,36,46,0.12)';
     ctx.beginPath(); ctx.arc(sx, sy, r + 5, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = col;
     ctx.beginPath(); ctx.arc(sx, sy, r + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, c.troops / L.cap)); ctx.stroke();
     // body
     ctx.fillStyle = col;
     ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(29,42,39,0.55)'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.strokeStyle = 'rgba(24,36,46,0.55)'; ctx.lineWidth = 1.2; ctx.stroke();
     drawKeep(sx, sy + r * 0.12, r * 0.9, c.level);
     // wall buff
     if (c.wallUntil > t) {
@@ -848,7 +866,7 @@ function render(now) {
       ctx.beginPath(); ctx.arc(sx, sy, r + 12, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
     } else if (S.mode && c.owner === 1) {
       const pulse = reduceMotion ? 0.6 : 0.4 + 0.4 * Math.sin(now * 6);
-      ctx.strokeStyle = `rgba(181,48,42,${pulse})`; ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(184,67,44,${pulse})`; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(sx, sy, r + 12, 0, Math.PI * 2); ctx.stroke();
     }
     // troop count
@@ -888,7 +906,7 @@ function render(now) {
   }
 
   // paused veil
-  if (!S.running && !S.over) { ctx.fillStyle = 'rgba(228,235,224,0.25)'; ctx.fillRect(0, 0, cw, ch); }
+  if (!S.running && !S.over) { ctx.fillStyle = 'rgba(231,238,242,0.25)'; ctx.fillRect(0, 0, cw, ch); }
 }
 
 // ---------- input ----------
@@ -965,7 +983,7 @@ function showResult() {
   const stamp = $('#resStamp');
   stamp.textContent = win ? '勝利' : '敗北'; stamp.className = 'stamp ' + (win ? 'win' : 'lose');
   $('#resTitle').textContent = `${def.no}　${def.name}`;
-  $('#resText').textContent = win ? '敵の旗はすべて降りた。' : '自軍の城はすべて落ちた。陣を立て直そう。';
+  $('#resText').textContent = win ? '黒氷社の旗はすべて降りた。' : '自軍の基地をすべて失った。態勢を立て直そう。';
   $('#resTime').textContent = fmtTime(S.t);
   $('#resCap').textContent = S.captured;
   const btns = $('#resBtns'); btns.innerHTML = '';
@@ -1004,12 +1022,12 @@ function showTitle() {
     const b = document.createElement('button'); b.type = 'button';
     const locked = i + 1 > progress.unlocked, done = progress.cleared.includes(i);
     b.disabled = locked;
-    b.innerHTML = `<span class="no">${st.no}</span><span class="nm">${locked ? '？？？' : st.name}</span><span class="st${done ? ' done' : ''}">${done ? '平定' : locked ? '未開放' : '挑戦できる'}</span>`;
+    b.innerHTML = `<span class="no">${st.no}</span><span class="nm">${locked ? '？？？' : st.name}</span><span class="st${done ? ' done' : ''}">${done ? '奪還' : locked ? '未開放' : '挑戦できる'}</span>`;
     b.addEventListener('click', () => startStage(i));
     li.appendChild(b); list.appendChild(li);
   });
   const next = Math.min(progress.unlocked, STAGES.length) - 1;
-  $('#startBtn').textContent = progress.cleared.length === 0 ? '出陣する' : `つづきから（${STAGES[next].no}）`;
+  $('#startBtn').textContent = progress.cleared.length === 0 ? '出動する' : `つづきから（${STAGES[next].no}）`;
   $('#startBtn').onclick = () => startStage(next);
   $('#title').hidden = false;
 }
@@ -1031,7 +1049,7 @@ showTitle();
 requestAnimationFrame(frame);
 
 // small hook for automated checks
-window.__hoka = {
+window.__game = {
   get state() { return S; }, STAGES, startStage, aiThink, toS,
   step(sec) { const n = Math.round(sec / 0.05); for (let k = 0; k < n && S && S.running; k++) update(0.05); },
   skipStory() { storyQ = []; nextLine(); },

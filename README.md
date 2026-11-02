@@ -9,9 +9,10 @@ This repository also hosts [`antarctica-viz/`](antarctica-viz/), a Streamlit
 web UI for exploring public Antarctic observation data (sea-ice extent, South
 Pole CO₂, research-station temperatures).
 
-[`hoka-renjo/`](hoka-renjo/) is 烽火連城, a single-file browser real-time
-strategy game: send troops from castle to castle to win back a fallen kingdom,
-with a five-chapter story. Open `hoka-renjo/index.html` in a browser to play.
+[`hyogen-no-hoka/`](hyogen-no-hoka/) is 氷原の烽火, a single-file browser
+real-time strategy game set in Antarctica: send crew from station to station
+to retake bases, with a five-chapter story. Open `hyogen-no-hoka/index.html`
+in a browser to play.
 
 ## Development
 
