@@ -27,17 +27,24 @@ PARSERS: dict[str, Callable[[str], pd.DataFrame]] = {
 PAGES = [
     "概要",
     "海氷面積",
-    "南極点 温室効果ガス",
+    "温室効果ガス",
     "オゾンホール",
     "アイスコア",
     "基地の気象",
     "CSVを分析",
     "データソース",
 ]
-# Gas label -> (dataset, unit, download file stem)
-GASES: dict[str, tuple[sources.Dataset, str, str]] = {
-    "CO₂": (sources.SOUTH_POLE_CO2, "ppm", "co2_south_pole_monthly"),
-    "CH₄": (sources.SOUTH_POLE_CH4, "ppb", "ch4_south_pole_monthly"),
+GAS_UNITS = {"CO₂": "ppm", "CH₄": "ppb"}
+# Station -> gas -> (dataset, download file stem)
+GHG_STATIONS: dict[str, dict[str, tuple[sources.Dataset, str]]] = {
+    "南極点": {
+        "CO₂": (sources.SOUTH_POLE_CO2, "co2_south_pole_monthly"),
+        "CH₄": (sources.SOUTH_POLE_CH4, "ch4_south_pole_monthly"),
+    },
+    "昭和基地": {
+        "CO₂": (sources.SYOWA_CO2, "co2_syowa_monthly"),
+        "CH₄": (sources.SYOWA_CH4, "ch4_syowa_monthly"),
+    },
 }
 READER_PARSERS = {"wind_speed": "reader_wind"}
 FIRST_OZONE_YEAR = 1979
@@ -134,6 +141,10 @@ def page_overview(base: tuple[int, int]) -> None:
             f"{latest['area']:.1f} 百万km²",
             help="9月7日〜10月13日の平均",
         )
+    syowa_co2 = load_or_report(sources.SYOWA_CO2, "gml")
+    if syowa_co2 is not None:
+        latest = syowa_co2.iloc[-1]
+        cols[2].metric(f"昭和基地 CO₂ ({latest['date']:%Y-%m})", f"{latest['value']:.1f} ppm")
 
     st.subheader("収録データセット")
     st.dataframe(
@@ -233,9 +244,11 @@ def page_sea_ice(base: tuple[int, int]) -> None:
 
 
 def page_greenhouse(base: tuple[int, int]) -> None:
-    st.title("南極点の温室効果ガス")
-    gas = st.radio("成分", list(GASES), horizontal=True)
-    dataset, unit, stem = GASES[gas]
+    st.title("南極の温室効果ガス")
+    station = st.radio("観測所", list(GHG_STATIONS), horizontal=True)
+    gas = st.radio("成分", list(GAS_UNITS), horizontal=True)
+    dataset, stem = GHG_STATIONS[station][gas]
+    unit = GAS_UNITS[gas]
     st.subheader(dataset.title)
     df = load_or_report(dataset, "gml")
     if df is None:
@@ -271,8 +284,44 @@ def page_greenhouse(base: tuple[int, int]) -> None:
             charts.simple_bars(growth, "year", "growth", f"増加量 ({unit}/年)"),
             width="stretch",
         )
+    station_comparison(gas, unit)
     csv_download(df, stem)
     source_note(dataset)
+
+
+def station_comparison(gas: str, unit: str) -> None:
+    """Annual means of ``gas`` at every station, on one axis (12-month years only)."""
+    st.subheader(f"観測所の比較 ({gas} 年平均)")
+    frames = []
+    for name, by_gas in GHG_STATIONS.items():
+        dataset, _ = by_gas[gas]
+        try:
+            max_age = st.session_state.get("max_age", sources.DEFAULT_MAX_AGE)
+            df = load(dataset.url, "gml", max_age)
+        except (sources.FetchError, parsers.ParseError):
+            continue
+        full = df[df["date"].dt.year.isin(analysis.complete_years(df))]
+        yearly = analysis.annual_summary(full)[["year", "mean"]]
+        frames.append(yearly.rename(columns={"mean": "value"}).assign(station=name))
+    if len(frames) < 2:
+        st.info("比較に必要なデータを取得できませんでした。")
+        return
+    combined = pd.concat(frames, ignore_index=True)
+    order = [f["station"].iloc[0] for f in frames]
+    st.altair_chart(
+        charts.multi_line(combined, "station", f"{gas} 年平均 ({unit})", order, value_format=".2f"),
+        width="stretch",
+    )
+    first, second = (f.set_index("year")["value"] for f in frames[:2])
+    diff = (second - first).dropna()
+    note = "12か月そろった年の平均。欠測のある年は線が途切れます。"
+    if not diff.empty:
+        note += (
+            f" 両方そろった{len(diff)}年の差 ({order[1]} − {order[0]}) は平均 "
+            f"{diff.mean():+.2f} {unit}、最大でも {diff.abs().max():.2f} {unit} で、"
+            "線はほぼ重なります。"
+        )
+    st.caption(note)
 
 
 def page_ozone(base: tuple[int, int]) -> None:
@@ -546,7 +595,7 @@ def page_sources(base: tuple[int, int]) -> None:
 RENDERERS = {
     "概要": page_overview,
     "海氷面積": page_sea_ice,
-    "南極点 温室効果ガス": page_greenhouse,
+    "温室効果ガス": page_greenhouse,
     "オゾンホール": page_ozone,
     "アイスコア": page_ice_core,
     "基地の気象": page_station,
