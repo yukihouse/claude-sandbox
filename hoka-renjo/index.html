@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>烽火連城</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* Layout: a one-screen war table. Slim ink header, the celadon map fills the middle, a command tray sits at the bottom. */
+:root {
+  --paper: #e4ebe0;
+  --tray: #f1f5ee;
+  --terrain: #cfdccd;
+  --terrain-deep: #b7c9b5;
+  --ink: #1d2a27;
+  --ink-soft: #55665f;
+  --line: #a3b5a6;
+  --player: #2c5a9a;
+  --enemy: #a5412b;
+  --bandit: #ad7f1a;
+  --neutral: #858d84;
+  --seal: #b5302a;
+  --scrim: rgba(29, 42, 39, 0.55);
+  --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  color-scheme: light;
+}
+[hidden] { display: none !important; }
+html { height: 100%; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%; margin: 0; overflow: hidden;
+  background: var(--paper); color: var(--ink);
+  font-family: var(--font-ui); font-size: 14px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--player); outline-offset: 2px; }
+
+#app {
+  height: 100%; display: flex; flex-direction: column; gap: 8px;
+  padding-block: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 1200px; margin: 0 auto;
+}
+
+/* header */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; }
+.chapter { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.chapter small { font-size: 12px; letter-spacing: 0.12em; color: var(--ink-soft); white-space: nowrap; }
+.chapter h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 20px; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ghost {
+  min-height: 40px; padding: 0 14px; border-radius: 4px;
+  border: 1px solid var(--line); background: var(--tray); font-size: 13px; white-space: nowrap;
+}
+.ghost:hover { border-color: var(--ink-soft); }
+
+/* map */
+.field { position: relative; flex: 1; min-height: 0; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; background: var(--terrain); }
+#map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+
+/* tray */
+.tray { display: grid; gap: 8px; }
+.order {
+  min-height: 52px; display: flex; align-items: center; gap: 14px;
+  padding: 6px 14px; border-radius: 4px; background: var(--tray); border: 1px solid var(--line);
+}
+.order .hint { color: var(--ink-soft); font-size: 13px; }
+.order.selecting { border-color: var(--player); }
+.order.targeting { border-color: var(--seal); }
+.order.targeting .hint { color: var(--seal); font-weight: 700; }
+.sendbar { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; }
+.sendbar label { font-weight: 700; font-size: 13px; white-space: nowrap; }
+.sendbar input { flex: 1; min-width: 0; accent-color: var(--player); height: 32px; }
+.sendbar output { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; min-width: 7.5em; text-align: right; }
+.items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.item {
+  position: relative; display: grid; gap: 1px; text-align: left;
+  padding: 7px 12px 8px; min-height: 52px; border-radius: 4px;
+  border: 1px solid var(--line); background: var(--tray);
+}
+.item .iname { font-family: var(--font-display); font-weight: 800; font-size: 16px; letter-spacing: 0.08em; }
+.item .idesc { font-size: 11px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .icount {
+  position: absolute; top: 6px; right: 8px; min-width: 22px; height: 22px; padding: 0 6px;
+  display: grid; place-items: center; border-radius: 11px;
+  background: var(--ink); color: var(--tray); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.item:disabled { opacity: 0.45; cursor: default; }
+.item.active { border-color: var(--seal); background: #f7ebe7; }
+.item.active .icount { background: var(--seal); }
+
+/* overlays */
+.overlay {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+  background: var(--scrim);
+  padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.card {
+  width: min(440px, 100%); background: var(--tray); border: 1px solid var(--line); border-radius: 4px;
+  padding: 24px; display: grid; gap: 16px; text-align: center; box-shadow: 0 18px 50px rgba(29, 42, 39, 0.35);
+}
+.card h2 { margin: 0; font-family: var(--font-display); font-size: 26px; letter-spacing: 0.12em; }
+.card p { margin: 0; color: var(--ink-soft); line-height: 1.7; }
+.btns { display: grid; gap: 8px; }
+.primary {
+  min-height: 48px; border-radius: 4px; border: 1px solid var(--ink); background: var(--ink); color: var(--tray);
+  font-weight: 700; letter-spacing: 0.08em;
+}
+.primary:hover { background: #2c3d39; }
+.secondary { min-height: 44px; border-radius: 4px; border: 1px solid var(--line); background: transparent; }
+.secondary:hover { border-color: var(--ink-soft); }
+
+/* title screen */
+#title { background: var(--paper); overflow-y: auto; }
+.title-wrap { width: min(880px, 100%); display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; }
+.title-mark { position: relative; display: flex; gap: 18px; align-items: flex-start; justify-self: end; order: 2; }
+.title-mark h1 {
+  margin: 0; writing-mode: vertical-rl; font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(56px, 9vw, 92px); line-height: 1; letter-spacing: 0.14em; color: var(--ink);
+}
+.title-mark .sub { writing-mode: vertical-rl; font-family: var(--font-display); font-size: 16px; letter-spacing: 0.4em; color: var(--ink-soft); padding-top: 8px; }
+.seal {
+  position: absolute; left: -26px; bottom: -6px; width: 54px; height: 54px; display: grid; place-items: center;
+  border: 3px solid var(--seal); border-radius: 6px; color: var(--seal); transform: rotate(-8deg);
+  font-family: var(--font-display); font-weight: 800; font-size: 15px; line-height: 1.05; text-align: center;
+}
+.menu { display: grid; gap: 18px; order: 1; }
+.lede { margin: 0; font-family: var(--font-display); font-size: 17px; line-height: 1.9; color: var(--ink); max-width: 28em; text-wrap: balance; }
+.chapters { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.chapters button {
+  width: 100%; min-height: 50px; display: grid; grid-template-columns: 4.5em 1fr auto; align-items: center; gap: 10px;
+  padding: 0 14px; border-radius: 4px; border: 1px solid var(--line); background: var(--tray); text-align: left;
+}
+.chapters button:hover:not(:disabled) { border-color: var(--ink); }
+.chapters button:disabled { opacity: 0.5; cursor: default; }
+.chapters .no { font-size: 12px; letter-spacing: 0.12em; color: var(--ink-soft); }
+.chapters .nm { font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: 0.06em; }
+.chapters .st { font-size: 12px; color: var(--ink-soft); }
+.chapters .st.done { color: var(--player); font-weight: 700; }
+.howto { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.7; }
+
+/* story */
+#story { place-items: end center; background: rgba(29, 42, 39, 0.35); cursor: pointer; }
+.dialog {
+  width: min(720px, 100%); display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start;
+  background: var(--tray); border: 1px solid var(--line); border-radius: 4px; padding: 18px 20px 14px;
+  box-shadow: 0 18px 50px rgba(29, 42, 39, 0.35);
+}
+.portrait {
+  width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+  color: #f4f6f1; font-family: var(--font-display); font-weight: 800; font-size: 30px;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+.portrait.narr { background: transparent; box-shadow: none; width: 0; height: 0; }
+.speech { display: grid; gap: 6px; min-width: 0; }
+.who { display: flex; align-items: baseline; gap: 10px; min-height: 22px; }
+.who b { font-family: var(--font-display); font-size: 18px; letter-spacing: 0.08em; }
+.who span { font-size: 12px; color: var(--ink-soft); }
+.line { margin: 0; font-size: 16px; line-height: 1.8; min-height: 3.6em; }
+.line.narr { font-family: var(--font-display); color: var(--ink-soft); }
+.dialog-foot { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dialog-foot small { color: var(--ink-soft); font-size: 12px; }
+.skip { min-height: 36px; padding: 0 12px; border-radius: 4px; border: 1px solid var(--line); background: transparent; font-size: 12px; }
+
+.stamp {
+  justify-self: center; width: 96px; height: 96px; display: grid; place-items: center;
+  border: 4px solid currentColor; border-radius: 8px; transform: rotate(-6deg);
+  font-family: var(--font-display); font-weight: 800; font-size: 34px; letter-spacing: 0.05em;
+}
+.stamp.win { color: var(--seal); }
+.stamp.lose { color: var(--ink-soft); }
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.stats div { border: 1px solid var(--line); border-radius: 4px; padding: 8px; display: grid; gap: 2px; }
+.stats small { font-size: 11px; color: var(--ink-soft); letter-spacing: 0.1em; }
+.stats b { font-size: 20px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) {
+  .title-wrap { grid-template-columns: 1fr; gap: 28px; }
+  .title-mark { justify-self: center; order: 0; }
+  .title-mark h1 { font-size: 64px; }
+  .chapter h1 { font-size: 17px; }
+  .item { padding: 6px 8px 7px; }
+  .item .iname { font-size: 15px; }
+  .dialog { grid-template-columns: 1fr; gap: 10px; padding: 14px 16px 12px; }
+  .portrait { width: 44px; height: 44px; font-size: 22px; }
+  .dialog .portrait { display: none; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  #app { gap: 6px; padding-block: 4px; }
+  .order, .item { min-height: 44px; }
+  .item .idesc { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <div class="chapter"><small id="chapNo">第一章</small><h1 id="chapName">落城の夜</h1></div>
+    <button class="ghost" id="pauseBtn" type="button">一時停止</button>
+  </header>
+  <div class="field" id="field"><canvas id="map" aria-label="戦場の地図"></canvas></div>
+  <div class="tray">
+    <div class="order" id="order">
+      <span class="hint" id="hint">自軍の城（藍色）をタップして出陣</span>
+      <div class="sendbar" id="sendbar" hidden>
+        <label for="ratio">送る兵</label>
+        <input id="ratio" type="range" min="10" max="100" step="10" value="50">
+        <output id="ratioOut" for="ratio">50%・0人</output>
+      </div>
+    </div>
+    <div class="items">
+      <button class="item" id="it-reinforce" type="button"><span class="iname">援軍</span><span class="idesc">自軍の城に兵 +15</span><span class="icount">1</span></button>
+      <button class="item" id="it-gale" type="button"><span class="iname">疾風</span><span class="idesc">進軍が12秒間 2倍速</span><span class="icount">1</span></button>
+      <button class="item" id="it-wall" type="button"><span class="iname">堅城</span><span class="idesc">城の守りが20秒間 2倍</span><span class="icount">1</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="title">
+  <div class="title-wrap">
+    <div class="title-mark">
+      <span class="sub">翠嶺奪還記</span>
+      <h1>烽火連城</h1>
+      <span class="seal">翠嶺<br>之印</span>
+    </div>
+    <div class="menu">
+      <p class="lede">都は落ちた。けれど山と河は残っている。<br>若き将・蒼真とともに、城をひとつずつ取り戻せ。</p>
+      <button class="primary" id="startBtn" type="button">出陣する</button>
+      <ul class="chapters" id="chapters"></ul>
+      <p class="howto">遊び方：自軍の城をタップ → スライダーで送る兵の割合を決める → 攻める城をタップ。城から城へドラッグしても出陣できます。城の兵は時間とともに増えます（中立の城は増えません）。</p>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="story" hidden>
+  <div class="dialog">
+    <div class="portrait" id="portrait">蒼</div>
+    <div class="speech">
+      <div class="who"><b id="whoName">蒼真</b><span id="whoRole">翠嶺の若き将</span></div>
+      <p class="line" id="storyLine"></p>
+    </div>
+    <div class="dialog-foot"><small id="storyProg">タップで次へ</small><button class="skip" id="skipBtn" type="button">会話をとばす</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="result" hidden>
+  <div class="card">
+    <div class="stamp" id="resStamp">勝利</div>
+    <h2 id="resTitle">落城の夜</h2>
+    <p id="resText"></p>
+    <div class="stats"><div><small>経過時間</small><b id="resTime">0:00</b></div><div><small>奪った城</small><b id="resCap">0</b></div></div>
+    <div class="btns" id="resBtns"></div>
+  </div>
+</div>
+
+<div class="overlay" id="pause" hidden>
+  <div class="card">
+    <h2>陣中にて</h2>
+    <p>戦は止まっています。</p>
+    <div class="btns">
+      <button class="primary" id="resumeBtn" type="button">再開する</button>
+      <button class="secondary" id="retryBtn" type="button">この章をやり直す</button>
+      <button class="secondary" id="toTitleBtn" type="button">章を選ぶ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ---------- constants ----------
+const W = 1.5, H = 1;            // world size (landscape); portrait screens rotate it
+const SPEED = 0.11;              // world units / sec
+const CLASH = 0.026;             // armies closer than this fight
+const LEVEL = {
+  1: { cap: 30, rate: 0.8, r: 0.034 },
+  2: { cap: 50, rate: 1.2, r: 0.040 },
+  3: { cap: 90, rate: 1.7, r: 0.048 },
+};
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COLOR = { 0: cssVar('--neutral'), 1: cssVar('--player'), 2: cssVar('--enemy'), 3: cssVar('--bandit') };
+const INK = cssVar('--ink'), PAPER = cssVar('--tray'), TERRAIN = cssVar('--terrain'), TERRAIN_DEEP = cssVar('--terrain-deep');
+const UI_FONT = '"Zen Kaku Gothic New", "Hiragino Sans", system-ui, sans-serif';
+const DISPLAY_FONT = '"Shippori Mincho B1", "Hiragino Mincho ProN", serif';
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const CHARS = {
+  narr:     { name: '', role: '', mark: '', color: 'transparent' },
+  soma:     { name: '蒼真', role: '翠嶺の若き将', mark: '蒼', color: '#2c5a9a' },
+  rin:      { name: '琳', role: '軍師', mark: '琳', color: '#2f7a6d' },
+  gantetsu: { name: '岩鉄', role: '先王の老将', mark: '岩', color: '#6b5434' },
+  karasu:   { name: '鴉丸', role: '黒鉄帝国の将', mark: '鴉', color: '#a5412b' },
+  sekiro:   { name: '赤狼', role: '赤狼党の頭', mark: '狼', color: '#ad7f1a' },
+  kokuyo:   { name: '黒曜帝', role: '黒鉄帝国の皇帝', mark: '曜', color: '#3a2f3a' },
+};
+
+// castle: [x, y, owner(0 neutral / 1 player / 2 黒鉄 / 3 赤狼党), level, troops]
+const STAGES = [
+  {
+    no: '第一章', name: '落城の夜',
+    castles: [[0.2,0.5,1,2,20],[0.55,0.25,0,1,6],[0.55,0.75,0,1,8],[0.85,0.5,0,2,14],[1.3,0.5,2,1,10],[1.15,0.18,0,1,10],[1.15,0.82,0,1,10]],
+    rivers: [],
+    ai: { interval: 4.5, greed: 1.15, focus: 0.8 },
+    items: { reinforce: 1, gale: 1, wall: 1 },
+    pre: [
+      ['narr', '翠嶺国の都は、黒鉄帝国の夜襲で落ちた。山と河だけが、昔のまま残っている。'],
+      ['soma', '城は奪われた。それでも、この山河がある限り、翠嶺は終わらない。'],
+      ['rin', '蒼真様、まずは手元の兵をまとめましょう。自軍の城をタップし、送る兵の数を決めて、攻める城をタップするのです。'],
+      ['rin', '中立の城は兵が増えません。先に押さえれば、そのぶんこちらの兵が育ちます。'],
+      ['soma', 'わかった。夜明けまでに、あの黒鉄の旗を降ろすぞ。'],
+    ],
+    post: [
+      ['gantetsu', 'ほう、若いのにやりおる。わしは岩鉄。先王に仕えておった者じゃ。'],
+      ['gantetsu', '生き残りの兵を連れてきた。好きに使うがいい。'],
+      ['rin', '心強い味方です。次は西の渓谷。黒鉄の将、鴉丸の砦があります。'],
+    ],
+  },
+  {
+    no: '第二章', name: '渓谷の砦',
+    castles: [[0.15,0.8,1,2,25],[0.3,0.5,1,1,10],[0.6,0.85,0,1,10],[0.52,0.45,0,2,18],[0.92,0.2,0,1,12],[0.97,0.62,0,1,10],[0.3,0.17,0,1,8],[1.32,0.22,2,2,25],[1.27,0.68,2,1,14]],
+    rivers: [{ w: 0.05, pts: [[0.73,-0.05],[0.68,0.3],[0.79,0.55],[0.71,0.8],[0.77,1.05]] }],
+    ai: { interval: 4.2, greed: 1.2, focus: 1.0 },
+    items: { reinforce: 1, gale: 1, wall: 2 },
+    pre: [
+      ['karasu', '翠嶺の残党か。谷ごと踏み潰してくれる。'],
+      ['rin', '渓谷の川は流れが速く、渡る兵の足が半分になります。'],
+      ['gantetsu', '「堅城」の札を使えば、城の守りがしばらく倍になる。攻められそうな城に使うんじゃ。'],
+      ['soma', '守って、溜めて、一気に攻める。行くぞ。'],
+    ],
+    post: [
+      ['karasu', 'くっ……この借りは必ず返す。'],
+      ['soma', '逃げたか。だが砦は取り戻した。'],
+      ['rin', '北の山には、赤狼という山賊が根城を構えています。黒鉄とも争っているとか。'],
+    ],
+  },
+  {
+    no: '第三章', name: '山賊の山',
+    castles: [[0.15,0.5,1,2,25],[0.75,0.12,3,2,25],[1.02,0.27,3,1,12],[1.35,0.85,2,2,30],[1.05,0.78,2,1,12],[0.4,0.22,0,1,8],[0.4,0.78,0,1,8],[0.72,0.5,0,3,30],[1.33,0.45,0,1,10]],
+    rivers: [],
+    ai: { interval: 3.8, greed: 1.2, focus: 0.9 },
+    items: { reinforce: 1, gale: 1, wall: 1 },
+    pre: [
+      ['sekiro', '翠嶺だろうが黒鉄だろうが、俺の山に入るやつは全員敵だ！'],
+      ['rin', '三つ巴です。山賊と黒鉄を争わせ、弱ったほうを叩くのが上策でしょう。'],
+      ['gantetsu', '真ん中の大城は兵の伸びが速い。取れれば大きいぞ。'],
+      ['soma', '焦らず、隙を待つ。'],
+    ],
+    post: [
+      ['sekiro', '……負けだ。あんたの戦、嫌いじゃねえ。'],
+      ['sekiro', '黒鉄の連中には仲間をやられた。手を貸してやる。'],
+      ['rin', '赤狼党が加わり、「援軍」の札が増えました。'],
+      ['soma', '次は大河だ。渡りきれば、王都はもう目の前になる。'],
+    ],
+  },
+  {
+    no: '第四章', name: '大河を越えて',
+    castles: [[0.15,0.3,1,2,30],[0.2,0.75,1,1,15],[0.45,0.5,1,1,12],[0.58,0.14,0,1,10],[0.58,0.86,0,1,10],[0.97,0.15,2,1,15],[0.95,0.5,2,2,25],[0.97,0.85,2,1,15],[1.32,0.3,2,2,25],[1.3,0.75,2,1,18]],
+    rivers: [{ w: 0.07, pts: [[0.77,-0.05],[0.73,0.25],[0.81,0.5],[0.73,0.75],[0.78,1.05]] }],
+    ai: { interval: 3.4, greed: 1.25, focus: 1.0 },
+    items: { reinforce: 2, gale: 2, wall: 1 },
+    pre: [
+      ['karasu', '大河を越えさせるな。岸の砦で迎え撃て！'],
+      ['rin', '河の中では兵の足が半分になります。「疾風」で一気に渡るのも手です。'],
+      ['sekiro', '正面から行くなら、俺たちが道を開けてやるさ。'],
+      ['soma', '全軍、渡河の用意を。'],
+    ],
+    post: [
+      ['karasu', '黒曜帝……申し訳ありませぬ……'],
+      ['gantetsu', '鴉丸は退いた。残るは王都の本城のみじゃ。'],
+      ['soma', '父上の城だ。必ず取り戻す。'],
+    ],
+  },
+  {
+    no: '終章', name: '王都奪還',
+    castles: [[0.12,0.5,1,2,35],[0.3,0.2,1,1,15],[0.3,0.8,1,1,15],[0.55,0.5,0,2,20],[0.76,0.2,2,1,18],[0.76,0.8,2,1,18],[1.0,0.36,2,2,25],[1.0,0.64,2,2,25],[1.33,0.5,2,3,60],[1.25,0.14,2,1,15],[1.25,0.86,2,1,15]],
+    rivers: [],
+    ai: { interval: 3.0, greed: 1.3, focus: 1.1 },
+    items: { reinforce: 2, gale: 1, wall: 2 },
+    pre: [
+      ['kokuyo', 'よくここまで来たな、翠嶺の小僧。だが王都の守りは鉄壁だ。'],
+      ['rin', '本城は兵の伸びがいちばん速い城です。まわりの城から切り崩しましょう。'],
+      ['sekiro', '派手にいこうぜ、大将。'],
+      ['gantetsu', '先王も見ておられよう。'],
+      ['soma', '山河はここにある。翠嶺の旗を、もう一度王都に掲げる！'],
+    ],
+    post: [
+      ['kokuyo', '馬鹿な……この私が……'],
+      ['narr', '王都の楼閣に、ふたたび翠嶺の藍の旗がひるがえった。'],
+      ['rin', '終わりましたね、蒼真様。'],
+      ['soma', 'いや、ここからだ。焼けた町を建て直そう。山河があれば、国はまたつくれる。'],
+      ['narr', '― 完 ―'],
+    ],
+  },
+];
+
+// ---------- progress ----------
+const STORE_KEY = 'hoka-renjo:v1';
+let progress = { unlocked: 1, cleared: [] };
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+  if (saved && saved.unlocked) progress = { unlocked: saved.unlocked, cleared: saved.cleared || [] };
+} catch (e) { /* storage unavailable */ }
+function saveProgress() { try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) { /* ignore */ } }
+
+// ---------- dom ----------
+const $ = s => document.querySelector(s);
+const field = $('#field'), canvas = $('#map'), ctx = canvas.getContext('2d');
+const order = $('#order'), hint = $('#hint'), sendbar = $('#sendbar'), ratio = $('#ratio'), ratioOut = $('#ratioOut');
+const itemBtns = { reinforce: $('#it-reinforce'), gale: $('#it-gale'), wall: $('#it-wall') };
+
+// ---------- state ----------
+let S = null;
+let view = { cw: 0, ch: 0, dpr: 1, portrait: false, scale: 1, ox: 0, oy: 0 };
+let terrain = null;
+let pointer = { x: 0, y: 0, inside: false };
+let drag = null;
+
+function mulberry(seed) {
+  return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+function startStage(i) {
+  const def = STAGES[i];
+  S = {
+    i, t: 0, running: false, paused: false, over: false, endAt: null, result: null,
+    castles: def.castles.map(([x, y, owner, level, troops], id) => ({ id, x, y, owner, level, troops, wallUntil: 0, flash: 0 })),
+    armies: [], floaters: [],
+    aiTimer: { 2: def.ai.interval * 2.2, 3: def.ai.interval * 2.6 },
+    items: { ...def.items }, galeUntil: 0,
+    selected: null, mode: null, captured: 0,
+  };
+  $('#chapNo').textContent = def.no;
+  $('#chapName').textContent = def.name;
+  buildTerrain();
+  updateTray();
+  hideAll();
+  playStory(def.pre, () => { S.running = true; });
+}
+
+// ---------- rules ----------
+const defMult = c => (c.wallUntil > S.t ? 2 : 1);
+function incoming(c, pred) { let n = 0; for (const a of S.armies) if (a.to === c.id && pred(a)) n += a.n; return n; }
+
+function inRiver(x, y) {
+  for (const r of STAGES[S.i].rivers) {
+    const p = r.pts;
+    for (let k = 0; k < p.length - 1; k++) {
+      const [ax, ay] = p[k], [bx, by] = p[k + 1];
+      const dx = bx - ax, dy = by - ay;
+      const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+      if (Math.hypot(x - (ax + dx * t), y - (ay + dy * t)) < r.w / 2) return true;
+    }
+  }
+  return false;
+}
+
+function send(from, to, n) {
+  n = Math.floor(n);
+  if (n < 1 || from === to || from.troops < n) return false;
+  from.troops -= n;
+  const d = dist(from, to) || 1, r = LEVEL[from.level].r;
+  S.armies.push({ owner: from.owner, n, to: to.id, x: from.x + (to.x - from.x) / d * r, y: from.y + (to.y - from.y) / d * r });
+  return true;
+}
+
+function arrive(a, c) {
+  if (c.owner === a.owner) { c.troops += a.n; return; }
+  const mult = defMult(c);
+  const def = c.troops * mult;
+  if (a.n > def) {
+    c.owner = a.owner; c.troops = a.n - def; c.wallUntil = 0; c.flash = 1;
+    if (a.owner === 1) { S.captured++; floater(c, '奪取', COLOR[1]); }
+    else if (S.selected === c.id) deselect();
+  } else {
+    c.troops -= a.n / mult;
+  }
+}
+
+function floater(c, text, color) { S.floaters.push({ x: c.x, y: c.y, text, color, age: 0 }); }
+
+function update(dt) {
+  S.t += dt;
+  for (const c of S.castles) {
+    if (c.owner === 0) continue;
+    const L = LEVEL[c.level];
+    if (c.troops < L.cap) c.troops = Math.min(L.cap, c.troops + L.rate * dt);
+    else if (c.troops > L.cap) c.troops = Math.max(L.cap, c.troops - 0.5 * dt);
+  }
+  for (const c of S.castles) if (c.flash > 0) c.flash = Math.max(0, c.flash - dt * 1.2);
+
+  // movement
+  const keep = [];
+  for (const a of S.armies) {
+    const tgt = S.castles[a.to];
+    const dx = tgt.x - a.x, dy = tgt.y - a.y, d = Math.hypot(dx, dy);
+    let sp = SPEED;
+    if (a.owner === 1 && S.t < S.galeUntil) sp *= 2;
+    if (inRiver(a.x, a.y)) sp *= 0.5;
+    const step = sp * dt;
+    if (step >= d) { arrive(a, tgt); continue; }
+    a.x += dx / d * step; a.y += dy / d * step;
+    keep.push(a);
+  }
+  S.armies = keep;
+
+  // field clashes
+  for (let i = 0; i < S.armies.length; i++) {
+    const a = S.armies[i];
+    if (a.n <= 0) continue;
+    for (let j = i + 1; j < S.armies.length; j++) {
+      const b = S.armies[j];
+      if (b.n <= 0 || a.owner === b.owner) continue;
+      if (Math.hypot(a.x - b.x, a.y - b.y) < CLASH) {
+        const m = Math.min(a.n, b.n);
+        a.n -= m; b.n -= m;
+        S.floaters.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, text: '−' + m, color: INK, age: 0 });
+        if (a.n <= 0) break;
+      }
+    }
+  }
+  S.armies = S.armies.filter(a => a.n > 0);
+
+  for (const f of S.floaters) f.age += dt;
+  S.floaters = S.floaters.filter(f => f.age < 1.3);
+
+  // AI
+  const ai = STAGES[S.i].ai;
+  for (const owner of [2, 3]) {
+    if (!S.castles.some(c => c.owner === owner)) continue;
+    S.aiTimer[owner] -= dt;
+    if (S.aiTimer[owner] <= 0) {
+      aiThink(owner, ai);
+      S.aiTimer[owner] = ai.interval * (0.75 + Math.random() * 0.5);
+    }
+  }
+
+  // end check
+  if (S.endAt === null) {
+    const hostile = S.castles.some(c => c.owner >= 2) || S.armies.some(a => a.owner >= 2);
+    const mine = S.castles.some(c => c.owner === 1) || S.armies.some(a => a.owner === 1);
+    if (!hostile) { S.result = 'win'; S.endAt = S.t + 0.9; }
+    else if (!mine) { S.result = 'lose'; S.endAt = S.t + 0.9; }
+  } else if (S.t >= S.endAt && !S.over) {
+    S.over = true; S.running = false; deselect(); S.mode = null; updateTray();
+    showResult();
+  }
+}
+
+function aiThink(owner, ai) {
+  const cs = S.castles, mine = cs.filter(c => c.owner === owner);
+  if (!mine.length) return;
+  const hostileTo = a => a.owner !== owner, friendly = a => a.owner === owner;
+
+  // 1. shore up a castle that is about to fall
+  for (const c of mine) {
+    const shortfall = incoming(c, hostileTo) - incoming(c, friendly) - c.troops * defMult(c);
+    if (shortfall > -2) {
+      const helper = mine.filter(m => m !== c && m.troops > 12).sort((a, b) => dist(a, c) - dist(b, c))[0];
+      if (helper && dist(helper, c) / SPEED < 7) {
+        const n = Math.min(Math.floor(helper.troops - 4), Math.ceil(shortfall + 6));
+        if (n >= 5 && send(helper, c, n)) return;
+      }
+    }
+  }
+
+  // 2. attack the best-value reachable target
+  let best = null;
+  for (const s of mine) {
+    const reserve = Math.max(3, s.troops * 0.3, incoming(s, hostileTo) - incoming(s, friendly));
+    const avail = Math.floor(s.troops - reserve);
+    if (avail < 6) continue;
+    for (const t of cs) {
+      if (t.owner === owner) continue;
+      const d = dist(s, t), travel = d / SPEED;
+      let est = t.troops * defMult(t) + (t.owner !== 0 ? LEVEL[t.level].rate * travel : 0);
+      est += incoming(t, a => a.owner === t.owner) - incoming(t, friendly);
+      if (est < 0) continue;
+      const n = Math.min(avail, Math.ceil(est * ai.greed) + 3);
+      if (n <= est + 1) continue;
+      const value = t.level * 1.4 + (t.owner === 1 ? ai.focus : t.owner === 0 ? 0.7 : 0.9);
+      const score = value / (0.25 + d) / (1 + est * 0.03);
+      if (!best || score > best.score) best = { s, t, n, score };
+    }
+  }
+  if (best) { send(best.s, best.t, best.n); return; }
+
+  // 3. move idle troops from the rear to the front
+  const foes = cs.filter(c => c.owner !== owner && c.owner !== 0);
+  if (!foes.length || mine.length < 2) return;
+  const front = c => Math.min(...foes.map(f => dist(c, f)));
+  const sorted = mine.slice().sort((a, b) => front(a) - front(b));
+  for (const c of sorted.slice(1).reverse()) {
+    if (c.troops >= LEVEL[c.level].cap * 0.85) { send(c, sorted[0], c.troops * 0.6); return; }
+  }
+}
+
+// ---------- player actions ----------
+function select(c) { S.selected = c.id; S.mode = null; updateTray(); }
+function deselect() { if (S) { S.selected = null; } updateTray(); }
+function sendRatio(from, to) {
+  const n = Math.floor(from.troops * (+ratio.value) / 100);
+  if (n < 1) { floater(from, '兵が足りない', INK); return; }
+  send(from, to, n);
+}
+function useItem(kind) {
+  if (!S || !S.running || S.items[kind] <= 0) return;
+  if (kind === 'gale') {
+    S.items.gale--; S.galeUntil = Math.max(S.galeUntil, S.t) + 12; updateTray(); return;
+  }
+  if (S.mode === kind) { S.mode = null; updateTray(); return; }
+  if (S.selected !== null) { applyItem(kind, S.castles[S.selected]); return; }
+  S.mode = kind; updateTray();
+}
+function applyItem(kind, c) {
+  if (c.owner !== 1 || S.items[kind] <= 0) return;
+  S.items[kind]--;
+  if (kind === 'reinforce') { c.troops += 15; floater(c, '+15', COLOR[1]); }
+  if (kind === 'wall') { c.wallUntil = Math.max(c.wallUntil, S.t) + 20; floater(c, '堅城', COLOR[1]); }
+  S.mode = null; updateTray();
+}
+
+function updateTray() {
+  const sel = S && S.selected !== null ? S.castles[S.selected] : null;
+  order.classList.toggle('selecting', !!sel);
+  order.classList.toggle('targeting', !!(S && S.mode));
+  sendbar.hidden = !sel;
+  hint.hidden = !!sel;
+  if (S && S.mode) hint.textContent = S.mode === 'reinforce' ? '援軍を送る自軍の城をタップ（もう一度押すと取り消し）' : '守りを固める自軍の城をタップ（もう一度押すと取り消し）';
+  else hint.textContent = '自軍の城（藍色）をタップして出陣';
+  for (const k of Object.keys(itemBtns)) {
+    const b = itemBtns[k], n = S ? S.items[k] : 0;
+    b.querySelector('.icount').textContent = n;
+    b.disabled = n <= 0 && !(k === 'gale' && S && S.t < S.galeUntil);
+    b.classList.toggle('active', !!S && (S.mode === k || (k === 'gale' && S.t < S.galeUntil)));
+  }
+}
+
+let lastTrayTick = 0;
+function tickTray() {
+  if (!S) return;
+  if (S.selected !== null) {
+    const c = S.castles[S.selected];
+    ratioOut.textContent = `${ratio.value}%・${Math.floor(c.troops * (+ratio.value) / 100)}人`;
+  }
+  const g = itemBtns.gale;
+  const left = Math.ceil(S.galeUntil - S.t);
+  g.querySelector('.idesc').textContent = left > 0 ? `発動中 あと${left}秒` : '進軍が12秒間 2倍速';
+  if (S.t - lastTrayTick > 0.5 || S.t < lastTrayTick) { lastTrayTick = S.t; updateTray(); }
+}
+
+// ---------- view ----------
+function layout() {
+  const { cw, ch } = view;
+  view.portrait = ch > cw * 1.05;
+  const dw = view.portrait ? H : W, dh = view.portrait ? W : H;
+  const pad = Math.max(26, Math.min(cw, ch) * 0.07);
+  view.scale = Math.max(1, Math.min((cw - pad * 2) / dw, (ch - pad * 2) / dh));
+  view.ox = (cw - dw * view.scale) / 2;
+  view.oy = (ch - dh * view.scale) / 2;
+}
+function toS(x, y) {
+  return view.portrait ? [view.ox + y * view.scale, view.oy + (W - x) * view.scale] : [view.ox + x * view.scale, view.oy + y * view.scale];
+}
+const radius = c => Math.max(16, LEVEL[c.level].r * view.scale);
+
+function resize() {
+  const r = field.getBoundingClientRect();
+  view.cw = r.width; view.ch = r.height; view.dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(r.width * view.dpr); canvas.height = Math.round(r.height * view.dpr);
+  layout(); buildTerrain();
+}
+
+function buildTerrain() {
+  if (!S || !view.cw) return;
+  const off = document.createElement('canvas');
+  off.width = canvas.width; off.height = canvas.height;
+  const g = off.getContext('2d');
+  g.scale(view.dpr, view.dpr);
+  g.fillStyle = TERRAIN; g.fillRect(0, 0, view.cw, view.ch);
+  const rnd = mulberry(S.i * 977 + 13);
+  const def = STAGES[S.i];
+  const s = view.scale;
+
+  // contour hills
+  for (let k = 0; k < 7; k++) {
+    const hx = rnd() * W, hy = rnd() * H, base = 0.06 + rnd() * 0.09, ph = rnd() * 6;
+    for (let ring = 0; ring < 4; ring++) {
+      const rr = base * (1 - ring * 0.22);
+      g.beginPath();
+      for (let p = 0; p <= 36; p++) {
+        const a = p / 36 * Math.PI * 2;
+        const wob = 1 + 0.16 * Math.sin(a * 3 + ph) + 0.08 * Math.sin(a * 5 + ph * 2);
+        const [px, py] = toS(hx + Math.cos(a) * rr * wob * 1.2, hy + Math.sin(a) * rr * wob);
+        p ? g.lineTo(px, py) : g.moveTo(px, py);
+      }
+      g.closePath();
+      if (ring === 3) { g.fillStyle = 'rgba(29,42,39,0.05)'; g.fill(); }
+      g.strokeStyle = 'rgba(29,42,39,0.13)'; g.lineWidth = 1; g.stroke();
+    }
+  }
+
+  // rivers
+  for (const r of def.rivers) {
+    const pts = r.pts.map(([x, y]) => toS(x, y));
+    const trace = () => { g.beginPath(); g.moveTo(...pts[0]); for (let k = 1; k < pts.length - 1; k++) { const mx = (pts[k][0] + pts[k + 1][0]) / 2, my = (pts[k][1] + pts[k + 1][1]) / 2; g.quadraticCurveTo(pts[k][0], pts[k][1], mx, my); } g.lineTo(...pts[pts.length - 1]); };
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    trace(); g.strokeStyle = '#97b9b8'; g.lineWidth = r.w * s; g.stroke();
+    trace(); g.strokeStyle = '#b4cfcb'; g.lineWidth = r.w * s * 0.45; g.stroke();
+    trace(); g.strokeStyle = 'rgba(29,42,39,0.25)'; g.lineWidth = 1; g.setLineDash([2, 6]); g.stroke(); g.setLineDash([]);
+  }
+
+  // mountains and woods, kept clear of castles and rivers
+  const clear = (x, y, m) => def.castles.every(([cx, cy]) => Math.hypot(cx - x, cy - y) > m) && !inRiverDef(def, x, y, 0.04);
+  let placed = 0;
+  for (let tries = 0; tries < 400 && placed < 16; tries++) {
+    const x = 0.03 + rnd() * (W - 0.06), y = 0.04 + rnd() * (H - 0.08);
+    if (!clear(x, y, 0.11)) continue;
+    placed++;
+    const sz = (0.018 + rnd() * 0.014) * s;
+    const [px, py] = toS(x, y);
+    g.beginPath(); g.moveTo(px - sz, py); g.lineTo(px - sz * 0.15, py - sz * 1.25); g.lineTo(px + sz * 0.55, py - sz * 0.35); g.lineTo(px + sz * 0.9, py - sz * 0.75); g.lineTo(px + sz * 1.6, py); g.closePath();
+    g.fillStyle = TERRAIN_DEEP; g.fill();
+    g.strokeStyle = 'rgba(29,42,39,0.45)'; g.lineWidth = 1.3; g.stroke();
+  }
+  for (let k = 0; k < 22; k++) {
+    const x = rnd() * W, y = rnd() * H;
+    if (!clear(x, y, 0.08)) continue;
+    for (let d = 0; d < 5; d++) {
+      const [px, py] = toS(x + (rnd() - 0.5) * 0.05, y + (rnd() - 0.5) * 0.04);
+      g.beginPath(); g.arc(px, py, 2 + rnd() * 2, 0, Math.PI * 2); g.fillStyle = 'rgba(47,90,70,0.22)'; g.fill();
+    }
+  }
+
+  // map frame + scale bar
+  const [fx0, fy0] = view.portrait ? [view.ox, view.oy] : [view.ox, view.oy];
+  const fw = (view.portrait ? H : W) * s, fh = (view.portrait ? W : H) * s;
+  g.strokeStyle = 'rgba(29,42,39,0.35)'; g.lineWidth = 1;
+  g.strokeRect(fx0 - 14, fy0 - 14, fw + 28, fh + 28);
+  const bar = 0.2 * s, bx = fx0 - 6, by = fy0 + fh + 8;
+  if (by + 4 < view.ch) {
+    g.fillStyle = 'rgba(29,42,39,0.6)';
+    g.fillRect(bx, by, bar / 2, 2); g.fillStyle = 'rgba(29,42,39,0.25)'; g.fillRect(bx + bar / 2, by, bar / 2, 2);
+    g.fillStyle = 'rgba(29,42,39,0.6)'; g.font = `11px ${UI_FONT}`; g.textBaseline = 'middle';
+    g.fillText('十里', bx + bar + 6, by + 1);
+  }
+  terrain = off;
+}
+function inRiverDef(def, x, y, extra) {
+  for (const r of def.rivers) for (let k = 0; k < r.pts.length - 1; k++) {
+    const [ax, ay] = r.pts[k], [bx, by] = r.pts[k + 1]; const dx = bx - ax, dy = by - ay;
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+    if (Math.hypot(x - (ax + dx * t), y - (ay + dy * t)) < r.w / 2 + extra) return true;
+  }
+  return false;
+}
+
+function drawKeep(x, y, s, level) {
+  ctx.fillStyle = 'rgba(244,246,241,0.95)';
+  ctx.fillRect(x - s * 0.5, y + s * 0.08, s, s * 0.34);
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(x - s * 0.1, y + s * 0.2, s * 0.2, s * 0.22);
+  let w = s * 0.78, base = y + s * 0.08;
+  ctx.fillStyle = 'rgba(244,246,241,0.95)';
+  for (let k = 0; k < level; k++) {
+    const h = s * 0.2;
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 - s * 0.08, base); ctx.lineTo(x + w / 2 + s * 0.08, base);
+    ctx.lineTo(x + w / 2 - s * 0.08, base - h); ctx.lineTo(x - w / 2 + s * 0.08, base - h);
+    ctx.closePath(); ctx.fill();
+    base -= h + s * 0.06;
+    if (k < level - 1) ctx.fillRect(x - w * 0.3, base, w * 0.6, s * 0.06);
+    w *= 0.68;
+  }
+}
+
+function hitCastle(px, py) {
+  if (!S) return null;
+  let best = null, bd = Infinity;
+  for (const c of S.castles) {
+    const [sx, sy] = toS(c.x, c.y);
+    const d = Math.hypot(px - sx, py - sy);
+    if (d < Math.max(radius(c) + 12, 28) && d < bd) { best = c; bd = d; }
+  }
+  return best;
+}
+
+function render(now) {
+  const { dpr, cw, ch } = view;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (terrain) ctx.drawImage(terrain, 0, 0, cw, ch); else { ctx.fillStyle = TERRAIN; ctx.fillRect(0, 0, cw, ch); }
+  if (!S) return;
+  const t = S.t;
+  const unit = view.scale;
+
+  // order line (drag, or hover while selected)
+  const from = drag && drag.moved ? drag.from : (S.selected !== null && pointer.inside ? S.castles[S.selected] : null);
+  if (from) {
+    const [sx, sy] = toS(from.x, from.y);
+    const tgt = hitCastle(pointer.x, pointer.y);
+    let ex = pointer.x, ey = pointer.y;
+    if (tgt && tgt !== from) [ex, ey] = toS(tgt.x, tgt.y);
+    ctx.strokeStyle = 'rgba(44,90,154,0.75)'; ctx.lineWidth = 2.5; ctx.setLineDash([8, 6]);
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // castles
+  for (const c of S.castles) {
+    const [sx, sy] = toS(c.x, c.y);
+    const r = radius(c), col = COLOR[c.owner], L = LEVEL[c.level];
+    // growth ring
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(29,42,39,0.12)';
+    ctx.beginPath(); ctx.arc(sx, sy, r + 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = col;
+    ctx.beginPath(); ctx.arc(sx, sy, r + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, c.troops / L.cap)); ctx.stroke();
+    // body
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(29,42,39,0.55)'; ctx.lineWidth = 1.2; ctx.stroke();
+    drawKeep(sx, sy + r * 0.12, r * 0.9, c.level);
+    // wall buff
+    if (c.wallUntil > t) {
+      ctx.strokeStyle = PAPER; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(sx, sy, r - 3, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = col; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(sx, sy, r + 10, 0, Math.PI * 2); ctx.stroke();
+    }
+    // capture flash
+    if (c.flash > 0) {
+      ctx.strokeStyle = col; ctx.globalAlpha = c.flash; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(sx, sy, r + 6 + (1 - c.flash) * 26, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    // selection / targeting
+    const isSel = S.selected === c.id || (drag && drag.from === c);
+    if (isSel) {
+      ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+      ctx.lineDashOffset = reduceMotion ? 0 : -now * 20;
+      ctx.beginPath(); ctx.arc(sx, sy, r + 12, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    } else if (S.mode && c.owner === 1) {
+      const pulse = reduceMotion ? 0.6 : 0.4 + 0.4 * Math.sin(now * 6);
+      ctx.strokeStyle = `rgba(181,48,42,${pulse})`; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(sx, sy, r + 12, 0, Math.PI * 2); ctx.stroke();
+    }
+    // troop count
+    const fs = Math.max(13, Math.min(20, r * 0.75));
+    ctx.font = `700 ${fs}px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const ty = sy + r + fs * 0.95;
+    ctx.lineWidth = 4; ctx.strokeStyle = PAPER; ctx.lineJoin = 'round';
+    const label = String(Math.floor(c.troops));
+    ctx.strokeText(label, sx, ty); ctx.fillStyle = c.owner === 0 ? INK : col; ctx.fillText(label, sx, ty);
+  }
+
+  // armies
+  for (const a of S.armies) {
+    const [sx, sy] = toS(a.x, a.y);
+    const tgt = S.castles[a.to];
+    const [tx, ty] = toS(tgt.x, tgt.y);
+    const d = Math.hypot(tx - sx, ty - sy) || 1;
+    const r = Math.max(6, Math.min(18, 4 + Math.sqrt(a.n) * 1.5)) * Math.max(0.8, Math.min(1.3, unit / 500));
+    ctx.strokeStyle = COLOR[a.owner]; ctx.globalAlpha = 0.35; ctx.lineWidth = r * 0.8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx - (tx - sx) / d * r * 2.2, sy - (ty - sy) / d * r * 2.2); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.lineCap = 'butt';
+    ctx.fillStyle = COLOR[a.owner];
+    ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = PAPER; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = `700 ${Math.max(10, r * 0.95)}px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = PAPER; ctx.fillText(String(a.n), sx, sy + 0.5);
+  }
+
+  // floaters
+  for (const f of S.floaters) {
+    const [sx, sy] = toS(f.x, f.y);
+    ctx.globalAlpha = Math.max(0, 1 - f.age / 1.3);
+    ctx.font = `800 15px ${DISPLAY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4; ctx.strokeStyle = PAPER;
+    ctx.strokeText(f.text, sx, sy - 24 - f.age * 22); ctx.fillStyle = f.color; ctx.fillText(f.text, sx, sy - 24 - f.age * 22);
+    ctx.globalAlpha = 1;
+  }
+
+  // paused veil
+  if (!S.running && !S.over) { ctx.fillStyle = 'rgba(228,235,224,0.25)'; ctx.fillRect(0, 0, cw, ch); }
+}
+
+// ---------- input ----------
+function localPoint(e) { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+canvas.addEventListener('pointerdown', e => {
+  if (!S || !S.running) return;
+  const [x, y] = localPoint(e);
+  pointer = { x, y, inside: true };
+  const c = hitCastle(x, y);
+  if (S.mode) { if (c && c.owner === 1) applyItem(S.mode, c); else { S.mode = null; updateTray(); } return; }
+  if (c && c.owner === 1) { drag = { from: c, x, y, moved: false }; canvas.setPointerCapture(e.pointerId); }
+  else drag = { from: null, x, y, moved: false };
+});
+canvas.addEventListener('pointermove', e => {
+  const [x, y] = localPoint(e);
+  pointer = { x, y, inside: true };
+  if (drag && drag.from && Math.hypot(x - drag.x, y - drag.y) > 12) drag.moved = true;
+});
+canvas.addEventListener('pointerleave', () => { pointer.inside = false; });
+canvas.addEventListener('pointerup', e => {
+  if (!S || !S.running || !drag) { drag = null; return; }
+  const [x, y] = localPoint(e);
+  const c = hitCastle(x, y);
+  const d = drag; drag = null;
+  if (d.moved && d.from) {
+    if (c && c !== d.from && d.from.owner === 1) sendRatio(d.from, c);
+    deselect(); return;
+  }
+  if (S.selected !== null) {
+    const sel = S.castles[S.selected];
+    if (c && c !== sel && sel.owner === 1) { sendRatio(sel, c); deselect(); }
+    else if (c && c.owner === 1 && c !== sel) select(c);
+    else deselect();
+  } else if (c && c.owner === 1) select(c);
+});
+canvas.addEventListener('pointercancel', () => { drag = null; });
+
+ratio.addEventListener('input', () => tickTray());
+for (const k of Object.keys(itemBtns)) itemBtns[k].addEventListener('click', () => useItem(k));
+
+// ---------- overlays ----------
+function hideAll() { for (const id of ['title', 'story', 'result', 'pause']) $('#' + id).hidden = true; }
+
+let storyQ = [], storyDone = null, storyTotal = 0;
+function playStory(lines, done) {
+  storyQ = lines.slice(); storyTotal = lines.length; storyDone = done;
+  $('#story').hidden = false; nextLine();
+}
+function nextLine() {
+  if (!storyQ.length) { $('#story').hidden = true; const d = storyDone; storyDone = null; if (d) d(); return; }
+  const [who, text] = storyQ.shift();
+  const ch = CHARS[who];
+  const p = $('#portrait');
+  p.textContent = ch.mark; p.style.background = ch.color; p.classList.toggle('narr', who === 'narr');
+  $('#whoName').textContent = ch.name; $('#whoRole').textContent = ch.role;
+  const line = $('#storyLine'); line.textContent = text; line.classList.toggle('narr', who === 'narr');
+  $('#storyProg').textContent = `${storyTotal - storyQ.length} / ${storyTotal}　タップで次へ`;
+}
+$('#story').addEventListener('click', nextLine);
+$('#skipBtn').addEventListener('click', e => { e.stopPropagation(); storyQ = []; nextLine(); });
+document.addEventListener('keydown', e => {
+  if (!$('#story').hidden && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); nextLine(); }
+  else if (e.key === 'Escape' && S && S.running) togglePause(true);
+});
+
+function fmtTime(sec) { const s = Math.floor(sec); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+function showResult() {
+  const def = STAGES[S.i], win = S.result === 'win';
+  if (win) {
+    progress.unlocked = Math.max(progress.unlocked, Math.min(STAGES.length, S.i + 2));
+    if (!progress.cleared.includes(S.i)) progress.cleared.push(S.i);
+    saveProgress();
+  }
+  const stamp = $('#resStamp');
+  stamp.textContent = win ? '勝利' : '敗北'; stamp.className = 'stamp ' + (win ? 'win' : 'lose');
+  $('#resTitle').textContent = `${def.no}　${def.name}`;
+  $('#resText').textContent = win ? '敵の旗はすべて降りた。' : '自軍の城はすべて落ちた。陣を立て直そう。';
+  $('#resTime').textContent = fmtTime(S.t);
+  $('#resCap').textContent = S.captured;
+  const btns = $('#resBtns'); btns.innerHTML = '';
+  const add = (label, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = label; b.addEventListener('click', fn); btns.appendChild(b); };
+  if (win) {
+    const i = S.i;
+    add(i < STAGES.length - 1 ? '物語を進める' : '結末を見る', 'primary', () => {
+      $('#result').hidden = true;
+      playStory(def.post, () => { if (i < STAGES.length - 1) startStage(i + 1); else showTitle(); });
+    });
+  } else {
+    add('もう一度挑む', 'primary', () => startStage(S.i));
+  }
+  add('章を選ぶ', 'secondary', showTitle);
+  $('#result').hidden = false;
+}
+
+function togglePause(force) {
+  if (!S || S.over || (!S.running && !S.paused)) return;
+  const on = force !== undefined ? force : !S.paused;
+  S.paused = on; S.running = !on;
+  $('#pause').hidden = !on;
+}
+$('#pauseBtn').addEventListener('click', () => togglePause());
+$('#resumeBtn').addEventListener('click', () => togglePause(false));
+$('#retryBtn').addEventListener('click', () => startStage(S.i));
+$('#toTitleBtn').addEventListener('click', showTitle);
+document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.running) togglePause(true); });
+
+function showTitle() {
+  hideAll();
+  if (S) { S.running = false; S.paused = false; }
+  const list = $('#chapters'); list.innerHTML = '';
+  STAGES.forEach((st, i) => {
+    const li = document.createElement('li');
+    const b = document.createElement('button'); b.type = 'button';
+    const locked = i + 1 > progress.unlocked, done = progress.cleared.includes(i);
+    b.disabled = locked;
+    b.innerHTML = `<span class="no">${st.no}</span><span class="nm">${locked ? '？？？' : st.name}</span><span class="st${done ? ' done' : ''}">${done ? '平定' : locked ? '未開放' : '挑戦できる'}</span>`;
+    b.addEventListener('click', () => startStage(i));
+    li.appendChild(b); list.appendChild(li);
+  });
+  const next = Math.min(progress.unlocked, STAGES.length) - 1;
+  $('#startBtn').textContent = progress.cleared.length === 0 ? '出陣する' : `つづきから（${STAGES[next].no}）`;
+  $('#startBtn').onclick = () => startStage(next);
+  $('#title').hidden = false;
+}
+
+// ---------- loop ----------
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (S && S.running) update(dt);
+  render(now / 1000);
+  tickTray();
+  requestAnimationFrame(frame);
+}
+
+new ResizeObserver(resize).observe(field);
+resize();
+updateTray();
+showTitle();
+requestAnimationFrame(frame);
+
+// small hook for automated checks
+window.__hoka = {
+  get state() { return S; }, STAGES, startStage, aiThink, toS,
+  step(sec) { const n = Math.round(sec / 0.05); for (let k = 0; k < n && S && S.running; k++) update(0.05); },
+  skipStory() { storyQ = []; nextLine(); },
+};
+})();
+</script>
+</body>
+</html>
