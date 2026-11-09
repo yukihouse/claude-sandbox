@@ -1,0 +1,7 @@
+# Shared ruff settings for every Python project under apps/.
+# Each project's pyproject.toml pulls these in with `extend = "../../ruff.toml"`.
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]

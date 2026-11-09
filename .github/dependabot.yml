@@ -1,17 +1,17 @@
 version: 2
 updates:
   - package-ecosystem: "uv"
-    directory: "/"
+    directory: "/apps/tetris"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "uv"
-    directory: "/version-checker"
+    directory: "/apps/version-checker"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "uv"
-    directory: "/antarctica-viz"
+    directory: "/apps/antarctica-viz"
     schedule:
       interval: "weekly"
 

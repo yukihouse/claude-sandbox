@@ -4,7 +4,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "apps/tetris/**"
+      - ".python-version"
+      - ".github/workflows/coverage.yml"
   pull_request:
+    paths:
+      - "apps/tetris/**"
+      - ".python-version"
+      - ".github/workflows/coverage.yml"
 
 permissions:
   pull-requests: write
@@ -13,6 +21,9 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/tetris
     steps:
       - uses: actions/checkout@v7
 
@@ -34,10 +45,11 @@ jobs:
         uses: py-cov-action/python-coverage-comment-action@v3
         with:
           GITHUB_TOKEN: ${{ github.token }}
+          COVERAGE_PATH: apps/tetris
 
       - name: Store Pull Request comment to be posted later
         uses: actions/upload-artifact@v7
         if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
         with:
           name: python-coverage-comment-action
-          path: python-coverage-comment-action.txt
+          path: apps/tetris/python-coverage-comment-action.txt

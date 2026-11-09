@@ -5,19 +5,15 @@ on:
     branches:
       - main
     paths:
-      - "src/**"
-      - "scripts/**"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "version-checker/**"
+      - "apps/tetris/**"
+      - "apps/version-checker/**"
+      - ".python-version"
       - ".github/workflows/windows-build.yml"
   pull_request:
     paths:
-      - "src/**"
-      - "scripts/**"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "version-checker/**"
+      - "apps/tetris/**"
+      - "apps/version-checker/**"
+      - ".python-version"
       - ".github/workflows/windows-build.yml"
 
 permissions:
@@ -36,10 +32,10 @@ jobs:
 
       - name: Build tetris.exe and verify embedded version info
         shell: pwsh
-        run: pwsh scripts/build_windows.ps1
+        run: pwsh apps/tetris/scripts/build_windows.ps1
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: tetris-windows
-          path: dist/windows/*.zip
+          path: apps/tetris/dist/windows/*.zip

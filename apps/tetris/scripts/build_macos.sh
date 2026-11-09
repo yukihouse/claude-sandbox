@@ -7,7 +7,7 @@
 # Requirements: macOS, and uv (https://docs.astral.sh/uv/).
 #
 # Usage:
-#   scripts/build_macos.sh
+#   scripts/build_macos.sh   (from apps/tetris/)
 
 set -euo pipefail
 
