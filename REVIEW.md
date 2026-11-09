@@ -16,4 +16,4 @@
 
 ## Skip
 
-`uv.lock`, `*/uv.lock`, `antarctica-viz/tests/fixtures/`
+`apps/*/uv.lock`, `apps/antarctica-viz/tests/fixtures/`

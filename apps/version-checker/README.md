@@ -25,7 +25,7 @@ uv run version-checker path/to/app.exe
 
 ## Coverage on pull requests
 
-The [`version-checker-coverage.yml`](../.github/workflows/version-checker-coverage.yml)
+The [`version-checker-coverage.yml`](../../.github/workflows/version-checker-coverage.yml)
 workflow runs this project's test suite with coverage whenever a pull
 request or push to `main` touches `version-checker/`, and posts (and updates)
 its own coverage summary comment on the pull request, separate from the

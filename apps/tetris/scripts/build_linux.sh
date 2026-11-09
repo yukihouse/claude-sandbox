@@ -7,7 +7,7 @@
 # Requirements: Linux, and uv (https://docs.astral.sh/uv/).
 #
 # Usage:
-#   scripts/build_linux.sh
+#   scripts/build_linux.sh   (from apps/tetris/)
 
 set -euo pipefail
 

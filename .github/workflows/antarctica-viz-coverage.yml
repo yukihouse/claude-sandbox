@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - "antarctica-viz/**"
+      - "apps/antarctica-viz/**"
       - ".github/workflows/antarctica-viz-coverage.yml"
   pull_request:
     paths:
-      - "antarctica-viz/**"
+      - "apps/antarctica-viz/**"
       - ".github/workflows/antarctica-viz-coverage.yml"
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: antarctica-viz
+        working-directory: apps/antarctica-viz
     steps:
       - uses: actions/checkout@v7
 
@@ -54,7 +54,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ github.token }}
           SUBPROJECT_ID: antarctica-viz
-          COVERAGE_PATH: antarctica-viz
+          COVERAGE_PATH: apps/antarctica-viz
           COMMENT_TEMPLATE: ${{ steps.coverage_comment_template.outputs.content }}
 
       - name: Store Pull Request comment to be posted later
@@ -62,4 +62,4 @@ jobs:
         if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
         with:
           name: python-coverage-comment-action-antarctica-viz
-          path: antarctica-viz/python-coverage-comment-action*.txt
+          path: apps/antarctica-viz/python-coverage-comment-action*.txt

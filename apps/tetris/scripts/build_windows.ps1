@@ -8,7 +8,7 @@
 # Requirements: Windows, PowerShell, and uv (https://docs.astral.sh/uv/).
 #
 # Usage:
-#   pwsh scripts/build_windows.ps1
+#   pwsh scripts/build_windows.ps1   (from apps/tetris/)
 
 $ErrorActionPreference = "Stop"
 
@@ -53,7 +53,7 @@ uv run --with pyinstaller pyinstaller `
     "$RootDir\scripts\pyinstaller_entry.py"
 
 Write-Host "==> Verifying embedded version info with version-checker"
-uv run --project "$RootDir\version-checker" version-checker $ExePath
+uv run --project "$RootDir\..\version-checker" version-checker $ExePath
 if ($LASTEXITCODE -ne 0) {
     Write-Error "error: version-checker did not confirm version info is embedded in $ExePath (exit code $LASTEXITCODE)."
     exit 1
