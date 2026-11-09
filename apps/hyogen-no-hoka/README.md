@@ -7,6 +7,19 @@
 TypeScript と Vite で書かれています。ビルドすると JS と CSS を埋め込んだ HTML ファイル 1 つ
 （`dist/index.html`）ができ、ブラウザで開けばそのまま遊べます。
 
+## アプリとして遊ぶ（PWA）
+
+main ブランチの内容は GitHub Pages（https://yukihouse.github.io/claude-sandbox/）に自動で公開されます。
+
+- **ホーム画面に追加**: Android の Chrome では「アプリをインストール」、
+  iPhone の Safari では共有メニューの「ホーム画面に追加」を選びます。全画面のアプリとして起動します。
+- **オフライン**: 一度ネットにつないで開けば、その後は電波がなくても遊べます。
+  会話シーンの文字も含めて、フォントもオフラインで表示されます。
+- **更新**: ネットにつながっているときに開くと、自動で最新版になります。
+
+`dist/index.html` をファイルとして直接開いた場合も遊べますが、インストールとオフライン機能は働きません
+（Service Worker は https か localhost でしか動かないため）。
+
 ## 開発
 
 Node.js 22 以上が必要です。
@@ -25,9 +38,13 @@ npm run coverage   # テストとカバレッジ
 | `src/render/` | Canvas への描画と座標変換 |
 | `src/ui/` | 下のバーと会話シーン |
 | `src/main.ts` | 起動、入力、画面の切り替え、ゲームループ |
+| `src/pwa.ts` | Service Worker の登録と、オフライン用フォントの先読み |
+| `public/` | PWA 用のファイル（マニフェスト、Service Worker `sw.js`、アイコン） |
 
-`src/game/`、`src/data/`、`src/save.ts`、`src/render/view.ts` はテストで 100% カバーします。
-Canvas の描画と DOM の配線は、ビルドしたゲームをブラウザで動かして確認します。
+アイコンの元データは `public/icon.svg` です。PNG（192px、512px、180px）はこれを書き出したものです。
+
+`src/game/`、`src/data/`、`src/save.ts`、`src/render/view.ts`、`src/pwa.ts` はテストで 100% カバーします。
+Canvas の描画、DOM の配線、`public/sw.js` は、ビルドしたゲームをブラウザで動かして確認します。
 
 ## 名前の由来
 
