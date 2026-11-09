@@ -4,7 +4,30 @@
 黒氷社に占拠された観測基地を、オーロラ隊の隊長・凪となってひとつずつ取り戻します。
 登場する人物・団体はすべて架空のものです。
 
-ビルド不要の単一 HTML ファイルです。`index.html` をブラウザで開けば遊べます。
+TypeScript と Vite で書かれています。ビルドすると JS と CSS を埋め込んだ HTML ファイル 1 つ
+（`dist/index.html`）ができ、ブラウザで開けばそのまま遊べます。
+
+## 開発
+
+Node.js 22 以上が必要です。
+
+```bash
+npm ci
+npm run dev        # 開発サーバー（保存すると即反映）
+npm run build      # 型チェックして dist/index.html を作る
+npm run coverage   # テストとカバレッジ
+```
+
+| ディレクトリ | 中身 |
+| --- | --- |
+| `src/game/` | ルール・AI・プレイヤー操作（DOM に依存しない純粋なロジック） |
+| `src/data/` | 章と登場人物のデータ |
+| `src/render/` | Canvas への描画と座標変換 |
+| `src/ui/` | 下のバーと会話シーン |
+| `src/main.ts` | 起動、入力、画面の切り替え、ゲームループ |
+
+`src/game/`、`src/data/`、`src/save.ts`、`src/render/view.ts` はテストで 100% カバーします。
+Canvas の描画と DOM の配線は、ビルドしたゲームをブラウザで動かして確認します。
 
 ## 名前の由来
 

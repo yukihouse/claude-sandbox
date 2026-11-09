@@ -1,0 +1,23 @@
+{
+  "name": "hyogen-no-hoka",
+  "private": true,
+  "version": "1.0.0",
+  "description": "氷原の烽火 — a browser real-time strategy game set in Antarctica",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@vitest/coverage-v8": "5.0.5",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vite-plugin-singlefile": "2.3.4",
+    "vitest": "5.0.5"
+  }
+}
