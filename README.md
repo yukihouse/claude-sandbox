@@ -81,7 +81,9 @@ Review follows the process in
 - [`.github/pull_request_template.md`](.github/pull_request_template.md):
   Testing / Risk / How to revert.
 - [`claude-review.yml`](.github/workflows/claude-review.yml): Claude code
-  review + security review on every PR (needs the `ANTHROPIC_API_KEY` secret).
+  review (with a security pass) on every PR, using a Claude Pro/Max
+  subscription — no API credits. Set it up with `claude setup-token` and save
+  the token as the `CLAUDE_CODE_OAUTH_TOKEN` repository secret.
 - [`.github/CODEOWNERS`](.github/CODEOWNERS): workflows, build scripts and
   dependency files always need a code owner.
 - `.claude/settings.json`: a hook that runs `ruff format` / `ruff check --fix`
