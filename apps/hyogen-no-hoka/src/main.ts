@@ -63,7 +63,7 @@ function startStage(i: number): void {
 }
 
 function rebuildTerrain(): void {
-  if (!S || !view.cw) return;
+  if (!S || !view.cw || !scene.palette) return;
   scene.terrain = buildTerrain(view, S.i, S.stage, canvas.width, canvas.height, scene.palette);
 }
 
@@ -258,6 +258,11 @@ function frame(now: number): void {
   const dt = Math.min(MAX_DT, (now - last) / 1000);
   last = now;
   step(dt);
+  if (!scene.palette) {
+    // the stylesheet was not applied yet when the game started: try again
+    scene.palette = readPalette();
+    rebuildTerrain();
+  }
   render(scene, S, now / 1000);
   tray.tick(S);
   requestAnimationFrame(frame);

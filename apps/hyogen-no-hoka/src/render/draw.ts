@@ -20,7 +20,8 @@ export interface Drag {
 export interface Scene {
   ctx: CanvasRenderingContext2D;
   view: View;
-  palette: Palette;
+  /** Null until the stylesheet's colours can be read. */
+  palette: Palette | null;
   terrain: HTMLCanvasElement | null;
   pointer: Pointer;
   drag: Drag | null;
@@ -65,6 +66,7 @@ function drawKeep(ctx: CanvasRenderingContext2D, x: number, y: number, s: number
 /** Draw one frame. `now` is in seconds and only drives animations. */
 export function render(scene: Scene, S: GameState | null, now: number): void {
   const { ctx, view, palette, terrain, pointer, drag, reduceMotion } = scene;
+  if (!palette) return;
   const { dpr, cw, ch } = view;
   const { ink: INK, paper: PAPER } = palette;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
