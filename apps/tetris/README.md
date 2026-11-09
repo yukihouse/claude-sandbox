@@ -63,7 +63,7 @@ it, failing the build if the check doesn't pass:
 ## Coverage on pull requests
 
 The [`coverage.yml`](../../.github/workflows/coverage.yml) workflow runs the test
-suite with coverage on every push and pull request, then uses
+suite with coverage on every push and pull request that touches `apps/tetris/`, then uses
 [py-cov-action/python-coverage-comment-action](https://github.com/py-cov-action/python-coverage-comment-action)
 to post (and update) a coverage summary comment on the pull request, along
 with a diff-coverage report and the badge shown above.

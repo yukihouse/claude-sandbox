@@ -18,7 +18,7 @@
 ## 起動
 
 ```bash
-cd antarctica-viz
+cd apps/antarctica-viz
 uv sync
 uv run antarctic-viz
 ```

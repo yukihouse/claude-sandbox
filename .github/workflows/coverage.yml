@@ -4,7 +4,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "apps/tetris/**"
+      - ".python-version"
+      - ".github/workflows/coverage.yml"
   pull_request:
+    paths:
+      - "apps/tetris/**"
+      - ".python-version"
+      - ".github/workflows/coverage.yml"
 
 permissions:
   pull-requests: write

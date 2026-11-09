@@ -7,11 +7,13 @@ on:
     paths:
       - "apps/tetris/**"
       - "apps/version-checker/**"
+      - ".python-version"
       - ".github/workflows/windows-build.yml"
   pull_request:
     paths:
       - "apps/tetris/**"
       - "apps/version-checker/**"
+      - ".python-version"
       - ".github/workflows/windows-build.yml"
 
 permissions:

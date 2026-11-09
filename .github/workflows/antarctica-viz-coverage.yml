@@ -6,10 +6,12 @@ on:
       - main
     paths:
       - "apps/antarctica-viz/**"
+      - ".python-version"
       - ".github/workflows/antarctica-viz-coverage.yml"
   pull_request:
     paths:
       - "apps/antarctica-viz/**"
+      - ".python-version"
       - ".github/workflows/antarctica-viz-coverage.yml"
 
 permissions:

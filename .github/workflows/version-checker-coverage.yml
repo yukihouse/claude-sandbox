@@ -6,10 +6,12 @@ on:
       - main
     paths:
       - "apps/version-checker/**"
+      - ".python-version"
       - ".github/workflows/version-checker-coverage.yml"
   pull_request:
     paths:
       - "apps/version-checker/**"
+      - ".python-version"
       - ".github/workflows/version-checker-coverage.yml"
 
 permissions:

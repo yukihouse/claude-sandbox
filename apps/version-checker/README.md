@@ -27,8 +27,8 @@ uv run version-checker path/to/app.exe
 
 The [`version-checker-coverage.yml`](../../.github/workflows/version-checker-coverage.yml)
 workflow runs this project's test suite with coverage whenever a pull
-request or push to `main` touches `version-checker/`, and posts (and updates)
+request or push to `main` touches `apps/version-checker/`, and posts (and updates)
 its own coverage summary comment on the pull request, separate from the
-root Tetris project's coverage comment, using
+Tetris app's coverage comment, using
 [py-cov-action/python-coverage-comment-action](https://github.com/py-cov-action/python-coverage-comment-action)'s
 `SUBPROJECT_ID` support.
