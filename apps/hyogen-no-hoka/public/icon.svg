@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 氷原の烽火: a beacon burning on a station mast. Full-bleed, content inside the maskable safe zone. -->
+  <rect width="512" height="512" fill="#e7eef2"/>
+  <g transform="translate(256 262) scale(1.12) translate(-256 -290)">
+  <circle cx="256" cy="290" r="150" fill="#2a63a8"/>
+  <circle cx="256" cy="290" r="150" fill="none" stroke="#18242e" stroke-opacity="0.5" stroke-width="6"/>
+  <g transform="translate(256 300) scale(1.45) translate(-256 -300)" fill="#f5f8fa">
+    <rect x="186" y="336" width="140" height="10"/>
+    <rect x="190" y="282" width="62" height="38"/>
+    <rect x="196" y="318" width="9" height="20"/>
+    <rect x="237" y="318" width="9" height="20"/>
+    <path d="M262 338a40 40 0 0 1 80 0z"/>
+    <rect x="298" y="236" width="8" height="64"/>
+  </g>
+  <g transform="translate(256 300) scale(1.45) translate(-256 -300)" fill="#18242e" fill-opacity="0.3">
+    <rect x="203" y="292" width="13" height="10"/>
+    <rect x="225" y="292" width="13" height="10"/>
+  </g>
+  <!-- the beacon at the top of the mast -->
+  <path d="M332 214c-30-20-28-58 4-88-4 26 18 34 14 58 14-8 18-22 16-34 20 26 10 58-34 64z" fill="#b8432c" stroke="#f5f8fa" stroke-width="6" stroke-linejoin="round"/>
+  </g>
+</svg>

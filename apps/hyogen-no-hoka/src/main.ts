@@ -8,6 +8,7 @@ import { update } from './game/update';
 import { type Drag, render, type Scene } from './render/draw';
 import { readPalette } from './render/palette';
 import { buildTerrain } from './render/terrain';
+import { registerServiceWorker, warmFonts, whenControlled } from './pwa';
 import { createView, hitCastle, layout, toS } from './render/view';
 import { loadProgress, nextChapter, recordWin, saveProgress } from './save';
 import type { AiOwner, GameState, ItemKind } from './types';
@@ -267,6 +268,19 @@ resize();
 tray.update(S);
 showTitle();
 requestAnimationFrame(frame);
+// After the first screen is up: install the Service Worker, then (once it controls
+// the page, so the responses get cached) fetch the fonts for all game text.
+window.addEventListener(
+  'load',
+  () => {
+    if (!registerServiceWorker(navigator, location.protocol, import.meta.env.PROD)) return;
+    const css = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"][href*="fonts.googleapis.com"]');
+    void whenControlled(navigator.serviceWorker).then(() =>
+      warmFonts(document.fonts, __GAME_CHARS__, () => (css ? fetch(css.href, { mode: 'cors' }) : Promise.resolve())),
+    );
+  },
+  { once: true },
+);
 
 // small hook for automated checks
 declare global {

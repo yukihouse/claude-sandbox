@@ -6,7 +6,8 @@ projects (no root `pyproject.toml`, not a uv workspace): `apps/tetris/`
 `apps/version-checker/` (Windows exe version checker). Python: `unittest`,
 ruff (shared root `ruff.toml`, line length 100), 100% coverage required.
 `apps/hyogen-no-hoka/` is a TypeScript + Vite browser game (npm, Vitest;
-100% coverage of game logic, data, save and view math).
+100% coverage of game logic, data, save, view math and PWA helpers;
+GitHub Pages deploy from main).
 
 ## Checks (run inside each app you touched and show the output)
 

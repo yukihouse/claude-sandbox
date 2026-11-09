@@ -9,7 +9,7 @@ A monorepo of small demo apps. Each app lives in its own directory under
 | [`apps/tetris/`](apps/tetris/) | Terminal (and Streamlit) Tetris game, used to demo PR test-coverage visualization |
 | [`apps/antarctica-viz/`](apps/antarctica-viz/) | Streamlit web UI for exploring public Antarctic observation data |
 | [`apps/version-checker/`](apps/version-checker/) | CLI that checks a Windows `.exe` has version information embedded |
-| [`apps/hyogen-no-hoka/`](apps/hyogen-no-hoka/) | 氷原の烽火, a browser real-time strategy game set in Antarctica (TypeScript + Vite, builds to one HTML file) |
+| [`apps/hyogen-no-hoka/`](apps/hyogen-no-hoka/) | 氷原の烽火, a browser real-time strategy game set in Antarctica (TypeScript + Vite, installable PWA on [GitHub Pages](https://yukihouse.github.io/claude-sandbox/)) |
 
 ## Layout conventions
 
