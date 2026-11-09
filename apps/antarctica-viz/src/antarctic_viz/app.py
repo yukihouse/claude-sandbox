@@ -88,7 +88,7 @@ def load_report(year: int, month: int) -> reports.MonthlyReport:
     )
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner="気象庁の月報を読み込んでいます…")
 def load_reports(
     months: tuple[tuple[int, int], ...],
 ) -> tuple[list[reports.MonthlyReport], list[str]]:
@@ -190,10 +190,15 @@ def report_view(months: list[tuple[int, int]], key: str) -> None:
     )
 
 
+def missing_reports(months: list[tuple[int, int]]) -> int:
+    """How many of the months' report pages would have to be downloaded."""
+    urls = [sources.jma_report_url(y, m) for y, m in months]
+    return sum(not sources.is_fresh(u, max_age=sources.JMA_REPORT_MAX_AGE) for u in urls)
+
+
 def report_corpus(months: list[tuple[int, int]]) -> list[reports.MonthlyReport] | None:
     """All months' reports, after the user agrees to download what is not cached yet."""
-    urls = [sources.jma_report_url(y, m) for y, m in months]
-    missing = sum(not sources.is_fresh(u, max_age=sources.JMA_REPORT_MAX_AGE) for u in urls)
+    missing = missing_reports(months)
     if missing and not st.session_state.get("reports_requested"):
         minutes = max(1, round(missing * sources.REQUEST_INTERVAL / 60))
         st.info(
@@ -205,10 +210,12 @@ def report_corpus(months: list[tuple[int, int]]) -> list[reports.MonthlyReport] 
         if not st.button("全期間の月報を取得"):
             return None
         st.session_state["reports_requested"] = True
-    with st.spinner(f"気象庁の月報を取得しています (未取得 {missing} ページ)…"):
-        corpus, failed = load_reports(tuple(months))
+    corpus, failed = load_reports(tuple(months))
     if failed:
         st.caption("取得・解析できなかった月: " + "、".join(failed))
+        if st.button("取得できなかった月を再取得"):
+            load_reports.clear()
+            st.rerun()
     return corpus
 
 
@@ -217,9 +224,7 @@ def report_notes(months: list[tuple[int, int]]) -> pd.DataFrame | None:
 
     Nothing is downloaded here: the full set is fetched only from the 月報 page.
     """
-    urls = [sources.jma_report_url(y, m) for y, m in months]
-    cached = all(sources.is_fresh(u, max_age=sources.JMA_REPORT_MAX_AGE) for u in urls)
-    if not (cached or st.session_state.get("reports_requested")):
+    if missing_reports(months) and not st.session_state.get("reports_requested"):
         return None
     corpus, _ = load_reports(tuple(months))
     return pd.DataFrame(

@@ -386,11 +386,16 @@ class TestReports(AppCase):
         at = self.corpus_page()
         captions = [c.value for c in at.caption]
         self.assertTrue(any("2010年8月、2010年10月" in c for c in captions))
+        self.texts = {**self.texts, sources.jma_report_url(2010, 8): "<h2>概況</h2><p>晴れ。</p>"}
+        self.fetch.side_effect = fake_fetch(self.texts)
+        next(b for b in at.button if b.label == "取得できなかった月を再取得").click().run()
+        self.assertEqual(len(at.exception), 0, [e.value for e in at.exception])
+        self.assertTrue(any(c.value.endswith(": 2010年10月") for c in at.caption))
         metrics = self.metrics()
-        self.assertEqual(metrics["収録した月"], "3 か月")
+        self.assertEqual(metrics["収録した月"], "4 か月")
         self.assertEqual(metrics["ブリザードの記述がある月"], "1 か月")
         self.assertEqual(metrics["回数が書かれている月"], "2 か月")
-        self.assertEqual(metrics["該当する月"], "2 / 3 か月")
+        self.assertEqual(metrics["該当する月"], "2 / 4 か月")
         self.assertEqual(metrics["比べた月"], "2 か月")
         self.assertEqual(at.session_state["reports_requested"], True)
         at.text_input[0].set_value("オーロラ").run()

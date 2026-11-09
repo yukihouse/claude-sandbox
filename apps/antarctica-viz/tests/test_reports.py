@@ -39,7 +39,7 @@ class TestParsing(unittest.TestCase):
         self.assertEqual(r.stats["平均気温"], "-2.8°C")
         self.assertEqual(r.stats["平均気圧(海面)"], "982.1hPa")
         self.assertEqual(len(r.stats), 14)
-        self.assertEqual(r.full_text, r.summary_text)
+        self.assertEqual(r.full_text, "\n".join(r.summary))
 
     def test_older_layout_with_ten_day_periods(self):
         r = reports.parse_report(page("jma_report_201007.html"), 2010, 7)
@@ -102,10 +102,24 @@ class TestEvents(unittest.TestCase):
             "中旬にも低気圧が通過したが、2月のブリザードは0回となった。": 0.0,
             "16日はB級ブリザードとなった。": None,
             "期間の前半にブリザードを3回記録した。7月はブリザードが合計4回あった。": 4.0,
+            "A級ブリザードは発生しなかったが、B級ブリザードを2回記録した。": 2.0,
+            "A級ブリザードは発生しなかった。": None,
+            "ブリザードはA級1回を含む4回となった。": 4.0,
+            "ブリザードが3回(A級2回、B級1回)あった。": 3.0,
         }
         for text, expected in cases.items():
             with self.subTest(text=text):
                 self.assertEqual(reports.blizzard_count(text), expected)
+
+    def test_period_notes_are_separate_sentences_and_not_month_counts(self):
+        r = reports.MonthlyReport(
+            2010, 8, ("今月はブリザードが多かった",), (("上旬", "ブリザードが2回あった。"),)
+        )
+        self.assertEqual(
+            reports.sentences(r.full_text),
+            ["今月はブリザードが多かった", "ブリザードが2回あった。"],
+        )
+        self.assertTrue(pd.isna(reports.event_table([r])["blizzard_count"].iloc[0]))
 
     def test_event_table_and_yearly_counts(self):
         corpus = [
@@ -149,6 +163,10 @@ class TestExpressions(unittest.TestCase):
             ("月平均風速も大きくなった。", WIND, 1),
             ("月平均海面気圧は平年よりも高く、晴れ日数も多かった。", PRESSURE, 1),
             ("月平均気温は平年より著しく高く、1位を記録した。", TEMP, 2),
+            ("月平均気温は平年より2.5°C高く、2月としては過去最高となった。", TEMP, 2),
+            ("月平均気温は平年より高く、晴れ日数は少なかった。", TEMP, 1),
+            ("月平均気温は-20.1°Cで、最低気温は低い方から3位だったが、平年より高かった。", TEMP, 1),
+            ("月平均気温、月間日照時間はいずれも平年並だった。", TEMP, 0),
         ]
         for text, element, expected in cases:
             with self.subTest(text=text):

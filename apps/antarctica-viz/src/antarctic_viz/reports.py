@@ -40,8 +40,8 @@ class MonthlyReport:
 
     @property
     def full_text(self) -> str:
-        """Summary plus the ten-day period notes, for searching and event extraction."""
-        return self.summary_text + "".join(text for _, text in self.periods)
+        """Summary plus the ten-day period notes, one line each, for searching and events."""
+        return "\n".join([*self.summary, *(text for _, text in self.periods)])
 
 
 def normalize(text: str) -> str:
@@ -145,8 +145,10 @@ def headline(report: MonthlyReport, limit: int = 60) -> str:
 
 
 def sentences(text: str) -> list[str]:
-    """Split normalized text into sentences ending with 。 (a trailing fragment is kept)."""
-    return [s for s in re.split(r"(?<=。)", normalize(text)) if s.strip()]
+    """Split text into normalized sentences ending with 。 or a line break."""
+    return [
+        s for line in text.split("\n") for s in re.split(r"(?<=。)", normalize(line)) if s.strip()
+    ]
 
 
 # --- Events (出来事) ------------------------------------------------------------
@@ -155,10 +157,11 @@ _NEGATED = re.compile(r"ブリザード(?:と|に)は?なら(?:な|ず)|ブリ�
 # Sentences about one ten-day period ("中旬は…計3回") give no total for the month.
 _PARTIAL = re.compile(r"^(?:\d\))?(?:特に)?[上中下]旬|期間の|[上中下]旬(?:は|にも)")
 _WHOLE_MONTH = re.compile(r"\d+月(?:の|は)ブリザード")
+_NONE_AT_ALL = re.compile(r"(?<![ABC]級)ブリザードは発生しなかった")
+_COUNT = r"(\d+(?:\.\d+)?)回"
 _BLIZZARD_COUNTS = (  # tried in this order within a sentence
-    re.compile(r"(?:計|合計|合わせて)(\d+(?:\.\d+)?)回"),
-    re.compile(r"(\d+(?:\.\d+)?)回の(?:[ABC]級)?ブリザード"),
-    re.compile(r"ブリザード[^。]*?(\d+(?:\.\d+)?)回"),
+    re.compile(r"(?:計|合計|合わせて)" + _COUNT),
+    re.compile(_COUNT + r"の(?:[ABC]級)?ブリザード"),
 )
 EVENTS: dict[str, re.Pattern[str]] = {
     "ブリザード": re.compile(r"ブリザード"),
@@ -182,20 +185,27 @@ def mentions(sentence: str, event: str) -> bool:
 def blizzard_count(text: str) -> float | None:
     """Number of blizzards in the month when the text states it, else ``None``.
 
-    The first sentence giving a count for the whole month wins. Reports sometimes count
-    a blizzard spanning two months as 0.5, hence a float.
+    Pass the summary only: the ten-day notes count per period. The first sentence
+    giving a count for the whole month wins. Without "計"/"N回のブリザード", the
+    largest "N回" after the word is taken, since class sub-counts ("A級1回を含む4回",
+    "3回(A級2回、B級1回)") never exceed the total. Reports sometimes count a blizzard
+    spanning two months as 0.5, hence a float.
     """
     for sentence in sentences(text):
         if "ブリザード" not in sentence:
             continue
         if _PARTIAL.search(sentence) and not _WHOLE_MONTH.search(sentence):
             continue
-        if "発生しなかった" in sentence:
-            return 0.0
         for pattern in _BLIZZARD_COUNTS:
             match = pattern.search(sentence)
             if match:
                 return float(match.group(1))
+        after = sentence[sentence.index("ブリザード") :]
+        counts = [float(n) for n in re.findall(_COUNT, after)]
+        if counts:
+            return max(counts)
+        if _NONE_AT_ALL.search(sentence):
+            return 0.0
     return None
 
 
@@ -208,7 +218,7 @@ def event_table(reports: list[MonthlyReport]) -> pd.DataFrame:
             "date": report.date,
             "year": report.year,
             "month": report.month,
-            "blizzard_count": blizzard_count(report.full_text),
+            "blizzard_count": blizzard_count(report.summary_text),
         }
         row.update({event: any(mentions(s, event) for s in text) for event in EVENTS})
         rows.append(row)
@@ -307,7 +317,14 @@ ELEMENTS: dict[str, Element] = {
 _ANY_SUBJECT = re.compile("|".join(e.subject.pattern for e in ELEMENTS.values()))
 
 
+# A clause about another quantity ("最低気温は低い方から3位") says nothing about the mean.
+_OTHER_QUANTITY = re.compile(r"最低気温|最高気温|最大風速|最大瞬間風速|日照|降雪|積雪")
+
+
 def _chunk_level(chunk: str, element: Element) -> int | None:
+    # "月平均気温、月間日照時間はいずれも平年並" still speaks for the mean.
+    if _OTHER_QUANTITY.search(chunk) and not re.search(r"いずれも|ともに", chunk):
+        return None
     if "平年並" in chunk:
         return 0
     rank = _RANK.search(chunk)
@@ -334,7 +351,9 @@ def text_level(text: str, element: Element) -> tuple[int, str] | None:
 
     The words after the first mention of the monthly mean ("月平均気温は平年よりかなり
     高く…") decide: 平年並 → 0, かなり/大きく → ±2, and a rank such as "低い方から4位"
-    → ±2 down to 6th place, ±1 below that.
+    → ±2 down to 6th place, ±1 below that. The first clause sets the direction; a
+    later clause in the same direction can only strengthen it ("平年より高く、
+    過去最高となった" → +2).
     """
     for sentence in sentences(text):
         for match in element.subject.finditer(sentence):
@@ -342,10 +361,11 @@ def text_level(text: str, element: Element) -> tuple[int, str] | None:
             following = _ANY_SUBJECT.search(rest)
             if following:
                 rest = rest[: following.start()]
-            for chunk in rest.split("、"):
-                level = _chunk_level(chunk, element)
-                if level is not None:
-                    return level, sentence
+            levels = [lv for c in rest.split("、") if (lv := _chunk_level(c, element)) is not None]
+            if levels:
+                first = levels[0]
+                same = [lv for lv in levels if lv * first > 0]
+                return (max(same, key=abs) if same else first), sentence
     return None
 
 
