@@ -9,6 +9,11 @@ This repository also hosts [`antarctica-viz/`](antarctica-viz/), a Streamlit
 web UI for exploring public Antarctic observation data (sea-ice extent, South
 Pole CO₂, research-station temperatures).
 
+[`hyogen-no-hoka/`](hyogen-no-hoka/) is 氷原の烽火, a single-file browser
+real-time strategy game set in Antarctica: send crew from station to station
+to retake bases, with a five-chapter story. Open `hyogen-no-hoka/index.html`
+in a browser to play.
+
 ## Development
 
 This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
