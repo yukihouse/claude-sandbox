@@ -22,10 +22,10 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      // Game rules, data, save, view math and PWA helpers are covered to 100%.
+      // Game rules, data, save, view math, palette and PWA helpers are covered to 100%.
       // Canvas drawing, DOM wiring (render/draw, render/terrain, ui/, main) and
       // public/sw.js are checked by playing the built game in a browser instead.
-      include: ['src/game/**', 'src/data/**', 'src/save.ts', 'src/render/view.ts', 'src/pwa.ts'],
+      include: ['src/game/**', 'src/data/**', 'src/save.ts', 'src/render/view.ts', 'src/render/palette.ts', 'src/pwa.ts'],
       reporter: ['text'],
       thresholds: { 100: true },
     },

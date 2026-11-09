@@ -6,7 +6,7 @@ import { aiThink } from './game/ai';
 import { createState } from './game/rules';
 import { update } from './game/update';
 import { type Drag, render, type Scene } from './render/draw';
-import { readPalette } from './render/palette';
+import { PALETTE } from './render/palette';
 import { buildTerrain } from './render/terrain';
 import { registerServiceWorker, warmFonts, whenControlled } from './pwa';
 import { createView, hitCastle, layout, toS } from './render/view';
@@ -36,7 +36,7 @@ const view = createView();
 const scene: Scene = {
   ctx,
   view,
-  palette: readPalette(),
+  palette: PALETTE,
   terrain: null,
   pointer: { x: 0, y: 0, inside: false },
   drag: null,

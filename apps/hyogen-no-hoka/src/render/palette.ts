@@ -10,16 +10,27 @@ export interface Palette {
 export const UI_FONT = '"Zen Kaku Gothic New", "Hiragino Sans", system-ui, sans-serif';
 export const DISPLAY_FONT = '"Shippori Mincho B1", "Hiragino Mincho ProN", serif';
 
-/** Colours come from the CSS custom properties in style.css. */
-export function readPalette(root: Element = document.documentElement): Palette {
-  const style = getComputedStyle(root);
-  const v = (name: string) => style.getPropertyValue(name).trim();
-  return {
-    owner: { 0: v('--neutral'), 1: v('--player'), 2: v('--enemy'), 3: v('--bandit') },
-    ink: v('--ink'),
-    paper: v('--tray'),
-    terrain: v('--terrain'),
-  };
-}
+/**
+ * Canvas colours. They match the custom properties in style.css (a test keeps
+ * them in sync) but are not read from CSS at runtime: a stylesheet that is not
+ * applied yet gives empty strings, and the canvas then draws everything black.
+ */
+export const PALETTE: Readonly<Palette> = {
+  owner: { 0: '#86929b', 1: '#2a63a8', 2: '#b8432c', 3: '#ad7e1a' },
+  ink: '#18242e',
+  paper: '#f5f8fa',
+  terrain: '#dde8ee',
+};
+
+/** The style.css custom property each canvas colour mirrors. */
+export const CSS_VARS: Readonly<Record<string, string>> = {
+  '--neutral': PALETTE.owner[0],
+  '--player': PALETTE.owner[1],
+  '--enemy': PALETTE.owner[2],
+  '--bandit': PALETTE.owner[3],
+  '--ink': PALETTE.ink,
+  '--tray': PALETTE.paper,
+  '--terrain': PALETTE.terrain,
+};
 
 export const toneColor = (p: Palette, tone: FloaterTone): string => (tone === 'player' ? p.owner[1] : p.ink);
