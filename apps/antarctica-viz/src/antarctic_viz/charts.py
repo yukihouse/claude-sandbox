@@ -167,6 +167,7 @@ def anomaly_heatmap(anomalies: pd.DataFrame, title: str, *, reverse: bool = Fals
                 alt.Tooltip("month:O", title="月"),
                 alt.Tooltip("value:Q", title="値", format=".2f"),
                 alt.Tooltip("anomaly:Q", title=title, format="+.2f"),
+                *([alt.Tooltip("note:N", title="概況")] if "note" in anomalies else []),
             ],
         )
         .properties(height=alt.Step(9))
@@ -409,3 +410,90 @@ def ozone_season(daily: pd.DataFrame) -> alt.LayerChart:
         ),
     ]
     return alt.layer(*layers).properties(height=360)
+
+
+_MONTH_AXIS = alt.Axis(labelExpr="datum.value + '月'", labelAngle=0)
+BLIZZARD_KINDS = ["回数の記載あり", "ブリザードの記述のみ", "記述なし"]
+
+
+def blizzard_grid(events: pd.DataFrame) -> alt.LayerChart:
+    """Year x month grid of what each report says about blizzards, with stated counts."""
+    df = events[["year", "month", "blizzard_count", "ブリザード"]].copy()
+    df["kind"] = BLIZZARD_KINDS[2]
+    df.loc[df["ブリザード"], "kind"] = BLIZZARD_KINDS[1]
+    df.loc[df["blizzard_count"].notna(), "kind"] = BLIZZARD_KINDS[0]
+    df["label"] = df["blizzard_count"].map(lambda n: "" if pd.isna(n) else f"{n:g}")
+    x = alt.X("month:O", title="", axis=_MONTH_AXIS)
+    y = alt.Y("year:O", title="", sort="descending")
+    cells = (
+        alt.Chart(df)
+        .mark_rect(stroke="white", strokeWidth=1)
+        .encode(
+            x,
+            y,
+            color=alt.Color(
+                "kind:N",
+                title="",
+                scale=alt.Scale(domain=BLIZZARD_KINDS, range=[SERIES[0], BAND_BLUE, NEUTRAL]),
+                legend=alt.Legend(orient="top"),
+            ),
+            tooltip=[
+                alt.Tooltip("year:O", title="年"),
+                alt.Tooltip("month:O", title="月"),
+                alt.Tooltip("kind:N", title="概況の記述"),
+                alt.Tooltip("label:N", title="回数"),
+            ],
+        )
+    )
+    counts = alt.Chart(df).mark_text(color="white", fontWeight="bold").encode(x, y, text="label:N")
+    return alt.layer(cells, counts).properties(height=alt.Step(18))
+
+
+def count_heatmap(
+    df: pd.DataFrame, x: str, y: str, title: str, x_order: list[str]
+) -> alt.LayerChart:
+    """Counts on a ``x`` (categories in ``x_order``) by ``y`` grid, shaded light to dark."""
+    base = alt.Chart(df).encode(
+        alt.X(f"{x}:N", title="", sort=x_order, axis=alt.Axis(labelAngle=0, labelLimit=200)),
+        alt.Y(f"{y}:O", title="", sort="descending"),
+    )
+    cells = base.mark_rect(stroke="white", strokeWidth=1).encode(
+        color=alt.Color("value:Q", title=title, scale=alt.Scale(scheme="blues")),
+        tooltip=[alt.Tooltip(f"{y}:O"), alt.Tooltip(f"{x}:N"), alt.Tooltip("value:Q", title=title)],
+    )
+    labels = base.mark_text(fontSize=11).encode(
+        text="value:Q",
+        color=alt.condition(
+            alt.datum.value > df["value"].max() / 2, alt.value("white"), alt.value("black")
+        ),
+    )
+    return alt.layer(cells, labels).properties(height=alt.Step(22))
+
+
+def expression_matrix(table: pd.DataFrame, labels: list[str]) -> alt.LayerChart:
+    """How often each wording in the summary (rows) met each computed class (columns)."""
+    counts = table.groupby(["text_label", "computed_label"]).size().rename("value").reset_index()
+    base = alt.Chart(counts).encode(
+        alt.X(
+            "computed_label:N",
+            title="数値から計算した区分",
+            scale=alt.Scale(domain=labels),
+            axis=alt.Axis(labelAngle=0),
+        ),
+        alt.Y("text_label:N", title="概況の表現", scale=alt.Scale(domain=labels)),
+    )
+    cells = base.mark_rect(stroke="white", strokeWidth=1).encode(
+        color=alt.Color("value:Q", title="か月", scale=alt.Scale(scheme="blues")),
+        tooltip=[
+            alt.Tooltip("text_label:N", title="概況の表現"),
+            alt.Tooltip("computed_label:N", title="計算した区分"),
+            alt.Tooltip("value:Q", title="か月"),
+        ],
+    )
+    text = base.mark_text(fontSize=13).encode(
+        text="value:Q",
+        color=alt.condition(
+            alt.datum.value > counts["value"].max() / 2, alt.value("white"), alt.value("black")
+        ),
+    )
+    return alt.layer(cells, text).properties(height=alt.Step(44), width=alt.Step(96))

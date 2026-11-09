@@ -141,3 +141,39 @@ class TestIceCoreCharts(unittest.TestCase):
         spec = charts.co2_temperature_scatter(pairs).to_dict()
         self.assertEqual(spec["encoding"]["x"]["field"], "co2")
         self.assertEqual(spec["encoding"]["y"]["field"], "temperature")
+
+
+class TestReportCharts(unittest.TestCase):
+    def test_anomaly_heatmap_shows_report_notes(self):
+        anomalies = pd.DataFrame(
+            {"year": [2020], "month": [1], "value": [1.0], "anomaly": [0.5], "note": ["晴れ"]}
+        )
+        tooltips = charts.anomaly_heatmap(anomalies, "A").to_dict()["encoding"]["tooltip"]
+        self.assertEqual(tooltips[-1]["title"], "概況")
+        plain = charts.anomaly_heatmap(anomalies.drop(columns="note"), "A").to_dict()
+        self.assertNotIn("概況", [t["title"] for t in plain["encoding"]["tooltip"]])
+
+    def test_blizzard_grid_kinds_and_counts(self):
+        events = pd.DataFrame(
+            {
+                "year": [2020, 2020, 2020],
+                "month": [1, 2, 3],
+                "blizzard_count": [3.5, None, None],
+                "ブリザード": [True, True, False],
+            }
+        )
+        spec = charts.blizzard_grid(events).to_dict()
+        rows = next(iter(spec["datasets"].values()))
+        self.assertEqual([r["kind"] for r in rows], charts.BLIZZARD_KINDS)
+        self.assertEqual([r["label"] for r in rows], ["3.5", "", ""])
+
+    def test_count_heatmap_and_expression_matrix(self):
+        counts = pd.DataFrame({"year": [2020, 2020], "event": ["a", "b"], "value": [3, 0]})
+        spec = charts.count_heatmap(counts, "event", "year", "月数", ["a", "b"]).to_dict()
+        self.assertEqual(spec["layer"][0]["encoding"]["x"]["sort"], ["a", "b"])
+        table = pd.DataFrame({"text_label": ["高い", "高い"], "computed_label": ["高い", "平年並"]})
+        labels = ["低い", "平年並", "高い"]
+        spec = charts.expression_matrix(table, labels).to_dict()
+        self.assertEqual(spec["layer"][0]["encoding"]["x"]["scale"]["domain"], labels)
+        rows = next(iter(spec["datasets"].values()))
+        self.assertEqual(sorted(r["value"] for r in rows), [1, 1])
