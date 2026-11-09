@@ -74,3 +74,11 @@ suite with coverage on every push and pull request, then uses
 [py-cov-action/python-coverage-comment-action](https://github.com/py-cov-action/python-coverage-comment-action)
 to post (and update) a coverage summary comment on the pull request, along
 with a diff-coverage report and the badge shown above.
+
+## Code review
+
+Based on [How the Claude Code team does code review](https://claude.dev/blog/solving-code-review-at-anthropic/):
+[`CLAUDE.md`](CLAUDE.md) (checks), [`REVIEW.md`](REVIEW.md) (review rules), a ruff hook in `.claude/settings.json`, and
+[`claude-review.yml`](.github/workflows/claude-review.yml), which reviews PRs
+using a Claude subscription token (`claude setup-token` → repository secret
+`CLAUDE_CODE_OAUTH_TOKEN`; skipped when unset).
