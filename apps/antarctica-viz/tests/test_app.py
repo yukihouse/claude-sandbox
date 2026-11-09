@@ -1,3 +1,4 @@
+import json
 import unittest
 from datetime import date
 from pathlib import Path
@@ -37,6 +38,15 @@ TEXTS = {
     sources.ICE_CORE_CO2.url: ice_core_co2_text(),
     sources.EDC_TEMPERATURE.url: edc_text(),
 }
+REPORT_INDEX = " ".join(f"ant{m}.html" for m in ("201007", "201008", "201009", "201010", "202602"))
+REPORT_TEXTS = {
+    sources.JMA_REPORT_INDEX_URL: REPORT_INDEX,
+    sources.jma_report_url(2010, 7): (FIXTURES / "jma_report_201007.html").read_text("utf-8"),
+    # 2010-08 is missing (HTTP error), 2010-09 has no statistics, 2010-10 has no summary.
+    sources.jma_report_url(2010, 9): "<h2>概況</h2><p>カタバ風で晴れた。</p>",
+    sources.jma_report_url(2010, 10): "<h2>その他</h2><p>x</p>",
+    sources.jma_report_url(2026, 2): (FIXTURES / "jma_report_202602.html").read_text("utf-8-sig"),
+}
 
 
 def fake_fetch(texts):
@@ -56,6 +66,13 @@ class AppCase(unittest.TestCase):
         patcher = mock.patch("antarctic_viz.sources.fetch_text", side_effect=fake_fetch(self.texts))
         self.fetch = patcher.start()
         self.addCleanup(patcher.stop)
+        # Never let the developer's real cache decide whether reports count as downloaded.
+        fresh = mock.patch("antarctic_viz.sources.is_fresh", return_value=False)
+        self.is_fresh = fresh.start()
+        self.addCleanup(fresh.stop)
+        pace = mock.patch("antarctic_viz.sources.REQUEST_INTERVAL", 0)
+        pace.start()
+        self.addCleanup(pace.stop)
         self.at = AppTest.from_file(APP, default_timeout=60)
 
     def run_page(self, page, base=None):
@@ -207,6 +224,7 @@ class TestOffline(AppCase):
             "オゾンホール",
             "アイスコア",
             "基地の気象",
+            "昭和基地の月報",
         ):
             with self.subTest(page=page):
                 self.run_page(page)
@@ -323,3 +341,144 @@ class TestUpload(AppCase):
     def test_unparseable_file_reports_error(self):
         at = self.upload(b"")
         self.assertTrue(any("CSVを読み込めません" in e.value for e in at.error))
+
+
+class TestReports(AppCase):
+    texts = {**TEXTS, **REPORT_TEXTS}
+
+    def corpus_page(self):
+        at = self.run_page("昭和基地の月報")
+        next(b for b in at.button if b.label == "全期間の月報を取得").click().run()
+        self.assertEqual(len(at.exception), 0, [e.value for e in at.exception])
+        return at
+
+    def test_month_view_shows_summary_and_numbers(self):
+        at = self.run_page("昭和基地の月報")
+        metrics = {m.label: m for m in at.metric}
+        self.assertEqual(metrics["月平均気温"].value, "-2.8 °C")
+        self.assertIn("(平年差)", metrics["月平均気温"].delta)
+        self.assertIn("概況の表現: 平年並", metrics["月平均気温"].help)
+        self.assertIn("平年値の期間での区分", metrics["月平均風速"].help)
+        self.assertFalse(metrics["月平均気圧"].help)
+        self.assertTrue(any("ブリザードは0回" in m.value for m in at.markdown))
+        self.assertTrue(any("1991–2020年" in c.value for c in at.caption))
+        self.assertTrue(any("未取得の5か月分" in i.value for i in at.info))
+        self.assertEqual(
+            sum("全期間の月報を取得すると" in i.value for i in at.info), 3, "three corpus tabs"
+        )
+        self.assertEqual(
+            self.fetch.call_count, len(set(c.args[0] for c in self.fetch.call_args_list))
+        )
+
+    def test_month_view_older_and_failing_months(self):
+        at = self.run_page("昭和基地の月報")
+        at.selectbox(key="report_year").set_value(2010).run()
+        self.assertEqual(at.selectbox(key="report_month").value, 10)
+        self.assertTrue(any("2010年10月の月報を読み込めませんでした" in e.value for e in at.error))
+        at.selectbox(key="report_month").set_value(9).run()
+        self.assertEqual(len(at.metric), 0)
+        at.selectbox(key="report_month").set_value(7).run()
+        self.assertEqual(len(at.exception), 0)
+        self.assertIn("旬別の天候経過", [e.label for e in at.expander])
+        self.assertTrue(any("1971–2000年" in c.value for c in at.caption))
+
+    def test_corpus_tabs_after_download(self):
+        at = self.corpus_page()
+        captions = [c.value for c in at.caption]
+        self.assertTrue(any("2010年8月、2010年10月" in c for c in captions))
+        self.texts = {**self.texts, sources.jma_report_url(2010, 8): "<h2>概況</h2><p>晴れ。</p>"}
+        self.fetch.side_effect = fake_fetch(self.texts)
+        next(b for b in at.button if b.label == "取得できなかった月を再取得").click().run()
+        self.assertEqual(len(at.exception), 0, [e.value for e in at.exception])
+        self.assertTrue(any(c.value.endswith(": 2010年10月") for c in at.caption))
+        metrics = self.metrics()
+        self.assertEqual(metrics["収録した月"], "4 か月")
+        self.assertEqual(metrics["ブリザードの記述がある月"], "1 か月")
+        self.assertEqual(metrics["回数が書かれている月"], "2 か月")
+        self.assertEqual(metrics["該当する月"], "2 / 4 か月")
+        self.assertEqual(metrics["比べた月"], "2 か月")
+        self.assertEqual(at.session_state["reports_requested"], True)
+        at.text_input[0].set_value("オーロラ").run()
+        self.assertTrue(any("該当する文はありませんでした" in i.value for i in at.info))
+        at.radio(key="expression_element").set_value("風速").run()
+        self.assertEqual(self.metrics()["比べた月"], "1 か月")
+        self.assertEqual(len(at.exception), 0)
+
+    def test_cached_corpus_needs_no_button(self):
+        self.is_fresh.return_value = True
+        at = self.run_page("昭和基地の月報")
+        self.assertFalse(any(b.label == "全期間の月報を取得" for b in at.button))
+        self.assertIn("収録した月", self.metrics())
+
+    def test_station_page_offers_the_report(self):
+        at = self.run_page("基地の気象")
+        self.assertIn("気象庁の月報で確認する", [h.value for h in at.subheader])
+        self.assertTrue(any("「昭和基地の月報」ページで全期間" in c.value for c in at.caption))
+        self.assertEqual(self.metrics()["月平均気温"], "-2.8 °C")
+        at.selectbox[0].set_value("Vostok").run()
+        self.assertNotIn("気象庁の月報で確認する", [h.value for h in at.subheader])
+
+    def test_station_heatmap_gets_notes_once_reports_are_cached(self):
+        self.is_fresh.return_value = True
+        at = self.run_page("基地の気象")
+        self.assertTrue(any("セルにマウスを乗せると、その月" in c.value for c in at.caption))
+        specs = [json.loads(chart.proto.spec) for chart in at.get("vega_lite_chart")]
+        heatmap = next(spec for spec in specs if spec.get("mark", {}).get("type") == "rect")
+        self.assertEqual(heatmap["encoding"]["tooltip"][-1]["title"], "概況")
+
+
+class TestReportsWithoutReader(AppCase):
+    texts = REPORT_TEXTS
+
+    def test_expressions_need_reader_and_corpus_can_be_empty(self):
+        at = self.run_page("昭和基地の月報")
+        next(b for b in at.button if b.label == "全期間の月報を取得").click().run()
+        self.assertTrue(any("比べられる月がありませんでした" in i.value for i in at.info))
+        self.assertNotIn("(平年差)", str([m.delta for m in at.metric]))
+
+
+class TestReportsShortReader(AppCase):
+    texts = {**REPORT_TEXTS, sources.reader_temperature("Syowa").url: reader_text(2015, 2024)}
+
+    def test_too_few_normal_years_gives_no_class(self):
+        self.run_page("昭和基地の月報")
+        temp = next(m for m in self.at.metric if m.label == "月平均気温")
+        self.assertIn("(平年差)", temp.delta)
+        self.assertEqual(temp.help, "概況の表現: 平年並")
+
+
+class TestReportIndexProblems(AppCase):
+    texts = {
+        sources.reader_temperature("Syowa").url: reader_text(1957, 2024),
+        sources.JMA_REPORT_INDEX_URL: "<html>no links</html>",
+    }
+
+    def test_empty_index_is_reported_and_station_page_continues(self):
+        at = self.run_page("昭和基地の月報")
+        self.assertTrue(any("リンクが見つかりませんでした" in e.value for e in at.error))
+        at = self.run_page("基地の気象")
+        self.assertTrue(any("気象庁の月報を取得できませんでした" in c.value for c in at.caption))
+        self.assertEqual(len(at.error), 0)
+
+
+class TestReportCorpusAllFailing(AppCase):
+    texts = {sources.JMA_REPORT_INDEX_URL: "ant201008.html"}
+
+    def test_tabs_explain_when_no_report_could_be_read(self):
+        at = self.run_page("昭和基地の月報")
+        next(b for b in at.button if b.label == "全期間の月報を取得").click().run()
+        self.assertTrue(any("2010年8月の月報を読み込めませんでした" in e.value for e in at.error))
+        self.assertEqual(sum("全期間の月報を取得すると" in i.value for i in at.info), 3)
+
+
+class TestReportCorpusComplete(AppCase):
+    texts = {
+        sources.JMA_REPORT_INDEX_URL: "ant202602.html",
+        sources.jma_report_url(2026, 2): REPORT_TEXTS[sources.jma_report_url(2026, 2)],
+    }
+
+    def test_no_failure_note_when_every_month_is_read(self):
+        self.is_fresh.return_value = True
+        at = self.run_page("昭和基地の月報")
+        self.assertEqual(self.metrics()["収録した月"], "1 か月")
+        self.assertFalse(any("取得・解析できなかった月" in c.value for c in at.caption))

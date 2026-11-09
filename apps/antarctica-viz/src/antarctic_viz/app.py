@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from antarctic_viz import analysis, charts, parsers, sources
+from antarctic_viz import analysis, charts, parsers, reports, sources
 
 PARSERS: dict[str, Callable[[str], pd.DataFrame]] = {
     "sea_ice": parsers.parse_sea_ice_daily,
@@ -31,6 +31,7 @@ PAGES = [
     "オゾンホール",
     "アイスコア",
     "基地の気象",
+    "昭和基地の月報",
     "CSVを分析",
     "データソース",
 ]
@@ -49,6 +50,7 @@ GHG_STATIONS: dict[str, dict[str, tuple[sources.Dataset, str]]] = {
 READER_PARSERS = {"wind_speed": "reader_wind"}
 FIRST_OZONE_YEAR = 1979
 SOURCES_DOC = Path(__file__).with_name("data_sources.md")
+REPORT_KEYWORDS = ["カタバ風", "極成層圏雲", "蜃気楼", "暖気", "放射冷却", "極値", "A級"]
 
 
 @st.cache_data(ttl=3600, show_spinner="データを取得しています…")
@@ -68,6 +70,265 @@ def load_or_report(dataset: sources.Dataset, parser: str) -> pd.DataFrame | None
             f"`{sources.DEFAULT_CACHE_DIR}` にキャッシュされ、オフラインでも表示できます。"
         )
         return None
+
+
+@st.cache_data(ttl=3600, show_spinner="気象庁の月報の一覧を取得しています…")
+def load_report_index(max_age: float) -> list[tuple[int, int]]:
+    months = reports.parse_index(sources.fetch_text(sources.JMA_REPORT_INDEX_URL, max_age=max_age))
+    if not months:
+        raise parsers.ParseError("月報の一覧に月別ページへのリンクが見つかりませんでした")
+    return months
+
+
+@st.cache_data(ttl=3600, show_spinner="気象庁の月報を取得しています…")
+def load_report(year: int, month: int) -> reports.MonthlyReport:
+    url = sources.jma_report_url(year, month)
+    return reports.parse_report(
+        sources.fetch_text(url, max_age=sources.JMA_REPORT_MAX_AGE), year, month
+    )
+
+
+@st.cache_data(ttl=3600, show_spinner="気象庁の月報を読み込んでいます…")
+def load_reports(
+    months: tuple[tuple[int, int], ...],
+) -> tuple[list[reports.MonthlyReport], list[str]]:
+    """Every listed month, downloaded at a polite pace; months that fail are named."""
+    urls = {sources.jma_report_url(y, m): (y, m) for y, m in months}
+    texts = sources.fetch_many(list(urls), max_age=sources.JMA_REPORT_MAX_AGE)
+    corpus, failed = [], []
+    for url, text in texts.items():
+        year, month = urls[url]
+        try:
+            if isinstance(text, sources.FetchError):
+                raise text
+            corpus.append(reports.parse_report(text, year, month))
+        except (sources.FetchError, parsers.ParseError):
+            failed.append(f"{year}年{month}月")
+    return corpus, failed
+
+
+def report_months(*, quiet: bool = False) -> list[tuple[int, int]] | None:
+    """Months with a JMA report; on failure an error, or only a caption when ``quiet``."""
+    try:
+        return load_report_index(st.session_state.get("max_age", sources.DEFAULT_MAX_AGE))
+    except (sources.FetchError, parsers.ParseError) as exc:
+        if quiet:
+            st.caption(f"気象庁の月報を取得できませんでした: {exc}")
+        else:
+            st.error(f"**{sources.JMA_SYOWA_REPORTS.title}** を読み込めませんでした。\n\n{exc}")
+        return None
+
+
+def syowa_monthly() -> dict[str, pd.DataFrame]:
+    """READER monthly series at Syowa for each element the reports compare with normal."""
+    out = {}
+    max_age = st.session_state.get("max_age", sources.DEFAULT_MAX_AGE)
+    for key in reports.ELEMENTS:
+        dataset = sources.reader_series("Syowa", key)
+        try:
+            out[key] = load(dataset.url, READER_PARSERS.get(key, "reader"), max_age)
+        except (sources.FetchError, parsers.ParseError):
+            continue
+    return out
+
+
+def report_view(months: list[tuple[int, int]], key: str) -> None:
+    """Pick a month and show its summary next to the numbers it describes."""
+    years = sorted({y for y, _ in months}, reverse=True)
+    left, right = st.columns(2)
+    year = left.selectbox("年", years, key=f"{key}_year")
+    options = [m for y, m in months if y == year]
+    month = right.selectbox(
+        "月", options, index=len(options) - 1, format_func="{}月".format, key=f"{key}_month"
+    )
+    try:
+        report = load_report(year, month)
+    except (sources.FetchError, parsers.ParseError) as exc:
+        st.error(f"{year}年{month}月の月報を読み込めませんでした。\n\n{exc}")
+        return
+    monthly = syowa_monthly()
+    cols = st.columns(len(reports.ELEMENTS))
+    for col, (name, element) in zip(cols, reports.ELEMENTS.items(), strict=True):
+        value = reports.stat_value(report, element)
+        if value is None:
+            continue
+        delta, help_text = None, None
+        normals = reports.normal_values(monthly[name], year, month) if name in monthly else None
+        if normals is not None and len(normals):
+            delta = f"{value - normals.mean():+.1f} {element.unit} (平年差)"
+            computed = reports.classify(value, normals)
+            if computed is not None:
+                help_text = f"平年値の期間での区分: {element.level_label(computed)}"
+        described = reports.text_level(report.full_text, element)
+        if described is not None:
+            help_text = f"概況の表現: {element.level_label(described[0])}" + (
+                f" / {help_text}" if help_text else ""
+            )
+        col.metric(
+            f"月平均{element.label}",
+            f"{value:g} {element.unit}",
+            delta,
+            delta_color="off",
+            help=help_text,
+        )
+    st.markdown(f"#### {year}年{month}月の概況")
+    st.markdown("\n".join(f"> {line}  " for line in report.summary))
+    if report.periods:
+        with st.expander("旬別の天候経過"):
+            for label, text in report.periods:
+                st.markdown(f"**{label}**: {text}")
+    if report.stats:
+        with st.expander("気候統計値"):
+            st.dataframe(
+                pd.DataFrame(list(report.stats.items()), columns=["項目", "値"]), hide_index=True
+            )
+    start, end = reports.jma_normal_period(year, month)
+    st.caption(
+        f"平年差: READER の昭和基地の値から求めた {start}–{end}年の同月平均 "
+        "(気象庁がこの月の月報で使っていた平年値の期間) との差。"
+        f"原文: [{sources.jma_report_url(year, month)}]({sources.jma_report_url(year, month)})"
+    )
+
+
+def missing_reports(months: list[tuple[int, int]]) -> int:
+    """How many of the months' report pages would have to be downloaded."""
+    urls = [sources.jma_report_url(y, m) for y, m in months]
+    return sum(not sources.is_fresh(u, max_age=sources.JMA_REPORT_MAX_AGE) for u in urls)
+
+
+def report_corpus(months: list[tuple[int, int]]) -> list[reports.MonthlyReport] | None:
+    """All months' reports, after the user agrees to download what is not cached yet."""
+    missing = missing_reports(months)
+    if missing and not st.session_state.get("reports_requested"):
+        minutes = max(1, round(missing * sources.REQUEST_INTERVAL / 60))
+        st.info(
+            f"「出来事の推移」「キーワード検索」「表現と偏差」は全{len(months)}か月分の月報を"
+            f"使います。未取得の{missing}か月分は、気象庁のサーバーに負担をかけないよう"
+            f"{sources.REQUEST_INTERVAL:g}秒間隔で取得するため約{minutes}分かかります。"
+            "取得したページは30日間キャッシュされ、次からはすぐに表示されます。"
+        )
+        if not st.button("全期間の月報を取得"):
+            return None
+        st.session_state["reports_requested"] = True
+    corpus, failed = load_reports(tuple(months))
+    if failed:
+        st.caption("取得・解析できなかった月: " + "、".join(failed))
+        if st.button("取得できなかった月を再取得"):
+            load_reports.clear()
+            st.rerun()
+    return corpus
+
+
+def report_notes(months: list[tuple[int, int]]) -> pd.DataFrame | None:
+    """First sentence of each month's summary, once every report is available locally.
+
+    Nothing is downloaded here: the full set is fetched only from the 月報 page.
+    """
+    if missing_reports(months) and not st.session_state.get("reports_requested"):
+        return None
+    corpus, _ = load_reports(tuple(months))
+    return pd.DataFrame(
+        [{"year": r.year, "month": r.month, "note": reports.headline(r)} for r in corpus],
+        columns=["year", "month", "note"],
+    )
+
+
+def report_events(corpus: list[reports.MonthlyReport]) -> None:
+    events = reports.event_table(corpus)
+    c1, c2, c3 = st.columns(3)
+    c1.metric("収録した月", f"{len(events)} か月")
+    c2.metric("ブリザードの記述がある月", f"{int(events['ブリザード'].sum())} か月")
+    c3.metric("回数が書かれている月", f"{int(events['blizzard_count'].notna().sum())} か月")
+    st.subheader("ブリザード")
+    st.altair_chart(charts.blizzard_grid(events), width="stretch")
+    st.caption(
+        "数字は概況に書かれたその月のブリザードの回数 (「4回のブリザード」「ブリザードは0回」"
+        "など)。旬ごとの回数しか書かれていない月や、回数を書かずに「ブリザードとなった」と"
+        "だけある月は「記述のみ」です。「ブリザードとはならなかった」は記述に数えません。"
+    )
+    st.subheader("出来事が書かれた月の数 (年ごと)")
+    long = reports.yearly_event_months(events)
+    st.altair_chart(
+        charts.count_heatmap(long, "event", "year", "月数", list(reports.EVENTS)), width="stretch"
+    )
+    st.caption(
+        "その年の月報のうち、概況 (と旬別の天候経過) に各出来事が書かれていた月の数です。"
+        "語句の一致で数えているため、書き方の変化 (年によって旬ごとの記述が増えるなど) "
+        "の影響を受けます。"
+    )
+    csv_download(events, "syowa_report_events")
+
+
+def report_search(corpus: list[reports.MonthlyReport]) -> None:
+    query = st.text_input(
+        "キーワード (スペースで区切ると、いずれかを含む文を探します)", REPORT_KEYWORDS[0]
+    )
+    st.caption("例: " + " / ".join(REPORT_KEYWORDS))
+    hits = reports.search(corpus, query)
+    if hits.empty:
+        st.info("該当する文はありませんでした。")
+        return
+    months = hits[["year", "month"]].drop_duplicates()
+    st.metric("該当する月", f"{len(months)} / {len(corpus)} か月")
+    years = sorted({r.year for r in corpus})
+    per_year = (
+        months.groupby("year").size().reindex(years, fill_value=0).rename("value").reset_index()
+    )
+    st.altair_chart(charts.simple_bars(per_year, "year", "value", "該当する月数"), width="stretch")
+    table = hits.assign(
+        年月=hits["date"].dt.strftime("%Y年%m月"),
+        原文=[
+            sources.jma_report_url(y, m) for y, m in zip(hits["year"], hits["month"], strict=True)
+        ],
+    )
+    st.dataframe(
+        table[["年月", "sentence", "原文"]].rename(columns={"sentence": "文"}),
+        hide_index=True,
+        column_config={"原文": st.column_config.LinkColumn(display_text="開く")},
+    )
+
+
+def report_expressions(corpus: list[reports.MonthlyReport]) -> None:
+    monthly = syowa_monthly()
+    table = reports.expression_table(corpus, monthly)
+    if table.empty:
+        st.info("比べられる月がありませんでした (平年値の計算に使う READER のデータが必要です)。")
+        return
+    by_label = {e.label: e for e in reports.ELEMENTS.values()}
+    present = [label for label in by_label if label in set(table["element"])]
+    label = st.radio("要素", present, horizontal=True, key="expression_element")
+    element = by_label[label]
+    sub = table[table["element"] == label]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("比べた月", f"{len(sub)} か月")
+    c2.metric("向き (低い・平年並・高い) の一致", f"{sub['direction_match'].mean():.0%}")
+    c3.metric("「かなり」まで一致", f"{sub['exact_match'].mean():.0%}")
+    labels = [element.level_label(level) for level in reports.LEVELS]
+    st.altair_chart(charts.expression_matrix(sub, labels), width="content")
+    st.caption(
+        f"縦: 概況の「月平均{label}は平年より…」の表現。横: 月報の統計表の値が、気象庁がその月に"
+        "使っていた平年値の期間 (READER の昭和基地の値) の同じ月の分布のどこにあるか。"
+        "下位・上位10%を「かなり」、3等分した中央を「平年並」としています。"
+        "表現は語句のルールで読み取っているため、読み違いもあります (下の表で文を確認できます)。"
+    )
+    shown = sub.assign(
+        年月=sub["date"].dt.strftime("%Y年%m月"),
+        一致=sub["exact_match"].map({True: "○", False: "×"}),
+    )
+    shown.loc[~shown["direction_match"], "一致"] = "××"
+    st.dataframe(
+        shown[["年月", "text_label", "computed_label", "value", "anomaly", "一致", "sentence"]],
+        hide_index=True,
+        column_config={
+            "text_label": "概況の表現",
+            "computed_label": "計算した区分",
+            "value": st.column_config.NumberColumn(f"値 ({element.unit})", format="%.1f"),
+            "anomaly": st.column_config.NumberColumn("平年差", format="%+.1f"),
+            "sentence": "文",
+        },
+    )
+    st.caption("一致: ○ 程度まで一致 / × 向きは一致 / ×× 向きが逆または平年並との食い違い")
+    csv_download(table, "syowa_report_expressions")
 
 
 def source_note(dataset: sources.Dataset) -> None:
@@ -94,11 +355,22 @@ def climatology_or_warn(df: pd.DataFrame, base: tuple[int, int]) -> pd.Series | 
         return None
 
 
-def anomaly_section(monthly: pd.DataFrame, base: tuple[int, int], unit: str, *, reverse: bool):
+def anomaly_section(
+    monthly: pd.DataFrame,
+    base: tuple[int, int],
+    unit: str,
+    *,
+    reverse: bool,
+    notes: pd.DataFrame | None = None,
+):
+    """Heatmap and bars of monthly anomalies; ``notes`` (year, month, note) join the tooltip."""
     clim = climatology_or_warn(monthly, base)
     if clim is None:
         return
     anomalies = analysis.monthly_anomalies(monthly, clim)
+    if notes is not None:
+        anomalies = anomalies.merge(notes, on=["year", "month"], how="left")
+        anomalies["note"] = anomalies["note"].fillna("")
     label = f"偏差 ({unit})"
     st.caption(f"{base[0]}–{base[1]}年の月別平均からの偏差")
     st.altair_chart(charts.anomaly_heatmap(anomalies, label, reverse=reverse), width="stretch")
@@ -516,7 +788,22 @@ def page_station(base: tuple[int, int]) -> None:
             cycle = pd.DataFrame({"month": clim.index.astype(int), "value": clim.to_numpy()})
             st.altair_chart(charts.seasonal_bars(cycle, f"{label} ({unit})"), width="stretch")
     with tab_anom:
-        anomaly_section(df, base, unit, reverse=False)
+        months = report_months(quiet=True) if station == "Syowa" else None
+        notes = report_notes(months) if months is not None else None
+        anomaly_section(df, base, unit, reverse=False, notes=notes)
+        if months is not None:
+            st.subheader("気象庁の月報で確認する")
+            hover = (
+                "ヒートマップのセルにマウスを乗せると、その月の概況の冒頭も表示されます。"
+                if notes is not None
+                else "「昭和基地の月報」ページで全期間の月報を取得すると、ヒートマップの"
+                "セルにマウスを乗せたときにその月の概況の冒頭も表示されます。"
+            )
+            st.caption(
+                "偏差の大きな月に何が起きていたかを、気象庁「南極の気象」の概況 (文章) で"
+                f"確認できます (2010年1月以降)。{hover}"
+            )
+            report_view(months, key="station_report")
     with tab_compare:
         chosen = st.multiselect(
             "比較する基地 (最大5)",
@@ -547,6 +834,38 @@ def page_station(base: tuple[int, int]) -> None:
             )
             st.caption(f"各基地の {base[0]}–{base[1]}年平均からの偏差 (12か月揃った年のみ)")
     csv_download(df, f"{element}_{station}")
+    source_note(dataset)
+
+
+def page_reports(base: tuple[int, int]) -> None:
+    dataset = sources.JMA_SYOWA_REPORTS
+    st.title("昭和基地の月報")
+    st.write(
+        "気象庁「南極の気象」は、昭和基地のその月の天候を文章 (概況) でまとめています。"
+        "数値だけでは分からない背景 (低気圧の通過、ブリザード、記録の更新など) を読み、"
+        "文章から出来事を数えたり、言葉と数値を突き合わせたりできます。"
+    )
+    months = report_months()
+    if months is None:
+        return
+    gate = st.container()
+    tab_month, tab_events, tab_search, tab_expr = st.tabs(
+        ["月の概況", "出来事の推移", "キーワード検索", "表現と偏差"]
+    )
+    with tab_month:
+        report_view(months, key="report")
+    with gate:
+        corpus = report_corpus(months)
+    for tab, render in (
+        (tab_events, report_events),
+        (tab_search, report_search),
+        (tab_expr, report_expressions),
+    ):
+        with tab:
+            if corpus:
+                render(corpus)
+            else:
+                st.info("全期間の月報を取得すると表示されます。")
     source_note(dataset)
 
 
@@ -599,6 +918,7 @@ RENDERERS = {
     "オゾンホール": page_ozone,
     "アイスコア": page_ice_core,
     "基地の気象": page_station,
+    "昭和基地の月報": page_reports,
     "CSVを分析": page_upload,
     "データソース": page_sources,
 }

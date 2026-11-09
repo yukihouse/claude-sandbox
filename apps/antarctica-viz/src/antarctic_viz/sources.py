@@ -234,6 +234,31 @@ def ozone_hole_daily(year: int) -> Dataset:
     )
 
 
+JMA_REPORT_INDEX_URL = "https://www.data.jma.go.jp/antarctic/indexant.html"
+JMA_REPORT_URL_TEMPLATE = "https://www.data.jma.go.jp/antarctic/ant{year:04d}{month:02d}.html"
+# A month's report is not revised once published, so it can be cached for long.
+JMA_REPORT_MAX_AGE = 30 * 24 * 60 * 60
+# Seconds between downloads when many report pages are fetched in a row.
+REQUEST_INTERVAL = 1.0
+
+JMA_SYOWA_REPORTS = Dataset(
+    key="jma_syowa_reports",
+    title="昭和基地 月の天候の概況 (文章)",
+    provider="気象庁",
+    url=JMA_REPORT_INDEX_URL,
+    homepage=JMA_REPORT_INDEX_URL,
+    description=(
+        "気象庁「南極の気象」の月報。昭和基地のその月の天候を文章でまとめた概況と、"
+        "平均気温・平均風速・平均気圧などの気候統計値。2010年1月から。"
+    ),
+    citation="気象庁「南極の気象」 (各月のページ) をもとに加工して作成",
+)
+
+
+def jma_report_url(year: int, month: int) -> str:
+    return JMA_REPORT_URL_TEMPLATE.format(year=year, month=month)
+
+
 CATALOG: tuple[Dataset, ...] = (
     SEA_ICE_EXTENT,
     SOUTH_POLE_CO2,
@@ -246,6 +271,7 @@ CATALOG: tuple[Dataset, ...] = (
     reader_series("Syowa", "wind_speed"),
     ICE_CORE_CO2,
     EDC_TEMPERATURE,
+    JMA_SYOWA_REPORTS,
 )
 
 
@@ -259,6 +285,44 @@ Opener = Callable[..., object]
 def cache_path(url: str, cache_dir: Path) -> Path:
     digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
     return cache_dir / f"{digest}.txt"
+
+
+def is_fresh(
+    url: str,
+    *,
+    cache_dir: Path = DEFAULT_CACHE_DIR,
+    max_age: float = DEFAULT_MAX_AGE,
+    now: Callable[[], float] = time.time,
+) -> bool:
+    """Whether ``fetch_text`` would answer ``url`` from the cache without downloading."""
+    path = cache_path(url, cache_dir)
+    return path.exists() and now() - path.stat().st_mtime < max_age
+
+
+def fetch_many(
+    urls: list[str],
+    *,
+    cache_dir: Path = DEFAULT_CACHE_DIR,
+    max_age: float = DEFAULT_MAX_AGE,
+    sleep: Callable[[float], None] = time.sleep,
+) -> dict[str, str | FetchError]:
+    """Fetch several URLs one by one, pausing ``REQUEST_INTERVAL`` s between downloads.
+
+    Cache hits cost the provider nothing and are not paced. A URL that cannot be
+    fetched maps to its ``FetchError`` instead of stopping the whole batch.
+    """
+    results: dict[str, str | FetchError] = {}
+    downloaded = False
+    for url in urls:
+        if not is_fresh(url, cache_dir=cache_dir, max_age=max_age):
+            if downloaded:
+                sleep(REQUEST_INTERVAL)
+            downloaded = True
+        try:
+            results[url] = fetch_text(url, cache_dir=cache_dir, max_age=max_age)
+        except FetchError as exc:
+            results[url] = exc
+    return results
 
 
 def fetch_text(
@@ -276,7 +340,7 @@ def fetch_text(
     working offline; only when there is no cache at all is ``FetchError`` raised.
     """
     path = cache_path(url, cache_dir)
-    if path.exists() and now() - path.stat().st_mtime < max_age:
+    if is_fresh(url, cache_dir=cache_dir, max_age=max_age, now=now):
         return path.read_text(encoding="utf-8")
 
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})

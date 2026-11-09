@@ -3,6 +3,7 @@ import tempfile
 import unittest
 import urllib.error
 from pathlib import Path
+from unittest import mock
 
 from antarctic_viz import sources
 
@@ -48,6 +49,12 @@ class TestCatalog(unittest.TestCase):
         ds = sources.ozone_hole_daily(2024)
         self.assertIn("to3areas_2024_", ds.url)
         self.assertEqual(ds.key, "ozone_hole_daily_2024")
+
+    def test_jma_report_url_pads_the_month(self):
+        self.assertEqual(
+            sources.jma_report_url(2026, 2), "https://www.data.jma.go.jp/antarctic/ant202602.html"
+        )
+        self.assertIn(sources.JMA_SYOWA_REPORTS, sources.CATALOG)
 
     def test_catalog_keys_are_unique(self):
         keys = [d.key for d in sources.CATALOG]
@@ -112,3 +119,35 @@ class TestFetchText(unittest.TestCase):
     def test_offline_without_cache_raises_fetch_error(self):
         with self.assertRaises(sources.FetchError):
             sources.fetch_text("https://x/b", cache_dir=self.cache, opener=self.failing)
+
+
+class TestFetchMany(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.cache = Path(self.tmp.name)
+        self.sleeps = []
+
+    def fetch(self, url, **kwargs):
+        if url.endswith("bad"):
+            raise sources.FetchError(f"offline: {url}")
+        return f"body of {url}"
+
+    def test_is_fresh_follows_cache_age(self):
+        self.assertFalse(sources.is_fresh("https://x/a", cache_dir=self.cache))
+        path = sources.cache_path("https://x/a", self.cache)
+        path.write_text("cached", encoding="utf-8")
+        self.assertTrue(sources.is_fresh("https://x/a", cache_dir=self.cache))
+        os.utime(path, (0, 0))
+        self.assertFalse(sources.is_fresh("https://x/a", cache_dir=self.cache))
+
+    def test_downloads_are_paced_and_failures_collected(self):
+        sources.cache_path("https://x/cached", self.cache).write_text("c", encoding="utf-8")
+        urls = ["https://x/cached", "https://x/a", "https://x/bad", "https://x/b"]
+        with mock.patch.object(sources, "fetch_text", side_effect=self.fetch):
+            results = sources.fetch_many(urls, cache_dir=self.cache, sleep=self.sleeps.append)
+        self.assertEqual(results["https://x/a"], "body of https://x/a")
+        self.assertIsInstance(results["https://x/bad"], sources.FetchError)
+        self.assertEqual(list(results), urls)
+        # Three downloads: no pause before the first, one before each of the others.
+        self.assertEqual(self.sleeps, [sources.REQUEST_INTERVAL] * 2)
