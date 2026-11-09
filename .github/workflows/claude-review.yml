@@ -62,6 +62,7 @@ jobs:
             (`gh pr view --comments`) so you do not repeat a finding, and if you
             have reviewed before, focus on the commits pushed since then.
 
+            Do not run the CLAUDE.md checks; CI's Lint and Coverage workflows run them.
             Drop findings that are only about style, diagnostics or cleanup.
             Post each finding as an inline comment, then one top-level summary
             comment that starts with the count (or "No issues found.").
