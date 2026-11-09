@@ -69,3 +69,20 @@ suite with coverage on every push and pull request, then uses
 [py-cov-action/python-coverage-comment-action](https://github.com/py-cov-action/python-coverage-comment-action)
 to post (and update) a coverage summary comment on the pull request, along
 with a diff-coverage report and the badge shown above.
+
+## Code review
+
+Review follows the process in
+[How the Claude Code team does code review](https://claude.dev/blog/solving-code-review-at-anthropic/):
+
+- [`CLAUDE.md`](CLAUDE.md): checks an agent must run and show before a PR.
+- [`REVIEW.md`](REVIEW.md): what to flag, how to tag it (Important / Nit /
+  Pre-existing), what to skip, round limits, and risk tiers.
+- [`.github/pull_request_template.md`](.github/pull_request_template.md):
+  Testing / Risk / How to revert.
+- [`claude-review.yml`](.github/workflows/claude-review.yml): Claude code
+  review + security review on every PR (needs the `ANTHROPIC_API_KEY` secret).
+- [`.github/CODEOWNERS`](.github/CODEOWNERS): workflows, build scripts and
+  dependency files always need a code owner.
+- `.claude/settings.json`: a hook that runs `ruff format` / `ruff check --fix`
+  on Python files Claude edits.
