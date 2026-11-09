@@ -72,19 +72,9 @@ with a diff-coverage report and the badge shown above.
 
 ## Code review
 
-Review follows the process in
-[How the Claude Code team does code review](https://claude.dev/blog/solving-code-review-at-anthropic/):
-
-- [`CLAUDE.md`](CLAUDE.md): checks an agent must run and show before a PR.
-- [`REVIEW.md`](REVIEW.md): what to flag, how to tag it (Important / Nit /
-  Pre-existing), what to skip, round limits, and risk tiers.
-- [`.github/pull_request_template.md`](.github/pull_request_template.md):
-  Testing / Risk / How to revert.
-- [`claude-review.yml`](.github/workflows/claude-review.yml): Claude code
-  review (with a security pass) on every PR, using a Claude Pro/Max
-  subscription — no API credits. Set it up with `claude setup-token` and save
-  the token as the `CLAUDE_CODE_OAUTH_TOKEN` repository secret.
-- [`.github/CODEOWNERS`](.github/CODEOWNERS): workflows, build scripts and
-  dependency files always need a code owner.
-- `.claude/settings.json`: a hook that runs `ruff format` / `ruff check --fix`
-  on Python files Claude edits.
+Based on [How the Claude Code team does code review](https://claude.dev/blog/solving-code-review-at-anthropic/):
+[`CLAUDE.md`](CLAUDE.md) (checks), [`REVIEW.md`](REVIEW.md) (review rules), a PR
+template, a ruff hook in `.claude/settings.json`, and
+[`claude-review.yml`](.github/workflows/claude-review.yml), which reviews PRs
+using a Claude subscription token (`claude setup-token` → repository secret
+`CLAUDE_CODE_OAUTH_TOKEN`; skipped when unset).

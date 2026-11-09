@@ -1,7 +1,0 @@
-# High-risk paths: always require a code owner's review (enable
-# "Require review from Code Owners" in the branch protection rule for main).
-/.github/      @yukihouse
-/scripts/      @yukihouse
-/pyproject.toml @yukihouse
-/antarctica-viz/pyproject.toml @yukihouse
-/version-checker/pyproject.toml @yukihouse
