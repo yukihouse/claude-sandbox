@@ -321,7 +321,12 @@ _ANY_SUBJECT = re.compile("|".join(e.subject.pattern for e in ELEMENTS.values())
 _OTHER_QUANTITY = re.compile(r"最低気温|最高気温|最大風速|最大瞬間風速|日照|降雪|積雪")
 
 
+# Weather systems whose names contain 高/低 ("低気圧の通過が少なく") are not a level.
+_PRESSURE_SYSTEMS = re.compile(r"[高低]気圧")
+
+
 def _chunk_level(chunk: str, element: Element) -> int | None:
+    chunk = _PRESSURE_SYSTEMS.sub("", chunk)
     # "月平均気温、月間日照時間はいずれも平年並" still speaks for the mean.
     if _OTHER_QUANTITY.search(chunk) and not re.search(r"いずれも|ともに", chunk):
         return None

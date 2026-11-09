@@ -167,6 +167,9 @@ class TestExpressions(unittest.TestCase):
             ("月平均気温は平年より高く、晴れ日数は少なかった。", TEMP, 1),
             ("月平均気温は-20.1°Cで、最低気温は低い方から3位だったが、平年より高かった。", TEMP, 1),
             ("月平均気温、月間日照時間はいずれも平年並だった。", TEMP, 0),
+            ("月平均気温は、低気圧の通過が少なく平年より高かった。", TEMP, 1),
+            ("月平均気温は、高気圧に覆われた日が多く平年より低かった。", TEMP, -1),
+            ("月平均海面気圧は、低気圧が次々と通過して平年より低かった。", PRESSURE, -1),
         ]
         for text, element, expected in cases:
             with self.subTest(text=text):
