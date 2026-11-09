@@ -6,7 +6,7 @@ import { aiThink } from './game/ai';
 import { createState } from './game/rules';
 import { update } from './game/update';
 import { type Drag, render, type Scene } from './render/draw';
-import { readPalette } from './render/palette';
+import { PALETTE } from './render/palette';
 import { buildTerrain } from './render/terrain';
 import { registerServiceWorker, warmFonts, whenControlled } from './pwa';
 import { createView, hitCastle, layout, toS } from './render/view';
@@ -36,7 +36,7 @@ const view = createView();
 const scene: Scene = {
   ctx,
   view,
-  palette: readPalette(),
+  palette: PALETTE,
   terrain: null,
   pointer: { x: 0, y: 0, inside: false },
   drag: null,
@@ -63,7 +63,7 @@ function startStage(i: number): void {
 }
 
 function rebuildTerrain(): void {
-  if (!S || !view.cw || !scene.palette) return;
+  if (!S || !view.cw) return;
   scene.terrain = buildTerrain(view, S.i, S.stage, canvas.width, canvas.height, scene.palette);
 }
 
@@ -258,11 +258,6 @@ function frame(now: number): void {
   const dt = Math.min(MAX_DT, (now - last) / 1000);
   last = now;
   step(dt);
-  if (!scene.palette) {
-    // the stylesheet was not applied yet when the game started: try again
-    scene.palette = readPalette();
-    rebuildTerrain();
-  }
   render(scene, S, now / 1000);
   tray.tick(S);
   requestAnimationFrame(frame);

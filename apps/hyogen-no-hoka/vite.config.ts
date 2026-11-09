@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { defineConfig } from 'vitest/config';
-import { type Plugin } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { uniqueChars } from './src/pwa';
 
@@ -11,21 +10,6 @@ const sources = ['index.html', ...readdirSync('src', { recursive: true, encoding
   .filter((f) => /\.(ts|html)$/.test(f))
   .map((f) => readFileSync(f, 'utf8'));
 
-// Vite moves the entry <script> into <head>, ahead of the inlined <style>.
-// Put it back at the end of <body>, where index.html has it, so the page's
-// markup and styles are in place before the game starts.
-const scriptAtEndOfBody = (): Plugin => ({
-  name: 'script-at-end-of-body',
-  apply: 'build',
-  transformIndexHtml: {
-    order: 'post',
-    handler(html) {
-      const tag = html.match(/<script type="module"[^>]*><\/script>\n?/)?.[0];
-      return tag ? html.replace(tag, '').replace('</body>', `${tag.trim()}\n</body>`) : html;
-    },
-  },
-});
-
 // The build inlines all JS and CSS into dist/index.html, so the game still
 // runs by opening one file in a browser (file:// included), as before.
 export default defineConfig({
@@ -33,7 +17,7 @@ export default defineConfig({
   // under /<repo>/) and still opens from disk.
   base: './',
   define: { __GAME_CHARS__: JSON.stringify(uniqueChars(sources)) },
-  plugins: [scriptAtEndOfBody(), viteSingleFile()],
+  plugins: [viteSingleFile()],
   test: {
     include: ['tests/**/*.test.ts'],
     coverage: {
