@@ -38,8 +38,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Tests
-        run: npm test
+      # Same checks as hyogen-no-hoka.yml, so a commit that fails them is never published.
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests with coverage
+        run: npm run coverage
 
       - name: Build
         run: npm run build

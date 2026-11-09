@@ -1,6 +1,5 @@
 import './style.css';
 import { MAX_DT } from './config';
-import { CHARS } from './data/chars';
 import { STAGES } from './data/stages';
 import { release, select, tapInItemMode, useItem } from './game/actions';
 import { aiThink } from './game/ai';
@@ -9,7 +8,7 @@ import { update } from './game/update';
 import { type Drag, render, type Scene } from './render/draw';
 import { readPalette } from './render/palette';
 import { buildTerrain } from './render/terrain';
-import { registerServiceWorker, uniqueChars, warmFonts } from './pwa';
+import { registerServiceWorker, warmFonts, whenControlled } from './pwa';
 import { createView, hitCastle, layout, toS } from './render/view';
 import { loadProgress, nextChapter, recordWin, saveProgress } from './save';
 import type { AiOwner, GameState, ItemKind } from './types';
@@ -269,16 +268,19 @@ resize();
 tray.update(S);
 showTitle();
 requestAnimationFrame(frame);
-if (registerServiceWorker(navigator, location.protocol, import.meta.env.PROD)) {
-  // Once the game is idle, fetch the font pieces for all story and UI text so they work offline.
-  const gameText = [
-    document.body.textContent ?? '',
-    ...STAGES.flatMap((st) => [st.no, st.name, ...[...st.pre, ...st.post].map(([, line]) => line)]),
-    ...Object.values(CHARS).flatMap((ch) => [ch.name, ch.role, ch.mark]),
-    '勝利敗北制圧防寒壁隊員が足りない発動中あと秒物語を進める結末を見るもう一度挑む章を選ぶつづきから奪還未開放挑戦できる？0123456789+−:%・人',
-  ];
-  window.addEventListener('load', () => void warmFonts(document.fonts, uniqueChars(gameText)), { once: true });
-}
+// After the first screen is up: install the Service Worker, then (once it controls
+// the page, so the responses get cached) fetch the fonts for all game text.
+window.addEventListener(
+  'load',
+  () => {
+    if (!registerServiceWorker(navigator, location.protocol, import.meta.env.PROD)) return;
+    const css = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"][href*="fonts.googleapis.com"]');
+    void whenControlled(navigator.serviceWorker).then(() =>
+      warmFonts(document.fonts, __GAME_CHARS__, () => (css ? fetch(css.href, { mode: 'cors' }) : Promise.resolve())),
+    );
+  },
+  { once: true },
+);
 
 // small hook for automated checks
 declare global {

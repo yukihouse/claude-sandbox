@@ -16,6 +16,19 @@ export function registerServiceWorker(
   return true;
 }
 
+/**
+ * Resolves once a Service Worker controls this page. On a first visit that is
+ * only after the new worker installs, activates and claims the page; requests
+ * made before then bypass it and are not cached for offline play.
+ */
+export async function whenControlled(
+  sw: Pick<ServiceWorkerContainer, 'ready' | 'controller' | 'addEventListener'>,
+): Promise<void> {
+  await sw.ready;
+  if (sw.controller) return;
+  await new Promise<void>((resolve) => sw.addEventListener('controllerchange', () => resolve(), { once: true }));
+}
+
 /** The web-font faces the game uses (see index.html and style.css). */
 export const FONT_FACES = [
   '700 16px "Shippori Mincho B1"',
@@ -29,13 +42,20 @@ export const uniqueChars = (texts: Iterable<string>): string =>
   [...new Set([...texts].join('').replace(/\s/g, ''))].join('');
 
 /**
- * Ask the browser for the font files covering all of the game's text, so the
- * Service Worker caches them while online. Google serves Japanese fonts in
- * many small pieces and the browser normally only fetches the ones on screen;
+ * Fetch, through the Service Worker so it caches them, the font stylesheet
+ * and the font files covering `text`. Google serves Japanese fonts in many
+ * small pieces and the browser normally only fetches the ones on screen;
  * without this, later chapters would fall back to the system font offline.
- * Returns how many faces loaded; failures (e.g. offline) are ignored.
+ * Returns how many requests succeeded; failures (e.g. offline) are ignored.
  */
-export async function warmFonts(fonts: Pick<FontFaceSet, 'load'>, text: string): Promise<number> {
-  const results = await Promise.allSettled(FONT_FACES.map((face) => fonts.load(face, text)));
+export async function warmFonts(
+  fonts: Pick<FontFaceSet, 'load'>,
+  text: string,
+  fetchStylesheet: () => Promise<unknown>,
+): Promise<number> {
+  const results = await Promise.allSettled([
+    fetchStylesheet(),
+    ...FONT_FACES.map((face) => fonts.load(face, text)),
+  ]);
   return results.filter((r) => r.status === 'fulfilled').length;
 }
