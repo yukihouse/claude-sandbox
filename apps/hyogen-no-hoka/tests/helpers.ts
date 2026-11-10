@@ -6,6 +6,8 @@ export function stage(castles: CastleDef[], extra: Partial<StageDef> = {}): Stag
   return {
     no: 'テスト',
     name: 'テスト',
+    era: '2000–2001',
+    win: 'テスト',
     castles,
     rivers: [] as River[],
     ai: { interval: 4, greed: 1.2, focus: 1 },

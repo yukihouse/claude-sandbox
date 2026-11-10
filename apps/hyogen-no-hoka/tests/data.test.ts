@@ -23,6 +23,8 @@ describe('stage data', () => {
       expect(inRiver(s.rivers, x, y)).toBe(false);
     }
     for (const line of [...s.pre, ...s.post]) expect(CHARS[line[0]]).toBeDefined();
+    expect(s.era).toMatch(/^\d{4}–(\d{4}|現在)$/);
+    expect(s.win).not.toBe('');
     expect(s.pre.length).toBeGreaterThan(0);
     expect(s.post.length).toBeGreaterThan(0);
   });

@@ -132,6 +132,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--player); ou
 .chapters button:disabled { opacity: 0.5; cursor: default; }
 .chapters .no { font-size: 12px; letter-spacing: 0.12em; color: var(--ink-soft); }
 .chapters .nm { font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: 0.06em; }
+.chapters .nm small { display: block; font-family: var(--font-ui); font-weight: 400; font-size: 11px; letter-spacing: 0.04em; color: var(--ink-soft); }
 .chapters .st { font-size: 12px; color: var(--ink-soft); }
 .chapters .st.done { color: var(--player); font-weight: 700; }
 .howto { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.7; }

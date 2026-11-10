@@ -20,7 +20,7 @@
 <body>
 <div id="app">
   <header class="bar">
-    <div class="chapter"><small id="chapNo">第一章</small><h1 id="chapName">白い夜明け</h1></div>
+    <div class="chapter"><small id="chapNo">第一章</small><h1 id="chapName">開南丸、南へ</h1></div>
     <button class="ghost" id="pauseBtn" type="button">一時停止</button>
   </header>
   <div class="field" id="field"><canvas id="map" aria-label="南極の地図"></canvas></div>
@@ -44,12 +44,12 @@
 <div class="overlay" id="title">
   <div class="title-wrap">
     <div class="title-mark">
-      <span class="sub">南極基地奪還記</span>
+      <span class="sub">南極探検史をたどる</span>
       <h1>氷原の烽火</h1>
       <span class="seal">南極<br>観測</span>
     </div>
     <div class="menu">
-      <p class="lede">南極の観測基地は、黒氷社に占拠された。<br>オーロラ隊の隊長・凪とともに、基地をひとつずつ取り戻せ。</p>
+      <p class="lede">ブリザードで閉ざされた昭和基地の夜。<br>新人越冬隊員の凪とともに、南極探検の歴史をたどろう。</p>
       <button class="primary" id="startBtn" type="button">出動する</button>
       <ul class="chapters" id="chapters"></ul>
       <p class="howto">遊び方：自軍の基地をタップ → バーで送る隊員の割合を決める → 向かう基地をタップ。基地から基地へドラッグしても出動できます。基地の隊員は時間とともに増えます（無人基地は増えません）。</p>
@@ -61,7 +61,7 @@
   <div class="dialog">
     <div class="portrait" id="portrait">凪</div>
     <div class="speech">
-      <div class="who"><b id="whoName">凪</b><span id="whoRole">オーロラ隊 隊長</span></div>
+      <div class="who"><b id="whoName">凪</b><span id="whoRole">新人越冬隊員</span></div>
       <p class="line" id="storyLine"></p>
     </div>
     <div class="dialog-foot"><small id="storyProg">タップで次へ</small><button class="skip" id="skipBtn" type="button">会話をとばす</button></div>
@@ -71,7 +71,7 @@
 <div class="overlay" id="result" hidden>
   <div class="card">
     <div class="stamp" id="resStamp">勝利</div>
-    <h2 id="resTitle">白い夜明け</h2>
+    <h2 id="resTitle">開南丸、南へ</h2>
     <p id="resText"></p>
     <div class="stats"><div><small>経過時間</small><b id="resTime">0:00</b></div><div><small>制圧した基地</small><b id="resCap">0</b></div></div>
     <div class="btns" id="resBtns"></div>
