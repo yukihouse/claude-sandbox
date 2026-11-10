@@ -16,7 +16,9 @@ export const DISPLAY_FONT = '"Shippori Mincho B1", "Hiragino Mincho ProN", serif
  * applied yet gives empty strings, and the canvas then draws everything black.
  */
 export const PALETTE: Readonly<Palette> = {
-  owner: { 0: '#86929b', 1: '#2a63a8', 2: '#b8432c', 3: '#ad7e1a' },
+  // 2 ブリザード: a dark storm violet. 3 流氷: sea-ice teal (also drawn as a hexagon,
+  // so the two never depend on colour alone).
+  owner: { 0: '#86929b', 1: '#2a63a8', 2: '#4a2d63', 3: '#258a7a' },
   ink: '#18242e',
   paper: '#f5f8fa',
   terrain: '#dde8ee',
@@ -26,8 +28,8 @@ export const PALETTE: Readonly<Palette> = {
 export const CSS_VARS: Readonly<Record<string, string>> = {
   '--neutral': PALETTE.owner[0],
   '--player': PALETTE.owner[1],
-  '--enemy': PALETTE.owner[2],
-  '--bandit': PALETTE.owner[3],
+  '--blizzard': PALETTE.owner[2],
+  '--floe': PALETTE.owner[3],
   '--ink': PALETTE.ink,
   '--tray': PALETTE.paper,
   '--terrain': PALETTE.terrain,

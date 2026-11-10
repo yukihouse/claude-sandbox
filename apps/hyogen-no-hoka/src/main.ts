@@ -1,5 +1,6 @@
 import './style.css';
 import { MAX_DT } from './config';
+import { FACTIONS, ownersIn } from './data/factions';
 import { STAGES } from './data/stages';
 import { release, select, tapInItemMode, useItem } from './game/actions';
 import { aiThink } from './game/ai';
@@ -53,6 +54,15 @@ function startStage(i: number): void {
   const stage = S.stage;
   $('#chapNo').textContent = stage.no;
   $('#chapName').textContent = stage.name;
+  $('#legend').replaceChildren(
+    ...ownersIn(stage).map((o) => {
+      const li = document.createElement('li');
+      const dot = document.createElement('i');
+      dot.className = `o${o}`;
+      li.append(dot, FACTIONS[o]);
+      return li;
+    }),
+  );
   rebuildTerrain();
   tray.update(S);
   hideAll();
@@ -162,7 +172,7 @@ function showResult(S: GameState): void {
   stamp.textContent = win ? '勝利' : '敗北';
   stamp.className = 'stamp ' + (win ? 'win' : 'lose');
   $('#resTitle').textContent = `${def.no}　${def.name}`;
-  $('#resText').textContent = win ? '黒氷社の旗はすべて降りた。' : '自軍の基地をすべて失った。態勢を立て直そう。';
+  $('#resText').textContent = win ? def.win : '自軍の基地をすべて失った。態勢を立て直そう。';
   $('#resTime').textContent = fmtTime(S.t);
   $('#resCap').textContent = String(S.captured);
   const btns = $('#resBtns');
@@ -226,11 +236,14 @@ function showTitle(): void {
       el.textContent = text;
       return el;
     };
-    b.append(
-      span('no', st.no),
-      span('nm', locked ? '？？？' : st.name),
-      span(done ? 'st done' : 'st', done ? '奪還' : locked ? '未開放' : '挑戦できる'),
-    );
+    const nm = span('nm', locked ? '？？？' : st.name);
+    if (!locked) {
+      const era = document.createElement('small');
+      era.textContent = st.era;
+      nm.appendChild(era);
+    }
+    b.append(nm, span(done ? 'st done' : 'st', done ? '踏破' : locked ? '未開放' : '挑戦できる'));
+    b.prepend(span('no', st.no));
     b.addEventListener('click', () => startStage(i));
     li.appendChild(b);
     list.appendChild(li);

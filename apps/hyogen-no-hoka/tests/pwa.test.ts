@@ -86,7 +86,7 @@ describe('whenControlled', () => {
 
 describe('__GAME_CHARS__', () => {
   it('holds the characters of all story lines and UI text, from the build', () => {
-    for (const text of ['南極点', '隊員が足りない', '結末を見る', 'つづきから', '作戦中断', '漂流団の頭']) {
+    for (const text of ['南極点', '隊員が足りない', '結末を見る', 'つづきから', '作戦中断', '新人越冬隊員', '大和雪原']) {
       for (const ch of text) expect(__GAME_CHARS__).toContain(ch);
     }
   });
