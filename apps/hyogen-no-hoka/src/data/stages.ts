@@ -81,10 +81,10 @@ export const STAGES: readonly StageDef[] = [
     no: '終章', name: '南極点',
     castles: [[0.12,0.5,1,2,35],[0.3,0.2,1,1,15],[0.3,0.8,1,1,15],[0.55,0.5,0,2,20],[0.76,0.2,2,1,18],[0.76,0.8,2,1,18],[1.0,0.36,2,2,25],[1.0,0.64,2,2,25],[1.33,0.5,2,3,60],[1.25,0.14,2,1,15],[1.25,0.86,2,1,15]],
     rivers: [],
-    // Same AI pace as chapter 4: at 3.0 s the seven enemy bases out-produced
-    // the player so fast that the finale was close to unwinnable.
-    ai: { interval: 3.4, greed: 1.3, focus: 1.1 },
-    items: { reinforce: 3, gale: 1, wall: 2 },
+    // A little faster than chapter 4 (3.4 s). At 3.0 s the seven enemy bases
+    // out-produced the player so fast that the finale was close to unwinnable.
+    ai: { interval: 3.3, greed: 1.3, focus: 1.1 },
+    items: { reinforce: 2, gale: 1, wall: 2 },
     pre: [
       ['himuro', 'よく来たな、オーロラ隊。だが南極点の本部は落ちんよ。'],
       ['minato', '本部は人の集まりがいちばん速い基地です。まわりから切り崩しましょう。'],
