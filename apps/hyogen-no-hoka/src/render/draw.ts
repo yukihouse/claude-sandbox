@@ -1,6 +1,6 @@
 import { FLOATER_LIFE, LEVEL } from '../config';
 import { castleAt } from '../game/rules';
-import type { Castle, GameState, Level } from '../types';
+import type { BaseStyle, Castle, GameState, Level, Owner } from '../types';
 import { DISPLAY_FONT, type Palette, toneColor, UI_FONT } from './palette';
 import { hitCastle, radius, toS, type View } from './view';
 
@@ -26,6 +26,64 @@ export interface Scene {
   drag: Drag | null;
   reduceMotion: boolean;
 }
+
+/**
+ * The outline of a base or a moving party: a circle, or a hexagon for the
+ * 流氷 (ice floes), so that owner is told apart by shape as well as colour.
+ */
+function bodyPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, owner: Owner): void {
+  ctx.beginPath();
+  if (owner !== 3) {
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    return;
+  }
+  const R = r * 1.08;
+  for (let k = 0; k < 6; k++) {
+    const a = (k / 6) * Math.PI * 2 + Math.PI / 6;
+    if (k) ctx.lineTo(x + Math.cos(a) * R, y + Math.sin(a) * R);
+    else ctx.moveTo(x + Math.cos(a) * R, y + Math.sin(a) * R);
+  }
+  ctx.closePath();
+}
+
+/** Tents and a flag, for the early expeditions: one tent, two tents, or a big camp. */
+function drawCamp(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, level: Level): void {
+  const snow = 'rgba(245,248,250,0.96)';
+  ctx.fillStyle = snow;
+  ctx.strokeStyle = snow;
+  const g = y + s * 0.34;
+  ctx.fillRect(x - s * 0.55, g - s * 0.03, s * 1.1, s * 0.07);
+  const tent = (cx: number, w: number, h: number) => {
+    ctx.beginPath();
+    ctx.moveTo(cx - w, g);
+    ctx.lineTo(cx, g - h);
+    ctx.lineTo(cx + w, g);
+    ctx.closePath();
+    ctx.fill();
+  };
+  if (level === 1) tent(x - s * 0.1, s * 0.3, s * 0.5);
+  else {
+    tent(x - s * 0.24, s * 0.26, s * 0.46);
+    tent(x + s * 0.2, s * 0.22, s * 0.38);
+  }
+  if (level === 3) tent(x - s * 0.02, s * 0.3, s * 0.62);
+  // a depot flag
+  const fx = x + s * (level === 1 ? 0.36 : 0.46);
+  const top = g - s * (level === 3 ? 0.98 : 0.72);
+  ctx.lineWidth = Math.max(1.2, s * 0.06);
+  ctx.beginPath();
+  ctx.moveTo(fx, g);
+  ctx.lineTo(fx, top);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(fx, top);
+  ctx.lineTo(fx - s * 0.26, top + s * 0.08);
+  ctx.lineTo(fx, top + s * 0.17);
+  ctx.closePath();
+  ctx.fill();
+}
+
+const DRAW_BASE: Readonly<Record<BaseStyle, typeof drawKeep>> = { camp: drawCamp, station: drawKeep };
 
 /** The little station silhouette drawn on top of each base. */
 function drawKeep(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, level: Level): void {
@@ -115,13 +173,12 @@ export function render(scene: Scene, S: GameState | null, now: number): void {
     ctx.stroke();
     // body
     ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    bodyPath(ctx, sx, sy, r, c.owner);
     ctx.fill();
     ctx.strokeStyle = 'rgba(24,36,46,0.55)';
     ctx.lineWidth = 1.2;
     ctx.stroke();
-    drawKeep(ctx, sx, sy + r * 0.12, r * 0.9, c.level);
+    DRAW_BASE[S.stage.bases](ctx, sx, sy + r * 0.12, r * 0.9, c.level);
     // wall buff
     if (c.wallUntil > t) {
       ctx.strokeStyle = PAPER;
@@ -199,8 +256,7 @@ export function render(scene: Scene, S: GameState | null, now: number): void {
     ctx.globalAlpha = 1;
     ctx.lineCap = 'butt';
     ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    bodyPath(ctx, sx, sy, r, a.owner);
     ctx.fill();
     ctx.strokeStyle = PAPER;
     ctx.lineWidth = 1.5;

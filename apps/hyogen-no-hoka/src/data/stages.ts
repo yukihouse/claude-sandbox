@@ -7,11 +7,15 @@ import type { StageDef } from '../types';
 // historical; 凪・湊・源 are fictional.
 //
 // castles: [x, y, owner(0 無人 / 1 自軍 / 2 ブリザード / 3 流氷), level(1 観測小屋 / 2 基地 / 3 本部), crew]
+// places: place names printed on the map, kept clear of the bases.
+// terrain / bases: how src/render draws the map and the bases (see TerrainKind, BaseStyle).
 // rivers are crevasse fields (and tide cracks in the sea ice): crossing one halves movement speed.
 export const STAGES: readonly StageDef[] = [
   {
     no: '第一章', name: '開南丸、南へ', era: '1910–1912',
     win: '大和雪原まで、隊は誰ひとり欠けずに進んだ。',
+    terrain: 'shelf', bases: 'camp',
+    places: [[0.05,0.2,'クジラ湾'],[0.7,0.38,'ロス棚氷']],
     castles: [[0.2,0.5,1,2,20],[0.55,0.25,0,1,6],[0.55,0.75,0,1,8],[0.85,0.5,0,2,14],[1.3,0.5,2,1,10],[1.15,0.18,0,1,10],[1.15,0.82,0,1,10]],
     rivers: [],
     ai: { interval: 4.5, greed: 1.15, focus: 0.8 },
@@ -38,6 +42,8 @@ export const STAGES: readonly StageDef[] = [
   {
     no: '第二章', name: '南極点への競争', era: '1911–1912',
     win: 'デポをつなぎ、南極点への道を切りひらいた。',
+    terrain: 'glacier', bases: 'camp',
+    places: [[0.74,0.96,'氷河'],[1.12,0.93,'南極横断山脈']],
     castles: [[0.15,0.8,1,2,25],[0.3,0.5,1,1,10],[0.6,0.85,0,1,10],[0.52,0.45,0,2,18],[0.92,0.2,0,1,12],[0.97,0.62,0,1,10],[0.3,0.17,0,1,8],[1.32,0.22,2,2,25],[1.27,0.68,2,1,14]],
     rivers: [{ w: 0.05, pts: [[0.73,-0.05],[0.68,0.3],[0.79,0.55],[0.71,0.8],[0.77,1.05]] }],
     ai: { interval: 4.2, greed: 1.2, focus: 1.0 },
@@ -63,6 +69,8 @@ export const STAGES: readonly StageDef[] = [
   {
     no: '第三章', name: 'エンデュアランスの漂流', era: '1914–1916',
     win: '流氷とブリザードをしのぎ、28人全員が生きのびた。',
+    terrain: 'sea', bases: 'camp',
+    places: [[0.42,0.5,'ウェッデル海']],
     castles: [[0.15,0.5,1,2,25],[0.75,0.12,3,2,25],[1.02,0.27,3,1,12],[1.35,0.85,2,2,30],[1.05,0.78,2,1,12],[0.4,0.22,0,1,8],[0.4,0.78,0,1,8],[0.72,0.5,0,3,30],[1.33,0.45,0,1,10]],
     rivers: [],
     ai: { interval: 3.8, greed: 1.2, focus: 0.9 },
@@ -87,6 +95,8 @@ export const STAGES: readonly StageDef[] = [
   {
     no: '第四章', name: '宗谷と昭和基地', era: '1956–1959',
     win: '海氷を越えて荷を運び、昭和基地を開いた。',
+    terrain: 'coast', bases: 'station',
+    places: [[0.05,0.62,'宗谷'],[0.36,0.06,'海氷'],[1.4,0.95,'東オングル島']],
     castles: [[0.15,0.3,1,2,30],[0.2,0.75,1,1,15],[0.45,0.5,1,1,12],[0.58,0.14,0,1,10],[0.58,0.86,0,1,10],[0.97,0.15,2,1,15],[0.95,0.5,2,2,25],[0.97,0.85,2,1,15],[1.32,0.3,2,2,25],[1.3,0.75,2,1,18]],
     rivers: [{ w: 0.07, pts: [[0.77,-0.05],[0.73,0.25],[0.81,0.5],[0.73,0.75],[0.78,1.05]] }],
     ai: { interval: 3.4, greed: 1.25, focus: 1.0 },
@@ -109,6 +119,8 @@ export const STAGES: readonly StageDef[] = [
   {
     no: '終章', name: '氷床の記憶', era: '1959–現在',
     win: 'ドームふじで、氷床に眠る地球の記憶を掘りあてた。',
+    terrain: 'plateau', bases: 'station',
+    places: [[1.42,0.68,'ドームふじ']],
     castles: [[0.12,0.5,1,2,35],[0.3,0.2,1,1,15],[0.3,0.8,1,1,15],[0.55,0.5,0,2,20],[0.76,0.2,2,1,18],[0.76,0.8,2,1,18],[1.0,0.36,2,2,25],[1.0,0.64,2,2,25],[1.33,0.5,2,3,60],[1.25,0.14,2,1,15],[1.25,0.86,2,1,15]],
     rivers: [],
     // A little faster than chapter 4 (3.4 s). At 3.0 s the seven enemy bases

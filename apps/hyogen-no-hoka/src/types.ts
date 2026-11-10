@@ -9,6 +9,16 @@ export type ItemKind = 'reinforce' | 'gale' | 'wall';
 export type TargetItem = Exclude<ItemKind, 'gale'>;
 export type CharId = 'narr' | 'nagi' | 'minato' | 'gen' | 'log';
 export type Point = readonly [x: number, y: number];
+/**
+ * What the chapter's map looks like: the Ross Ice Shelf by the sea, mountains
+ * and a glacier, the open Weddell Sea with ice floes, sea ice off an island,
+ * or the flat inland plateau.
+ */
+export type TerrainKind = 'shelf' | 'glacier' | 'sea' | 'coast' | 'plateau';
+/** Tents and depots (the early expeditions) or the buildings of a research station. */
+export type BaseStyle = 'camp' | 'station';
+/** A place name printed on the map. */
+export type Place = readonly [x: number, y: number, name: string];
 
 export interface Character {
   name: string;
@@ -44,6 +54,9 @@ export interface StageDef {
   era: string;
   /** Result text after a win. */
   win: string;
+  terrain: TerrainKind;
+  bases: BaseStyle;
+  places: readonly Place[];
   castles: readonly CastleDef[];
   rivers: readonly River[];
   ai: AiConfig;

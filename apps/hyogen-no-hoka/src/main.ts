@@ -1,5 +1,6 @@
 import './style.css';
 import { MAX_DT } from './config';
+import { FACTIONS, ownersIn } from './data/factions';
 import { STAGES } from './data/stages';
 import { release, select, tapInItemMode, useItem } from './game/actions';
 import { aiThink } from './game/ai';
@@ -53,6 +54,15 @@ function startStage(i: number): void {
   const stage = S.stage;
   $('#chapNo').textContent = stage.no;
   $('#chapName').textContent = stage.name;
+  $('#legend').replaceChildren(
+    ...ownersIn(stage).map((o) => {
+      const li = document.createElement('li');
+      const dot = document.createElement('i');
+      dot.className = `o${o}`;
+      li.append(dot, FACTIONS[o]);
+      return li;
+    }),
+  );
   rebuildTerrain();
   tray.update(S);
   hideAll();
