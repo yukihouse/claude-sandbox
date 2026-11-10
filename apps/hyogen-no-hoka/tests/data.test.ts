@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { H, W } from '../src/config';
 import { CHARS } from '../src/data/chars';
 import { FACTIONS, ownersIn } from '../src/data/factions';
+import { PORTRAITS } from '../src/data/portraits';
 import { STAGES } from '../src/data/stages';
 import { inRiver } from '../src/game/geometry';
 
@@ -53,5 +54,22 @@ describe('factions', () => {
   it('draws early expeditions as camps and later ones as stations', () => {
     expect(STAGES.map((s) => s.bases)).toEqual(['camp', 'camp', 'camp', 'station', 'station']);
     expect(STAGES.map((s) => s.terrain)).toEqual(['shelf', 'glacier', 'sea', 'coast', 'plateau']);
+  });
+});
+
+describe('portraits', () => {
+  it('gives every speaker but the narrator an SVG portrait named after them', () => {
+    const speakers = Object.keys(CHARS).filter((id) => id !== 'narr');
+    expect(Object.keys(PORTRAITS).sort()).toEqual(speakers.sort());
+    for (const [id, svg] of Object.entries(PORTRAITS)) {
+      expect(svg).toMatch(/^<svg [^>]*viewBox="0 0 60 80"/);
+      expect(svg).toContain(`aria-label="${CHARS[id as keyof typeof CHARS].name}"`);
+      expect(svg.endsWith('</svg>')).toBe(true);
+    }
+  });
+
+  it('keeps gradient ids unique, since all portraits share one page', () => {
+    const ids = Object.values(PORTRAITS).flatMap((svg) => [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]));
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

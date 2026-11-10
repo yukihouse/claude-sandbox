@@ -23,9 +23,6 @@ export type Place = readonly [x: number, y: number, name: string];
 export interface Character {
   name: string;
   role: string;
-  /** One kanji shown in the portrait circle. */
-  mark: string;
-  color: string;
 }
 
 export type StoryLine = readonly [who: CharId, text: string];

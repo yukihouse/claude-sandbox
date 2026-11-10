@@ -1,4 +1,5 @@
 import { CHARS } from '../data/chars';
+import { PORTRAITS } from '../data/portraits';
 import type { StoryLine } from '../types';
 import { $ } from './dom';
 
@@ -47,8 +48,8 @@ export class Story {
     const ch = CHARS[who];
     const narr = who === 'narr';
     const p = $('#portrait');
-    p.textContent = ch.mark;
-    p.style.background = ch.color;
+    // The portraits are fixed SVG strings from src/data, never user text.
+    p.innerHTML = who === 'narr' ? '' : PORTRAITS[who];
     p.classList.toggle('narr', narr);
     $('#whoName').textContent = ch.name;
     $('#whoRole').textContent = ch.role;
