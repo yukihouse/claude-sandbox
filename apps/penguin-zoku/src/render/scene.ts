@@ -117,23 +117,39 @@ function drawSnow(ctx: CanvasRenderingContext2D, t: number, heavy: boolean): voi
   }
 }
 
-function drawPenguin(ctx: CanvasRenderingContext2D, s: GameState, p: Penguin, t: number): void {
+/** Where a penguin stands (or swims) in the scene. */
+function placeOf(p: Penguin, t: number): { x: number; y: number; inSea: boolean; frame: number } {
   const h1 = hash(p.id);
   const h2 = hash(p.id + 1000);
   const inSea = canWork(p) && (p.action === 'krill' || p.action === 'fish');
   const frame = Math.floor(t / 400 + h1 * 4) % 2;
   if (inSea) {
-    const x = SEA_X + 8 + h1 * (W - SEA_X - 24) + Math.sin(t / 700 + h2 * 6) * 3;
-    const y = ICE_TOP + 4 + h2 * 30 + frame;
+    return {
+      x: SEA_X + 8 + h1 * (W - SEA_X - 24) + Math.sin(t / 700 + h2 * 6) * 3,
+      y: ICE_TOP + 4 + h2 * 30 + frame,
+      inSea,
+      frame,
+    };
+  }
+  const chick = !isAdult(p);
+  return {
+    x: 4 + h1 * (SEA_X - 22) + (p.action === 'rest' && canWork(p) ? Math.sin(t / 900 + h2 * 6) * 2 : 0),
+    y: ICE_TOP + 2 + h2 * (chick ? 30 : 24) + (frame && canWork(p) ? -1 : 0) + (chick ? 8 : 0),
+    inSea,
+    frame,
+  };
+}
+
+function drawPenguin(ctx: CanvasRenderingContext2D, s: GameState, p: Penguin, t: number): void {
+  const { x, y, inSea, frame } = placeOf(p, t);
+  const h1 = hash(p.id);
+  if (inSea) {
     sprite(ctx, ADULT, x, y, 2, 4);
     ctx.fillStyle = '#9cc9ea';
     ctx.fillRect(Math.round(x) - 2, Math.round(y) + 8, 18, 1);
     if (p.action === 'fish' && s.tools > 0) sprite(ctx, ['W', 'W', 'W', 'W'], x + 15, y - 4, 1);
   } else {
-    const chick = !isAdult(p);
-    const x = 4 + h1 * (SEA_X - 22) + (p.action === 'rest' && canWork(p) ? Math.sin(t / 900 + h2 * 6) * 2 : 0);
-    const y = ICE_TOP + 2 + h2 * (chick ? 30 : 24) + (frame && canWork(p) ? -1 : 0);
-    if (chick) sprite(ctx, CHICK, x + 2, y + 8, 2);
+    if (!isAdult(p)) sprite(ctx, CHICK, x + 2, y, 2);
     else sprite(ctx, ADULT, x, y, 2);
     if (p.status === 'injured') sprite(ctx, CROSS, x + 10, y + 6, 1);
     if (p.status === 'sick') sprite(ctx, DROP, x + 10, y + 6, 1);
@@ -142,14 +158,39 @@ function drawPenguin(ctx: CanvasRenderingContext2D, s: GameState, p: Penguin, t:
     if (canWork(p) && p.action === 'rest' && p.mateId !== null && Math.floor(t / 1200 + h1 * 5) % 3 === 0)
       sprite(ctx, HEART, x + 5, y - 5, 1);
   }
-  if (p.id === s.chiefId) sprite(ctx, CROWN, (inSea ? SEA_X + 8 + h1 * (W - SEA_X - 24) : 4 + h1 * (SEA_X - 22)) + 2, (inSea ? ICE_TOP + 4 + h2 * 30 : ICE_TOP + 2 + h2 * 24) - 3, 1);
+  if (p.id === s.chiefId) sprite(ctx, CROWN, x + 2, y - 3, 1);
 }
 
+const ARROW = ['YYYYY', '.YYY.', '..Y..'];
+
 /** Draw the tribe on its ice floe for time `t` (ms). */
-export function drawScene(ctx: CanvasRenderingContext2D, s: GameState, t: number): void {
+export function drawScene(ctx: CanvasRenderingContext2D, s: GameState, t: number, selectedId: number | null = null): void {
   ctx.imageSmoothingEnabled = false;
   drawBackdrop(ctx, s, t);
   const order = [...s.penguins].sort((a, b) => hash(a.id + 1000) - hash(b.id + 1000));
   for (const p of order) drawPenguin(ctx, s, p, t);
   if (seasonIndex(s.turn) === 3 || s.coldwave > 0) drawSnow(ctx, t, s.coldwave > 0);
+  const sel = selectedId === null ? undefined : s.penguins.find((p) => p.id === selectedId);
+  if (sel) {
+    const { x, y } = placeOf(sel, t);
+    sprite(ctx, ARROW, x + 2, y - 9 + (Math.floor(t / 300) % 2), 1);
+  }
+}
+
+/** A penguin as a small pixel-art SVG data URI, for lists. */
+export function penguinIcon(p: Penguin): string {
+  const rows = isAdult(p) ? ADULT : CHICK;
+  const w = 7;
+  const h = 10;
+  const ox = Math.floor((w - (rows[0] as string).length) / 2);
+  const oy = h - rows.length;
+  let rects = '';
+  rows.forEach((row, r) => {
+    for (let c = 0; c < row.length; c++) {
+      const col = COLORS[row[c] as string];
+      if (col) rects += `<rect x="${c + ox}" y="${r + oy}" width="1" height="1" fill="${col}"/>`;
+    }
+  });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges">${rects}</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
