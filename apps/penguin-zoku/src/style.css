@@ -11,8 +11,9 @@
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --page: #0d141b; }
+  :root:not([data-theme="light"]) { --page: #0d141b; }
 }
+:root[data-theme="dark"] { --page: #0d141b; }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body {
