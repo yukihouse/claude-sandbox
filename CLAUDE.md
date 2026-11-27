@@ -8,12 +8,15 @@ ruff (shared root `ruff.toml`, line length 100), 100% coverage required.
 `apps/hyogen-no-hoka/` is a TypeScript + Vite browser game (npm, Vitest;
 100% coverage of game logic, data, save, view math and PWA helpers;
 GitHub Pages deploy from main).
+`apps/penguin-zoku/` is a TypeScript + Vite turn-based browser game (npm, Vitest;
+100% coverage of game logic, data and save).
 
 ## Checks (run inside each app you touched and show the output)
 
 - `apps/tetris/`: `uv run ruff check . && uv run ruff format --check . && uv run coverage run -m unittest discover -s tests && uv run coverage report -m`
 - `apps/antarctica-viz/`, `apps/version-checker/`: `uv run ruff check . && uv run ruff format --check . && uv run coverage run -m unittest discover -s tests -t . && uv run coverage report -m`
 - `apps/hyogen-no-hoka/`: `npm ci && npm run typecheck && npm run coverage && npm run build`
+- `apps/penguin-zoku/`: `npm ci && npm run typecheck && npm run coverage && npm run build`
 
 Every PR gets an automated Claude review in CI (`.github/workflows/claude-review.yml`),
 so run `/code-review` before opening a PR only for large changes: a new feature, page or

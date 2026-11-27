@@ -10,6 +10,7 @@ A monorepo of small demo apps. Each app lives in its own directory under
 | [`apps/antarctica-viz/`](apps/antarctica-viz/) | Streamlit web UI for exploring public Antarctic observation data |
 | [`apps/version-checker/`](apps/version-checker/) | CLI that checks a Windows `.exe` has version information embedded |
 | [`apps/hyogen-no-hoka/`](apps/hyogen-no-hoka/) | 氷原の烽火, a browser real-time strategy game set in Antarctica (TypeScript + Vite, installable PWA on [GitHub Pages](https://yukihouse.github.io/claude-sandbox/)) |
+| [`apps/penguin-zoku/`](apps/penguin-zoku/) | ぺんぎん族, a turn-based penguin tribe survival and evolution game set in Antarctica, with a feature-phone style UI (TypeScript + Vite) |
 
 ## Layout conventions
 

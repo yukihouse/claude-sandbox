@@ -1,0 +1,43 @@
+name: penguin-zoku
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/penguin-zoku/**"
+      - ".github/workflows/penguin-zoku.yml"
+  pull_request:
+    paths:
+      - "apps/penguin-zoku/**"
+      - ".github/workflows/penguin-zoku.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/penguin-zoku
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/penguin-zoku/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests with coverage
+        run: npm run coverage
+
+      - name: Build
+        run: npm run build

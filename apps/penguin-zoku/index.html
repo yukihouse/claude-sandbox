@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ぺんぎん族</title>
+<meta name="theme-color" content="#1d2b3a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 10' shape-rendering='crispEdges'%3E%3Cpath fill='%231b2430' d='M2 0h3v1h1v3h1v4H6v1H1V8H0V4h1V1h1z'/%3E%3Cpath fill='%23f4f8fb' d='M2 2h1v1H2zm2 0h1v1H4zM2 4h3v5H2z'/%3E%3Cpath fill='%23f29b30' d='M3 3h1v1H3zM1 9h2v1H1zm3 0h2v1H4z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+</head>
+<body>
+<div id="phone">
+  <div class="speaker" aria-hidden="true"></div>
+  <div id="screen">
+    <div id="status" aria-live="polite"></div>
+    <canvas id="scene" width="240" height="120" aria-label="群れのようす"></canvas>
+    <div id="panel">
+      <div id="ptitle"></div>
+      <div id="pbody" tabindex="-1"></div>
+      <div id="pfoot"></div>
+    </div>
+  </div>
+  <div id="keys">
+    <button type="button" class="soft" id="kBack">戻る</button>
+    <div class="dpad">
+      <button type="button" id="kUp" aria-label="上">▲</button>
+      <button type="button" id="kOk" class="ok">決定</button>
+      <button type="button" id="kDown" aria-label="下">▼</button>
+    </div>
+    <button type="button" class="soft" id="kMenu">メニュー</button>
+  </div>
+  <p class="hint">キーボード: ↑↓ えらぶ / Enter 決定 / Esc 戻る / 1〜9 番号でえらぶ</p>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

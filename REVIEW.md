@@ -6,6 +6,8 @@
 - antarctica-viz parsers mis-read data (units, dates, missing values) and the chart lies.
 - hyogen-no-hoka game rules or AI break (wrong combat, resources, win/lose), a change to the
   saved format silently resets players' progress (`src/save.ts`), or the PWA service worker serves a stale or broken build offline.
+- penguin-zoku season rules break (food, breeding, events, win/lose), or a save that no longer
+  matches `isGameState` in `src/save.ts` silently drops a game in progress.
 - version-checker mis-parses a PE file (wrong offsets, truncated or malformed input) and
   reports version info as present when it is not, or crashes; the Windows build relies on it.
 - Build scripts or workflows pass without really checking anything.
